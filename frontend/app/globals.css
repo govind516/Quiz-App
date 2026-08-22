@@ -1315,3 +1315,11 @@ select.input option {
     display: none;
   }
 }
+
+/* segmented control (time-limit picker etc.) — unlayered so it beats .btn */
+.seg-active {
+  background: var(--color-violet);
+  color: #fff;
+  border-color: var(--color-violet);
+  box-shadow: 0 4px 16px -6px rgba(123, 92, 255, 0.6);
+}

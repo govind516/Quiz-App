@@ -21,6 +21,7 @@ import {
 	IconGrid,
 	IconQuestion,
 	IconTag,
+	IconTrash,
 	IconX,
 } from "@/components/icons";
 
@@ -202,63 +203,144 @@ function SectionHead({ title }: { title: string }) {
 	);
 }
 
-function AttemptsChart({ daily }: { daily: { date: string; count: number }[] }) {
-	const pathRef = useRef<SVGPolylineElement>(null);
-	const areaRef = useRef<SVGPolygonElement>(null);
-
-	const W = 560;
-	const H = 180;
-	const PAD = 18;
-
-	let points = "";
-	if (daily.length > 0) {
-		const max = Math.max(1, ...daily.map((d) => d.count));
-		const stepX = daily.length === 1 ? W : W / (daily.length - 1);
-		points = daily
-			.map((d, i) => {
-				const x = i * stepX;
-				const y = H - PAD - (d.count / max) * (H - PAD * 2);
-				return `${x.toFixed(1)},${y.toFixed(1)}`;
-			})
-			.join(" ");
-	}
-	const areaPoints = points ? `${points} ${W},${H} 0,${H}` : "";
+function AttemptsChart({ daily }: { daily: AdminAnalyticsDto["daily"] }) {
+	const [drawn, setDrawn] = useState(false);
 
 	useEffect(() => {
-		const path = pathRef.current;
-		if (!path || !points) return;
-		let length = 900;
-		try {
-			length = path.getTotalLength();
-		} catch {}
-		path.style.transition = "none";
-		path.style.strokeDasharray = String(length);
-		path.style.strokeDashoffset = String(length);
-		void path.getBoundingClientRect();
-		path.style.transition =
-			"stroke-dashoffset 1.4s cubic-bezier(.22,.68,0,1)";
-		path.style.strokeDashoffset = "0";
-		if (areaRef.current) {
-			areaRef.current.style.opacity = "0";
-			setTimeout(() => {
-				if (areaRef.current) areaRef.current.style.opacity = "1";
-			}, 600);
-		}
-	}, [points]);
+		const timer = setTimeout(() => setDrawn(true), 80);
+		return () => clearTimeout(timer);
+	}, [daily]);
+
+	const W = 560;
+	const H = 210;
+	const PAD_L = 34;
+	const PAD_R = 16;
+	const PAD_T = 18;
+	const PAD_B = 30;
+
+	const max = Math.max(1, ...daily.map((d) => d.count));
+	const stepX =
+		daily.length > 1 ? (W - PAD_L - PAD_R) / (daily.length - 1) : (W - PAD_L - PAD_R) / 2;
+
+	const pts = daily.map((d, i) => ({
+		x: PAD_L + i * stepX,
+		y: H - PAD_B - (d.count / max) * (H - PAD_T - PAD_B),
+	}));
+
+	const linePoints = pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+	const baselineY = H - PAD_B;
+	const areaPoints =
+		pts.length > 1
+			? `${linePoints} ${pts[pts.length - 1].x.toFixed(1)},${baselineY} ${PAD_L},${baselineY}`
+			: "";
+
+	const dayLabel = (dateStr: string) =>
+		new Date(`${dateStr}T00:00:00`)
+			.toLocaleDateString("en-US", { weekday: "short" })
+			.toUpperCase();
 
 	if (!daily.length) return null;
 
 	return (
-		<svg className="chart-svg w-full h-[180px]" viewBox="0 0 560 180" preserveAspectRatio="none">
-			<defs>
-				<linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-					<stop offset="0%" stopColor="#7B5CFF" stopOpacity=".35" />
-					<stop offset="100%" stopColor="#7B5CFF" stopOpacity="0" />
-				</linearGradient>
-			</defs>
-			<polygon ref={areaRef} className="transition-opacity duration-700" points={areaPoints} fill="url(#chartGrad)" />
-			<polyline ref={pathRef} className="chart-path" points={points} />
-		</svg>
+		<div>
+			<div className="relative">
+				<svg
+					viewBox={`0 0 ${W} ${H}`}
+					preserveAspectRatio="none"
+					className="w-full h-[190px]"
+				>
+					<defs>
+						<linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+							<stop offset="0%" stopColor="#7B5CFF" stopOpacity="0.32" />
+							<stop offset="100%" stopColor="#7B5CFF" stopOpacity="0" />
+						</linearGradient>
+					</defs>
+
+					<line
+						x1={PAD_L}
+						y1={baselineY}
+						x2={W - PAD_R}
+						y2={baselineY}
+						stroke="rgba(255,255,255,.16)"
+						strokeWidth="1"
+					/>
+
+					{areaPoints && (
+						<polygon
+							points={areaPoints}
+							fill="url(#chartGrad)"
+							style={{
+								opacity: drawn ? 1 : 0,
+								transition: "opacity .7s ease .5s",
+							}}
+						/>
+					)}
+
+					{pts.length > 1 && (
+						<polyline
+							points={linePoints}
+							fill="none"
+							stroke="#7B5CFF"
+							strokeWidth="2.5"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							pathLength={100}
+							strokeDasharray={100}
+							strokeDashoffset={drawn ? 0 : 100}
+							style={{ transition: "stroke-dashoffset 1.4s cubic-bezier(.22,.68,0,1)" }}
+						/>
+					)}
+
+					{pts.map((p, i) => (
+						<circle
+							key={`dot-${i}`}
+							cx={p.x}
+							cy={p.y}
+							r={3.5}
+							fill="#0D0A1D"
+							stroke="#7B5CFF"
+							strokeWidth="2"
+							style={{
+								opacity: drawn ? 1 : 0,
+								transition: `opacity .4s ease ${0.4 + i * 0.08}s`,
+							}}
+						/>
+					))}
+
+					<text
+						x={PAD_L - 8}
+						y={PAD_T + 2}
+						textAnchor="end"
+						fontSize="10"
+						fill="#655F82"
+					>
+						{max}
+					</text>
+					<text
+						x={PAD_L - 8}
+						y={baselineY + 4}
+						textAnchor="end"
+						fontSize="10"
+						fill="#655F82"
+					>
+						0
+					</text>
+				</svg>
+				{pts.length > 1 && (
+					<div className="relative h-6 mt-1">
+						{daily.map((d, i) => (
+							<span
+								key={`lbl-${i}`}
+								className="absolute mono text-[10px] text-faintc -translate-x-1/2 whitespace-nowrap"
+								style={{ left: `${((PAD_L + i * stepX) / W) * 100}%` }}
+							>
+								{dayLabel(d.date)}
+							</span>
+						))}
+					</div>
+				)}
+			</div>
+		</div>
 	);
 }
 
@@ -434,10 +516,14 @@ function QuestionsTab({ quizId }: { quizId: number }) {
 											<span className="badge">{question.points} pt</span>
 										</div>
 										<div className="font-medium text-ink">{question.questionText}</div>
-										<div className="text-xs mt-1 space-x-3">
+										<div className="mt-2 flex flex-wrap gap-1.5">
 											{question.options.map((o) => (
-												<span key={o.optionId} className={o.isCorrect ? "text-mint" : "mutedc"}>
-													{o.isCorrect ? "✓" : "·"} {o.optionText.length > 40 ? o.optionText.slice(0, 40) + "…" : o.optionText}
+												<span
+													key={o.optionId}
+													className={`badge !text-[11px] ${o.isCorrect ? "badge-mint" : ""} max-w-full`}
+												>
+													{o.isCorrect ? "✓ " : ""}
+													{o.optionText.length > 42 ? o.optionText.slice(0, 42) + "…" : o.optionText}
 												</span>
 											))}
 										</div>
@@ -473,7 +559,7 @@ function QuestionsTab({ quizId }: { quizId: number }) {
 												}
 											}}
 										>
-											🗑
+											<IconTrash size={13} />
 										</button>
 									</td>
 								</tr>
@@ -800,14 +886,17 @@ function ReviewTab({ quizzes }: { quizzes: QuizDto[] }) {
 											<div className="font-medium text-ink max-w-md">
 												{question.questionText}
 											</div>
-											<div className="text-xs mt-1 space-x-3">
-												{question.options.map((o) => (
-													<span key={o.optionId} className={o.isCorrect ? "text-mint" : "mutedc"}>
-														{o.isCorrect ? "✓" : "·"}{" "}
-														{o.optionText.length > 34 ? o.optionText.slice(0, 34) + "…" : o.optionText}
-													</span>
-												))}
-											</div>
+										<div className="mt-2 flex flex-wrap gap-1.5">
+											{question.options.map((o) => (
+												<span
+													key={o.optionId}
+													className={`badge !text-[11px] ${o.isCorrect ? "badge-mint" : ""} max-w-full`}
+												>
+													{o.isCorrect ? "✓ " : ""}
+													{o.optionText.length > 36 ? o.optionText.slice(0, 36) + "…" : o.optionText}
+												</span>
+											))}
+										</div>
 										</td>
 										<td>
 											<span className="badge">{question.type}</span>

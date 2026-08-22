@@ -305,6 +305,8 @@ Hardening choices and trade-offs that are **intentional** — listed so they rea
 
 **Leaderboard scoring asymmetry.** Per-quiz boards use `ZADD … GT` (best percentage wins — retrying cannot inflate a quiz rank), while global/category boards use `ZINCRBY` (cumulative points). Global rank is therefore an *activity/volume* signal by design; per-quiz rank is the *skill* signal.
 
+**Leaderboard ties share a rank.** Redis orders equal scores lexicographically by member, so raw ranks are arbitrary for ties. The UI recomputes display ranks client-side: equal scores share the same rank number (e.g. two players at 4 pts both show `#1`), and podium cards annotate ties with `(tie)`.
+
 **Certificates are snapshots.** Eligibility is evaluated live at claim time ("every published quiz in this category passed ≥60%"), but once issued a certificate is permanent — later additions to the category never revoke it. `CERTIFICATES` denormalises `category_name` for the same reason.
 
 **Guest sessions are ownership credentials, not identities.** A client-generated UUID correlates start/submit/result calls; the server normalises and stores it, and ownership checks compare against it. It is not proof of identity.

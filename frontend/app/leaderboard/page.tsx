@@ -11,15 +11,35 @@ import { useAuthStore } from "@/lib/auth-store";
 import { Eyebrow, initials } from "@/components/ui";
 import { IconTrophy } from "@/components/icons";
 
-function PodCard({
-	entry,
-	rank,
-}: {
-	entry?: LeaderboardEntryDto;
-	rank: number;
-}) {
-	if (!entry) return <div />;
-	const isFirst = rank === 1;
+interface RankedEntry {
+	entry: LeaderboardEntryDto;
+	displayRank: number;
+	shared: boolean;
+}
+
+function withSharedRanks(entries: LeaderboardEntryDto[]): RankedEntry[] {
+	let prevScore: number | null = null;
+	let prevRank = 0;
+	return entries.map((entry, i) => {
+		const shared = prevScore !== null && entry.score === prevScore;
+		const displayRank = shared ? prevRank : i + 1;
+		prevScore = entry.score;
+		prevRank = displayRank;
+		return { entry, displayRank, shared };
+	});
+}
+
+function PodCard({ slot }: { slot: RankedEntry | null }) {
+	if (!slot) {
+		return (
+			<div className="pod-card !border-dashed !border-linestrong flex flex-col items-center justify-center min-h-[170px]">
+				<div className="pod-avatar !bg-transparent text-faintc">?</div>
+				<div className="pod-handle text-faintc font-normal">Your name here</div>
+				<div className="pod-score">— pts</div>
+			</div>
+		);
+	}
+	const isFirst = slot.displayRank === 1;
 	return (
 		<div className={`pod-card ${isFirst ? "rank1" : ""}`}>
 			{isFirst && (
@@ -27,10 +47,13 @@ function PodCard({
 					<IconTrophy size={20} />
 				</div>
 			)}
-			<div className="pod-rank-badge">#{rank}</div>
-			<div className="pod-avatar">{initials(entry.name)}</div>
-			<div className="pod-handle">{entry.name}</div>
-			<div className="pod-score">{entry.score.toLocaleString()} pts</div>
+			<div className="pod-rank-badge">
+				#{slot.displayRank}
+				{slot.shared ? " (tie)" : ""}
+			</div>
+			<div className="pod-avatar">{initials(slot.entry.name)}</div>
+			<div className="pod-handle">{slot.entry.name}</div>
+			<div className="pod-score">{slot.entry.score.toLocaleString()} pts</div>
 		</div>
 	);
 }
@@ -65,15 +88,21 @@ export default function LeaderboardPage() {
 		enabled: board === "global" || Boolean(selectedCategory),
 	});
 
-	const entries = entriesQuery.data ?? [];
-	const youIndex = user ? entries.findIndex((e) => e.userId === user.id) : -1;
-	const youEntry = youIndex >= 0 ? entries[youIndex] : undefined;
-	const youInPodium = youIndex >= 0 && youIndex < 3;
-	const podium = [entries[1], entries[0], entries[2]].filter(Boolean);
-	const rest = (youIndex >= 3
-		? entries.filter((_, i) => i !== youIndex)
-		: entries
-	).slice(3);
+	const ranked = withSharedRanks(entriesQuery.data ?? []);
+	const podiumSlots: Array<RankedEntry | null> = [
+		ranked[1] ?? null,
+		ranked[0] ?? null,
+		ranked[2] ?? null,
+	];
+	const youSlot = user
+		? ranked.find((r) => r.entry.userId === user.id)
+		: undefined;
+	const rest = ranked.filter(
+		(r) => !podiumSlots.some((s) => s?.entry.userId === r.entry.userId)
+	);
+	const youInPodium = podiumSlots.some(
+		(s) => s?.entry.userId === user?.id
+	);
 
 	return (
 		<div className="py-10 max-w-3xl mx-auto">
@@ -118,7 +147,7 @@ export default function LeaderboardPage() {
 					</div>
 					<div className="card h-64 animate-pulse" />
 				</div>
-			) : entries.length === 0 ? (
+			) : ranked.length === 0 ? (
 				<div className="card p-10 text-center text-sm text-mutedc">
 					{board === "category" && !categorySlug ? (
 						"Pick a category to see its leaderboard."
@@ -134,65 +163,68 @@ export default function LeaderboardPage() {
 				</div>
 			) : (
 				<>
-					{entries.length >= 1 && (
-						<div className="podium">
-							<PodCard entry={podium[0]} rank={2} />
-							<PodCard entry={podium[1]} rank={1} />
-							<PodCard entry={podium[2]} rank={3} />
+					<div className="podium">
+						<PodCard slot={podiumSlots[0]} />
+						<PodCard slot={podiumSlots[1]} />
+						<PodCard slot={podiumSlots[2]} />
+					</div>
+
+					{rest.length > 0 && (
+						<div className="lb-list">
+							{rest.map(({ entry, displayRank }, i) => (
+								<div
+									key={entry.userId}
+									className={`lb-row row-animate ${
+										entry.userId === user?.id ? "!bg-violetdim" : ""
+									}`}
+									style={{ animationDelay: `${0.05 * (i + 1)}s` }}
+								>
+									<div className="lb-rank">#{displayRank}</div>
+									<div className="row-avatar">{initials(entry.name)}</div>
+									<div className="row-name">
+										<div className="handle flex items-center gap-2">
+											{entry.name}
+											{entry.userId === user?.id && (
+												<span className="badge badge-violet">you</span>
+											)}
+										</div>
+									</div>
+									<div className="row-score text-right mono text-mint">
+										{entry.score.toLocaleString()}
+									</div>
+								</div>
+							))}
 						</div>
 					)}
 
-					<div className="lb-list">
-						{rest.map((entry, i) => (
-							<div
-								key={entry.userId}
-								className={`lb-row row-animate ${entry.userId === user?.id ? "!bg-violetdim" : ""}`}
-								style={{ animationDelay: `${0.05 * (i + 1)}s` }}
-							>
-								<div className="lb-rank">#{entry.rank}</div>
-								<div className="row-avatar">{initials(entry.name)}</div>
-								<div className="row-name">
-									<div className="handle flex items-center gap-2">
-										{entry.name}
-										{entry.userId === user?.id && (
-											<span className="badge badge-violet">you</span>
-										)}
-									</div>
-								</div>
-								<div className="row-score text-right mono text-mint">
-									{entry.score.toLocaleString()}
-								</div>
-							</div>
-						))}
-					</div>
-
-					{youEntry && !youInPodium && (
-						<div className="you-row">
+					{youSlot && !youInPodium && (
+						<div className="you-row mt-6">
 							<div className="flex items-center gap-3.5">
 								<div
 									className="row-avatar"
 									style={{ border: "1.5px solid var(--color-violet)" }}
 								>
-									{initials(youEntry.name)}
+									{initials(youSlot.entry.name)}
 								</div>
 								<div>
 									<div className="handle font-semibold text-[13.5px] text-ink">
-										You · #{youEntry.rank}
+										You · #{youSlot.displayRank}
 									</div>
 									<div className="text-xs text-faintc mono">
-										{youEntry.score.toLocaleString()} pts
+										{youSlot.entry.score.toLocaleString()} pts
 									</div>
 								</div>
 							</div>
 							<span className="badge badge-violet">Keep climbing 🚀</span>
 						</div>
 					)}
+
+					<p className="mt-6 mono text-[11px] text-faintc leading-relaxed">
+						Scores are cumulative points across completed quizzes · quiz boards
+						track best percentage · equal scores share the same rank
+					</p>
 				</>
 			)}
-
-			<p className="mt-8 mono text-xs text-faintc">
-				Scores are points earned across completed quizzes · quiz boards track best percentage
-			</p>
 		</div>
 	);
 }
