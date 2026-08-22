@@ -89,7 +89,7 @@ function BrowseInner() {
 			</div>
 
 			{quizzesQuery.isPending ? (
-				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+				<div className="grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">
 					{[0, 1, 2].map((i) => (
 						<div key={i} className="card h-44 animate-pulse" />
 					))}
@@ -103,7 +103,7 @@ function BrowseInner() {
 					No quizzes match these filters yet.
 				</div>
 			) : (
-				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+				<div className="grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">
 					{quizzesQuery.data!.map((quiz) => (
 						<QuizCard key={quiz.id} quiz={quiz} />
 					))}

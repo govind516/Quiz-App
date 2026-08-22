@@ -7,7 +7,7 @@ import { BookmarkButton } from "./bookmark-button";
 
 export function QuizCard({ quiz }: { quiz: QuizDto }) {
 	return (
-		<div className="card card-hover flex flex-col justify-between !p-5">
+		<div className="card card-hover flex h-full flex-col justify-between !p-5">
 			<div>
 				<div className="mb-2 flex flex-wrap items-center gap-2">
 					<DifficultyBadge level={quiz.difficulty} />

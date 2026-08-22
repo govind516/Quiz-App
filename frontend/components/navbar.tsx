@@ -47,7 +47,7 @@ export function Navbar() {
 							</>
 						)}
 					</div>
-					<nav className="flex items-center gap-2 ml-auto">
+					<nav className="flex items-center gap-2">
 						{mounted && user ? (
 							<>
 								{user.role === "ADMIN" && (

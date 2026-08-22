@@ -293,8 +293,7 @@ a{ color:inherit; text-decoration:none; }
 .pod-rank-badge{ font-family:var(--font-mono); font-size:11px; color:var(--text-faint); margin-bottom:8px; }
 
 .lb-list{ display:flex; flex-direction:column; border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; }
-.lb-row{ display:grid; grid-template-columns:40px 40px 1fr 110px 90px 60px; align-items:center; gap:14px; padding:14px 20px; border-bottom:1px solid var(--border); transition:background .2s; opacity:0; transform:translateX(-8px); }
-.lb-row.animate{ animation:rowIn .5s ease forwards; }
+.lb-row{ display:grid; grid-template-columns:40px 40px 1fr 110px 90px 60px; align-items:center; gap:14px; padding:14px 20px; border-bottom:1px solid var(--border); transition:background .2s; opacity:0; transform:translateX(-8px); animation:rowIn .5s ease forwards; }
 .lb-row:last-child{ border-bottom:none; }
 .lb-row:hover{ background:var(--surface); }
 @keyframes rowIn{ to{ opacity:1; transform:translateX(0); } }
@@ -491,8 +490,8 @@ a{ color:inherit; text-decoration:none; }
   <div class="auth-form-col">
     <div class="auth-box">
       <div class="auth-tabs">
-        <div class="auth-tab active">Log in</div>
-        <div class="auth-tab">Sign up</div>
+        <div class="auth-tab active" onclick="selectTab(this,'.auth-tab')">Log in</div>
+        <div class="auth-tab" onclick="selectTab(this,'.auth-tab')">Sign up</div>
       </div>
       <div class="field"><label>Email</label><input type="email" placeholder="you@company.com"></div>
       <div class="field"><label>Password</label><input type="password" placeholder="••••••••••"></div>
@@ -626,9 +625,9 @@ a{ color:inherit; text-decoration:none; }
     <span class="eyebrow">Rankings</span>
     <h2 style="margin:10px 0 26px;font-size:28px;">Leaderboard</h2>
     <div class="lb-tabs">
-      <div class="lb-tab active">Global</div>
-      <div class="lb-tab">This week</div>
-      <div class="lb-tab">By category</div>
+      <div class="lb-tab active" onclick="selectTab(this,'.lb-tab')">Global</div>
+      <div class="lb-tab" onclick="selectTab(this,'.lb-tab')">This week</div>
+      <div class="lb-tab" onclick="selectTab(this,'.lb-tab')">By category</div>
     </div>
 
     <div class="podium">
@@ -867,6 +866,13 @@ function badgeClick(el, unlocked){
   }
 }
 
+// ---------- generic segmented-tab toggle (auth, leaderboard) ----------
+function selectTab(el, groupSelector){
+  var group = el.parentElement.querySelectorAll(groupSelector);
+  group.forEach(function(t){ t.classList.remove('active'); });
+  el.classList.add('active');
+}
+
 // ---------- admin: chart draw + review actions ----------
 function drawChart(){
   var path = document.getElementById('chartPath');
@@ -895,13 +901,17 @@ function initPageAnimations(id){
   }
   if(id === 'leaderboard'){
     document.querySelectorAll('#lbList .lb-row').forEach(function(r){
-      r.style.animation = 'none'; void r.offsetWidth; r.style.animation = null;
+      // Only toggle animation-name here, never the 'animation' shorthand —
+      // the shorthand also resets animation-delay, which would wipe out
+      // each row's stagger (set inline as animation-delay) on every revisit.
+      r.style.animationName = 'none'; void r.offsetWidth; r.style.animationName = '';
     });
   }
   if(id === 'admin'){
     runCounts(document.getElementById('page-admin'));
     drawChart();
   }
+  if(id !== 'quiz'){ stopTimer(); }
 }
 window.addEventListener('DOMContentLoaded', function(){ initPageAnimations('landing'); });
 
@@ -913,7 +923,6 @@ function showPage(id){
   window.scrollTo({top:0, behavior:'instant'});
   requestAnimationFrame(function(){ initPageAnimations(id); });
 }
-function initPageAnimations(id){ /* filled below per page */ }
 </script>
 </body>
 </html>
