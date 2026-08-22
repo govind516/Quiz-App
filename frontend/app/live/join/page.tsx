@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { publicApi } from "@/lib/api";
+import { Button, Eyebrow } from "@/components/ui";
 
 export default function JoinLiveRoomPage() {
 	const router = useRouter();
@@ -32,57 +33,44 @@ export default function JoinLiveRoomPage() {
 	}
 
 	return (
-		<div className="mx-auto max-w-sm">
-			<h1 className="text-3xl font-bold tracking-tight text-slate-900">
-				Join a live game
-			</h1>
-			<p className="mt-1 text-slate-500">No account needed — just a nickname.</p>
+		<div className="mx-auto max-w-sm py-10">
+			<Eyebrow>Live arena</Eyebrow>
+			<h1 className="text-[32px] mt-2 mb-1">Join a game.</h1>
+			<p className="text-mutedc text-sm">No account needed — just a nickname.</p>
 
-			<form
-				onSubmit={handleJoin}
-				className="mt-6 space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
-			>
-				<div>
-					<label htmlFor="code" className="block text-sm font-medium text-slate-700">
-						Room code
-					</label>
+			<form onSubmit={handleJoin} className="card mt-6">
+				<div className="field">
+					<label>Room code</label>
 					<input
-						id="code"
+						className="input text-center mono !text-xl !tracking-[0.3em] uppercase"
 						required
 						value={code}
 						onChange={(e) => setCode(e.target.value.toUpperCase())}
 						placeholder="ABC123"
 						maxLength={6}
-						className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-center font-mono text-xl tracking-[0.3em] focus:border-indigo-500 focus:outline-none"
 					/>
 				</div>
-				<div>
-					<label htmlFor="nick" className="block text-sm font-medium text-slate-700">
-						Nickname
-					</label>
+				<div className="field">
+					<label>Nickname</label>
 					<input
-						id="nick"
+						className="input"
 						required
 						value={nickname}
 						onChange={(e) => setNickname(e.target.value)}
 						placeholder="QuizWhiz"
 						maxLength={30}
-						className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
 					/>
 				</div>
 
 				{error && (
-					<div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-600">
+					<div className="rounded-lg border border-dangerc/40 bg-dangerdim px-3 py-2 text-sm text-dangerc mb-4">
 						{error}
 					</div>
 				)}
 
-				<button
-					disabled={pending}
-					className="w-full rounded-xl bg-indigo-600 py-3 font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-50"
-				>
+				<Button block type="submit" disabled={pending}>
 					{pending ? "Joining…" : "Join game"}
-				</button>
+				</Button>
 			</form>
 		</div>
 	);

@@ -14,6 +14,7 @@ import {
 type AnswerMap = Record<number, number[]>;
 
 const emptySubscribe = () => () => {};
+const TIMER_CIRC = 150.8;
 
 function formatClock(totalSeconds: number): string {
 	const m = Math.floor(totalSeconds / 60);
@@ -49,72 +50,66 @@ export default function TakeQuizPage() {
 		const tick = () => {
 			const remaining = Math.max(
 				0,
-				Math.floor((new Date(payload.expiresAt).getTime() - Date.now()) / 1000)
+				Math.floor(
+					(new Date(payload.expiresAt).getTime() - Date.now()) / 1000
+				)
 			);
 			setRemainingSec(remaining);
 		};
 		tick();
-		const interval = setInterval(tick, 1000);
+		const interval = setInterval(tick, 500);
 		return () => clearInterval(interval);
 	}, [payload]);
 
-	const submit = useCallback(
-		async (onDone: () => void, onError: (message: string) => void) => {
-			if (!payload || submittedRef.current) return;
-			submittedRef.current = true;
-			setSubmitting(true);
-			try {
-				const selectedAnswers = Object.entries(answersRef.current)
-					.filter(([, optionIds]) => optionIds.length > 0)
-					.map(([questionId, optionIds]) => ({
-						questionId: Number(questionId),
-						selectedOptionIds: optionIds,
-					}));
+	const submit = useCallback(async () => {
+		if (!payload || submittedRef.current || submitting) return;
+		submittedRef.current = true;
+		setSubmitting(true);
+		try {
+			const selectedAnswers = Object.entries(answersRef.current)
+				.filter(([, optionIds]) => optionIds.length > 0)
+				.map(([questionId, optionIds]) => ({
+					questionId: Number(questionId),
+					selectedOptionIds: optionIds,
+				}));
 
-				await api<AttemptResultDto>(`/api/attempts/${attemptId}/submit`, {
-					method: "POST",
-					auth: Boolean(user),
-					body: {
-						guestSessionId: user ? undefined : getGuestSessionId(),
-						answers: selectedAnswers,
-					},
-				});
-				onDone();
-			} catch (error) {
-				submittedRef.current = false;
-				setSubmitError(
-					error instanceof Error ? error.message : "Failed to submit your quiz."
-				);
-				onError("");
-			} finally {
-				setSubmitting(false);
-			}
-		},
-		[attemptId, payload, user]
-	);
+			await api<AttemptResultDto>(`/api/attempts/${attemptId}/submit`, {
+				method: "POST",
+				auth: Boolean(user),
+				body: {
+					guestSessionId: user ? undefined : getGuestSessionId(),
+					answers: selectedAnswers,
+				},
+			});
+			router.replace(`/result/${attemptId}`);
+		} catch (error) {
+			submittedRef.current = false;
+			setSubmitError(
+				error instanceof Error ? error.message : "Failed to submit your quiz."
+			);
+		} finally {
+			setSubmitting(false);
+		}
+	}, [attemptId, payload, user, router, submitting]);
 
 	useEffect(() => {
 		if (remainingSec === 0 && payload && !submittedRef.current) {
-			submit(() => router.replace(`/result/${attemptId}`), () => {});
+			void submit();
 		}
-	}, [remainingSec, payload, submit, attemptId, router]);
+	}, [remainingSec, payload, submit]);
 
 	if (!payload) {
 		return (
-			<div className="mx-auto max-w-lg rounded-xl border border-slate-200 bg-white p-8 text-center">
-				<h1 className="text-lg font-semibold text-slate-900">
-					Quiz session not found
-				</h1>
-				<p className="mt-2 text-sm text-slate-500">
-					This quiz session has expired or was opened in a new tab. Start the
-					quiz again to play.
-				</p>
-				<Link
-					href={`/quiz/${attemptId}`}
-					className="mt-4 inline-block rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-				>
-					Go back
-				</Link>
+			<div className="quiz-shell">
+				<div className="card p-10 text-center">
+					<h2 className="text-lg font-semibold text-ink">Quiz session not found</h2>
+					<p className="mt-2 text-sm text-mutedc">
+						This quiz session expired or was opened in a new tab. Start again to play.
+					</p>
+					<Link href="/browse" className="btn btn-primary mt-5 inline-flex">
+						Browse quizzes
+					</Link>
+				</div>
 			</div>
 		);
 	}
@@ -122,9 +117,11 @@ export default function TakeQuizPage() {
 	const questions = payload.questions;
 	const question = questions[current];
 	const selected = answers[question.questionId] ?? [];
-	const answeredCount = Object.values(answers).filter(
-		(ids) => ids.length > 0
-	).length;
+	const answeredCount = Object.values(answers).filter((ids) => ids.length > 0).length;
+	const totalSec = payload.timeLimitSec;
+	const fraction =
+		remainingSec === null ? 1 : Math.max(0, Math.min(1, remainingSec / totalSec));
+	const lowTime = (remainingSec ?? 9999) <= 30;
 
 	function chooseOption(optionId: number) {
 		setAnswers((prev) => ({
@@ -138,149 +135,131 @@ export default function TakeQuizPage() {
 		}));
 	}
 
-	const lowTime = (remainingSec ?? 0) <= 30;
+	const marks = ["A", "B", "C", "D", "E", "F"];
 
 	return (
-		<div className="mx-auto max-w-2xl">
-			<div className="mb-6 flex items-center justify-between gap-4">
-				<div>
-					<h1 className="text-xl font-bold tracking-tight text-slate-900">
-						{payload.quizTitle}
-					</h1>
-					<p className="text-sm text-slate-500">
+		<div className="quiz-shell">
+			<div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+				<div className="flex items-center gap-3.5">
+					<Link href="/browse" className="text-faintc hover:text-ink transition">
+						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round">
+							<path d="M15 18l-6-6 6-6" />
+						</svg>
+					</Link>
+					<span className="badge badge-violet">{payload.quizTitle}</span>
+					<span className="badge hidden sm:inline-flex">
 						{answeredCount}/{questions.length} answered
-					</p>
-				</div>
-				{remainingSec !== null && (
-					<div
-						className={`rounded-xl px-4 py-2 font-mono text-lg font-semibold tabular-nums ${
-							lowTime
-								? "bg-rose-50 text-rose-600"
-								: "bg-slate-100 text-slate-700"
-						}`}
-					>
-						{formatClock(remainingSec)}
-					</div>
-				)}
-			</div>
-
-			<div className="mb-6 h-1.5 overflow-hidden rounded-full bg-slate-100">
-				<div
-					className="h-full rounded-full bg-indigo-600 transition-all"
-					style={{
-						width: `${questions.length ? ((current + 1) / questions.length) * 100 : 0}%`,
-					}}
-				/>
-			</div>
-
-			<div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-				<div className="mb-4 flex items-center justify-between text-xs">
-					<span className="font-medium text-slate-400">
-						Question {current + 1} of {questions.length}
-					</span>
-					<span className="flex items-center gap-2">
-						<span className="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-500">
-							{question.type === "MULTI_SELECT"
-								? "Select all that apply"
-								: question.type === "TRUE_FALSE"
-									? "True or False"
-									: "Single answer"}
-						</span>
-						<span className="rounded-full bg-emerald-50 px-2 py-0.5 font-medium text-emerald-600">
-							{question.points} pt{question.points === 1 ? "" : "s"}
-						</span>
 					</span>
 				</div>
-
-				<h2 className="text-lg font-semibold leading-relaxed text-slate-900">
-					{question.questionText}
-				</h2>
-
-				<div className="mt-5 space-y-3">
-					{question.options.map((option) => {
-						const isSelected = selected.includes(option.optionId);
-						return (
-							<button
-								key={option.optionId}
-								onClick={() => chooseOption(option.optionId)}
-								className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition ${
-									isSelected
-										? "border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500"
-										: "border-slate-200 hover:border-indigo-300 hover:bg-slate-50"
-								}`}
+				<div className="flex items-center gap-4">
+					{remainingSec !== null && (
+						<>
+							<span
+								className={`mono text-[13px] ${lowTime ? "text-amberc" : "text-mutedc"}`}
 							>
-								<span
-									className={`flex h-5 w-5 flex-none items-center justify-center border-2 ${
-										question.type === "MULTI_SELECT"
-											? "rounded-md"
-											: "rounded-full"
-									} ${isSelected ? "border-indigo-600 bg-indigo-600" : "border-slate-300"}`}
-								>
-									{isSelected && <span className="h-2 w-2 rounded-full bg-white" />}
-								</span>
-								<span className="text-sm text-slate-800">{option.optionText}</span>
-							</button>
-						);
-					})}
+								{formatClock(remainingSec)}
+							</span>
+							<div className="timer-wrap">
+								<svg className="timer-ring" viewBox="0 0 54 54">
+									<circle className="timer-ring-bg" cx="27" cy="27" r="24" />
+									<circle
+										className="timer-ring-fg"
+										cx="27"
+										cy="27"
+										r="24"
+										style={{
+											strokeDashoffset: TIMER_CIRC * (1 - fraction),
+											stroke: lowTime ? "#FFB84D" : "#7B5CFF",
+										}}
+									/>
+								</svg>
+								<div className="timer-value" style={{ color: lowTime ? "#FFB84D" : undefined }}>
+									{remainingSec >= 60
+										? `${Math.ceil(remainingSec / 60)}m`
+										: `${remainingSec}s`}
+								</div>
+							</div>
+						</>
+					)}
 				</div>
+			</div>
 
-				{submitError && (
-					<div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-600">
-						{submitError}
-					</div>
-				)}
+			<div className="progress-track">
+				{questions.map((q, i) => (
+					<div
+						key={q.questionId}
+						className={`progress-seg ${
+							i === current ? "current" : (answers[q.questionId] ?? []).length > 0 ? "done" : ""
+						}`}
+					/>
+				))}
+			</div>
 
-				<div className="mt-6 flex items-center justify-between">
-					<button
-						disabled={current === 0}
-						onClick={() => setCurrent((i) => Math.max(0, i - 1))}
-						className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-40"
-					>
-						← Previous
-					</button>
+			<div className="q-card">
+				<div className="flex flex-wrap items-center gap-2 mb-4">
+					<span className="badge badge-violet">
+						{question.type === "MULTI_SELECT"
+							? "Select all that apply"
+							: question.type === "TRUE_FALSE"
+								? "True or False"
+								: "Single answer"}
+					</span>
+					<span className="badge">{question.points} pt</span>
+					<span className="mono text-xs text-faintc ml-auto">
+						Question {current + 1} / {questions.length}
+					</span>
+				</div>
+				<h3>{question.questionText}</h3>
+			</div>
 
+			<div className="options">
+				{question.options.map((option, i) => {
+					const isSelected = selected.includes(option.optionId);
+					return (
+						<button
+							key={option.optionId}
+							onClick={() => chooseOption(option.optionId)}
+							className={`option ${isSelected ? "selected" : ""}`}
+						>
+							<div className="opt-mark">{marks[i]}</div>
+							{option.optionText}
+						</button>
+					);
+				})}
+			</div>
+
+			{submitError && (
+				<div className="mt-4 rounded-lg border border-dangerc/40 bg-dangerdim px-3 py-2 text-sm text-dangerc">
+					{submitError}
+				</div>
+			)}
+
+			<div className="quiz-foot mt-6 justify-between">
+				<button
+					disabled={current === 0}
+					onClick={() => setCurrent((i) => Math.max(0, i - 1))}
+					className="btn btn-outline"
+				>
+					← Previous
+				</button>
+
+				<div className="flex gap-2.5 items-center">
 					{current < questions.length - 1 ? (
 						<button
-							onClick={() => setCurrent((i) => Math.min(questions.length - 1, i + 1))}
-							className="rounded-lg bg-slate-800 px-5 py-2 text-sm font-medium text-white hover:bg-slate-900"
+							onClick={() => setCurrent((i) => i + 1)}
+							className="btn btn-outline"
 						>
 							Next →
 						</button>
 					) : null}
+					<button
+						disabled={submitting}
+						onClick={() => void submit()}
+						className="btn btn-primary"
+					>
+						{submitting ? "Submitting…" : "Finish & submit"}
+					</button>
 				</div>
-			</div>
-
-			<div className="mt-4 flex items-center justify-between">
-				<div className="flex gap-1.5">
-					{questions.map((q, i) => {
-						const isAnswered = (answers[q.questionId] ?? []).length > 0;
-						const isCurrent = i === current;
-						return (
-							<button
-								key={q.questionId}
-								onClick={() => setCurrent(i)}
-								aria-label={`Go to question ${i + 1}`}
-								className={`h-2.5 w-2.5 rounded-full transition ${
-									isCurrent
-										? "scale-125 bg-indigo-600"
-										: isAnswered
-											? "bg-indigo-300"
-											: "bg-slate-300 hover:bg-slate-400"
-								}`}
-							/>
-						);
-					})}
-				</div>
-
-				<button
-					disabled={submitting}
-					onClick={() =>
-						submit(() => router.replace(`/result/${attemptId}`), () => {})
-					}
-					className="rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-				>
-					{submitting ? "Submitting…" : "Submit quiz"}
-				</button>
 			</div>
 		</div>
 	);

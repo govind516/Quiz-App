@@ -1,9 +1,12 @@
-import type { Difficulty } from "@/lib/types";
+"use client";
 
-const styles: Record<Difficulty, string> = {
-	BEGINNER: "bg-emerald-50 text-emerald-600",
-	INTERMEDIATE: "bg-amber-50 text-amber-600",
-	ADVANCED: "bg-rose-50 text-rose-600",
+import type { Difficulty } from "@/lib/types";
+import { Badge } from "./ui";
+
+const tones: Record<Difficulty, "mint" | "amber" | "violet"> = {
+	BEGINNER: "mint",
+	INTERMEDIATE: "amber",
+	ADVANCED: "violet",
 };
 
 const labels: Record<Difficulty, string> = {
@@ -13,11 +16,5 @@ const labels: Record<Difficulty, string> = {
 };
 
 export function DifficultyBadge({ level }: { level: Difficulty }) {
-	return (
-		<span
-			className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${styles[level]}`}
-		>
-			{labels[level]}
-		</span>
-	);
+	return <Badge tone={tones[level]}>{labels[level]}</Badge>;
 }

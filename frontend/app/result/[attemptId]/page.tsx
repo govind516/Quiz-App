@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api, publicApi } from "@/lib/api";
 import type { AttemptResultDto, QuestionPublicDto } from "@/lib/types";
@@ -10,6 +11,8 @@ import {
 	getGuestSessionId,
 	loadStartPayload,
 } from "@/lib/guest-session";
+import { Eyebrow } from "@/components/ui";
+import { IconCheck, IconX } from "@/components/icons";
 
 export default function ResultPage() {
 	const { attemptId } = useParams<{ attemptId: string }>();
@@ -26,30 +29,67 @@ export default function ResultPage() {
 		retry: false,
 	});
 
+	const ringRef = useRef<SVGCircleElement>(null);
+	const pctRef = useRef<HTMLDivElement>(null);
+	const bigRef = useRef<HTMLDivElement>(null);
+
+	const result = resultQuery.data;
+
+	useEffect(() => {
+		if (!result) return;
+		const passed = result.percentage >= 60;
+		const stroke = passed ? "#35E8B4" : "#FF6B6B";
+		const target = Math.min(100, Math.round(result.percentage));
+
+		const timer = setTimeout(() => {
+			if (ringRef.current) {
+				ringRef.current.style.strokeDashoffset = String(
+					502 * (1 - target / 100)
+				);
+				ringRef.current.style.stroke = stroke;
+			}
+		}, 150);
+
+		let raf = 0;
+		let startTime: number | null = null;
+		const step = (ts: number) => {
+			if (startTime === null) startTime = ts;
+			const progress = Math.min((ts - startTime) / 1200, 1);
+			const eased = 1 - Math.pow(1 - progress, 3);
+			const val = Math.round(eased * target);
+			if (bigRef.current)
+				bigRef.current.textContent = `${val}%`;
+			if (pctRef.current)
+				pctRef.current.textContent = `${result.score}/${result.totalPoints} points`;
+			if (progress < 1) raf = requestAnimationFrame(step);
+		};
+		raf = requestAnimationFrame(step);
+		return () => {
+			clearTimeout(timer);
+			cancelAnimationFrame(raf);
+		};
+	}, [result]);
+
 	if (resultQuery.isPending) {
-		return <div className="h-64 animate-pulse rounded-xl bg-slate-100" />;
+		return <div className="h-64 animate-pulse rounded-xl bg-surface2 mt-10" />;
 	}
 
-	if (resultQuery.isError || !resultQuery.data) {
+	if (resultQuery.isError || !result) {
 		return (
-			<div className="mx-auto max-w-lg rounded-xl border border-slate-200 bg-white p-8 text-center">
-				<h1 className="text-lg font-semibold text-slate-900">
+			<div className="mx-auto max-w-lg card p-10 text-center mt-10">
+				<h2 className="text-lg font-semibold text-ink">
 					Could not load this result
-				</h1>
-				<p className="mt-2 text-sm text-slate-500">
+				</h2>
+				<p className="mt-2 text-sm text-mutedc">
 					The attempt may belong to another session or is still in progress.
 				</p>
-				<Link
-					href="/"
-					className="mt-4 inline-block rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
-				>
+				<Link href="/browse" className="btn btn-primary mt-5 inline-flex">
 					Browse quizzes
 				</Link>
 			</div>
 		);
 	}
 
-	const result = resultQuery.data;
 	const payloadQuestions = new Map<number, QuestionPublicDto>(
 		loadStartPayload(attemptId)?.questions.map((q) => [q.questionId, q]) ?? []
 	);
@@ -63,171 +103,137 @@ export default function ResultPage() {
 		);
 	}
 
+	const correctCount = result.questions.filter((q) => q.correct).length;
 	const passed = result.percentage >= 60;
 
 	return (
-		<div className="mx-auto max-w-3xl">
-			{!user && (
-				<div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
-					<div>
-						<p className="font-semibold text-amber-800">
-							This score isn&apos;t saved yet.
-						</p>
-						<p className="text-sm text-amber-700">
-							Create a free account to keep your history and appear on
-							leaderboards.
-						</p>
+		<div className="quiz-shell">
+			<div className="text-center pt-4">
+				<Eyebrow>Quiz complete</Eyebrow>
+				<h2 className="text-[28px] mt-3">{result.quizTitle}</h2>
+				<p className="text-mutedc text-sm mb-2">Here&apos;s how you did.</p>
+
+				{result.status === "EXPIRED" && (
+					<div className="inline-block badge badge-danger mt-2">
+						Time expired — auto-submitted
 					</div>
-					<Link
-						href="/register"
-						className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700"
-					>
-						Sign up to save your score
+				)}
+
+				<div className="score-ring-wrap">
+					<svg className="score-ring" viewBox="0 0 180 180">
+						<circle className="score-ring-bg" cx="90" cy="90" r="80" />
+						<circle ref={ringRef} className="score-ring-fg" cx="90" cy="90" r="80" />
+					</svg>
+					<div className="score-ring-label">
+						<div ref={bigRef} className="big mono">
+							0%
+						</div>
+						<div ref={pctRef} className="text-xs text-faintc mt-1"></div>
+					</div>
+				</div>
+
+				<div className="breakdown">
+					{result.questions.map((q, i) => (
+						<div key={q.questionId} className={`bd-dot ${q.correct ? "ok" : "bad"}`}>
+							{i + 1}
+						</div>
+					))}
+				</div>
+
+				<p className="mono text-sm text-mutedc mb-8">
+					{correctCount}/{result.questions.length} correct ·{" "}
+					{Math.floor(result.durationSeconds / 60)}m {result.durationSeconds % 60}s
+				</p>
+
+				<div className="flex gap-3 justify-center flex-wrap">
+					<Link href="/browse" className="btn btn-outline">
+						Try another quiz
 					</Link>
-				</div>
-			)}
-
-			<div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
-				<h1 className="text-xl font-semibold text-slate-900">
-					{result.quizTitle}
-				</h1>
-
-				<div
-					className={`mx-auto mt-6 flex h-32 w-32 flex-col items-center justify-center rounded-full border-8 ${
-						passed ? "border-emerald-500" : "border-rose-400"
-					}`}
-				>
-					<span className="text-3xl font-bold text-slate-900">
-						{Math.round(result.percentage)}%
-					</span>
-					<span className="text-xs text-slate-400">score</span>
-				</div>
-
-				<div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-slate-600">
-					<span>
-						Status:{" "}
-						<span
-							className={`font-semibold ${
-								result.status === "EXPIRED" ? "text-rose-500" : "text-emerald-600"
-							}`}
-						>
-							{result.status === "EXPIRED" ? "Time expired" : "Submitted"}
-						</span>
-					</span>
-					<span>
-						Score:{" "}
-						<strong className="text-slate-800">
-							{result.score}/{result.totalPoints}
-						</strong>{" "}
-						points
-					</span>
-					{result.durationSeconds > 0 && (
-						<span>
-							Time:{" "}
-							<strong className="text-slate-800">
-								{Math.floor(result.durationSeconds / 60)}m{" "}
-								{result.durationSeconds % 60}s
-							</strong>
-						</span>
+					{user ? (
+						<Link href="/me" className="btn btn-primary">
+							View my progress
+						</Link>
+					) : (
+						<Link href="/auth?mode=signup" className="btn btn-primary">
+							Save this score — sign up
+						</Link>
 					)}
 				</div>
 			</div>
 
-			<h2 className="mb-4 mt-10 text-lg font-bold text-slate-900">
-				Review ({result.questions.filter((q) => q.correct).length}/
-				{result.questions.length} correct)
-			</h2>
+			<div className="mt-14">
+				<Eyebrow>Review</Eyebrow>
+				<h3 className="text-xl mt-2 mb-5">
+					{passed ? "Solid work." : "Learn from these."}
+				</h3>
 
-			<div className="space-y-4">
-				{result.questions.map((question, index) => {
-					return (
+				<div className="space-y-4">
+					{result.questions.map((question, index) => (
 						<div
 							key={question.questionId}
-							className={`rounded-2xl border bg-white p-6 shadow-sm ${
-								question.correct ? "border-emerald-200" : "border-rose-200"
+							className={`card !p-6 ${
+								question.correct ? "!border-mint/40" : "!border-dangerc/40"
 							}`}
 						>
 							<div className="flex items-start justify-between gap-3">
 								<div>
-									<p className="text-xs font-medium text-slate-400">
-										Question {index + 1} · {question.points} pt
-										{question.points === 1 ? "" : "s"}
-									</p>
-									<h3 className="mt-1 font-semibold text-slate-900">
+									<div className="flex flex-wrap items-center gap-2 mb-2">
+										<span className={`badge ${question.correct ? "badge-mint" : "badge-danger"}`}>
+											Q{index + 1}
+										</span>
+										<span className="badge">{question.points} pt</span>
+									</div>
+									<h4 className="font-semibold text-ink leading-relaxed">
 										{question.questionText}
-									</h3>
+									</h4>
 								</div>
-								<span
-									className={`flex-none rounded-full px-3 py-1 text-xs font-semibold ${
-										question.correct
-											? "bg-emerald-50 text-emerald-600"
-											: "bg-rose-50 text-rose-500"
-									}`}
-								>
-									{question.correct
-										? `+${question.awardedPoints}`
-										: "+0"}
+								<span className={`opt-mark !w-7 !h-7 ${question.correct ? "!bg-mint !border-mint !text-[#08130F]" : "!bg-dangerc !border-dangerc !text-[#1A0808]"}`}>
+									{question.correct ? <IconCheck size={13} /> : <IconX size={13} />}
 								</span>
 							</div>
 
-							<div className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
-								<div className="rounded-lg bg-slate-50 p-3">
-									<p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+							<div className="grid gap-2 text-sm sm:grid-cols-2 mt-4">
+								<div className="rounded-lg bg-surface2 p-3 border border-line">
+									<p className="text-[11px] uppercase tracking-wide text-faintc mb-1">
 										Your answer
 									</p>
-									<ul className="mt-1 space-y-0.5 text-slate-700">
+									<ul className="space-y-0.5 text-mutedc">
 										{question.selectedOptionIds.length === 0 && (
-											<li className="italic text-slate-400">Not answered</li>
+											<li className="italic">Not answered</li>
 										)}
 										{question.selectedOptionIds.map((id) => (
-											<li key={id}>
+											<li
+												key={id}
+												className={
+													question.correctOptionIds.includes(id) ? "text-mint" : "text-dangerc"
+												}
+											>
 												{optionText(question.questionId, id)}
 											</li>
 										))}
 									</ul>
 								</div>
-								<div className="rounded-lg bg-emerald-50 p-3">
-									<p className="text-xs font-medium uppercase tracking-wide text-emerald-500/70">
+								<div className="rounded-lg bg-mintdim/60 p-3 border border-mint/20">
+									<p className="text-[11px] uppercase tracking-wide text-mint/70 mb-1">
 										Correct answer
 									</p>
-									<ul className="mt-1 space-y-0.5 text-emerald-800">
+									<ul className="space-y-0.5 text-mint">
 										{question.correctOptionIds.map((id) => (
-											<li key={id}>
-												{optionText(question.questionId, id)}
-											</li>
+											<li key={id}>{optionText(question.questionId, id)}</li>
 										))}
 									</ul>
 								</div>
 							</div>
 
 							{question.explanation && (
-								<div className="mt-3 rounded-lg border border-indigo-100 bg-indigo-50/60 p-3 text-sm text-slate-600">
-									<span className="font-semibold text-indigo-700">
-										Explanation:{" "}
-									</span>
+								<div className="explain-inner mt-4 !border-l-violet">
+									<span className="text-violet font-semibold">Explanation: </span>
 									{question.explanation}
 								</div>
 							)}
 						</div>
-					);
-				})}
-			</div>
-
-			<div className="mt-10 mb-4 flex justify-center gap-3">
-				<Link
-					href="/"
-					className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
-				>
-					Take another quiz
-				</Link>
-				{user && (
-					<Link
-						href="/me"
-						className="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-					>
-						View my progress
-					</Link>
-				)}
+					))}
+				</div>
 			</div>
 		</div>
 	);

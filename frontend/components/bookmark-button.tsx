@@ -28,9 +28,9 @@ export function BookmarkButton({ quizId }: { quizId: number }) {
 	if (!user) {
 		return (
 			<Link
-				href="/login"
+				href="/auth"
 				title="Log in to save quizzes"
-				className="rounded-lg px-2 py-1.5 text-slate-300 transition hover:bg-slate-50 hover:text-rose-400"
+				className="rounded-lg px-2 py-1.5 text-faintc transition hover:bg-violetdim hover:text-violet"
 			>
 				♡
 			</Link>
@@ -44,8 +44,8 @@ export function BookmarkButton({ quizId }: { quizId: number }) {
 			disabled={mutation.isPending}
 			title={bookmarked ? "Remove bookmark" : "Save this quiz"}
 			onClick={() => mutation.mutate(bookmarked)}
-			className={`rounded-lg px-2 py-1.5 transition hover:bg-rose-50 disabled:opacity-50 ${
-				bookmarked ? "text-rose-500" : "text-slate-300 hover:text-rose-400"
+			className={`rounded-lg px-2 py-1.5 transition hover:bg-mintdim disabled:opacity-50 ${
+				bookmarked ? "text-mint" : "text-faintc hover:text-mint"
 			}`}
 		>
 			{bookmarked ? "♥" : "♡"}

@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HexQuiz — Desktop Design System Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0D0A1D;
+  --surface:#161330;
+  --surface-2:#1F1A40;
+  --border: rgba(255,255,255,.08);
+  --border-strong: rgba(255,255,255,.16);
+  --violet:#7B5CFF;
+  --violet-dim: rgba(123,92,255,.16);
+  --mint:#35E8B4;
+  --mint-dim: rgba(53,232,180,.14);
+  --amber:#FFB84D;
+  --amber-dim: rgba(255,184,77,.16);
+  --danger:#FF6B6B;
+  --danger-dim: rgba(255,107,107,.14);
+  --text:#F5F3FF;
+  --text-muted:#9891B5;
+  --text-faint:#655F82;
+  --radius-sm:8px;
+  --radius-md:14px;
+  --radius-lg:20px;
+  --shadow-glow: 0 20px 60px -18px rgba(123,92,255,.4);
+  --font-display:'Space Grotesk', sans-serif;
+  --font-body:'Plus Jakarta Sans', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+}
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+  line-height:1.5;
+  overflow-x:hidden;
+}
+body::before{
+  content:''; position:fixed; inset:0; z-index:-2;
+  background:
+    radial-gradient(circle at 15% 8%, rgba(123,92,255,.18), transparent 42%),
+    radial-gradient(circle at 88% 0%, rgba(53,232,180,.10), transparent 38%),
+    radial-gradient(circle at 50% 100%, rgba(123,92,255,.08), transparent 45%),
+    var(--bg);
+}
+body::after{
+  content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+  background-size:46px 46px;
+  -webkit-mask-image: radial-gradient(circle at 50% 0%, black, transparent 72%);
+  mask-image: radial-gradient(circle at 50% 0%, black, transparent 72%);
+}
+h1,h2,h3{ font-family:var(--font-display); font-weight:600; margin:0; letter-spacing:-0.01em; color:var(--text); }
+p{ margin:0; color:var(--text-muted); }
+a{ color:inherit; text-decoration:none; }
+.mono{ font-family:var(--font-mono); }
+.muted{ color:var(--text-muted); }
+.faint{ color:var(--text-faint); }
+.eyebrow{ font-family:var(--font-mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--violet); display:inline-flex; align-items:center; gap:8px; }
+:focus-visible{ outline:2px solid var(--violet); outline-offset:3px; border-radius:4px; }
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
+}
+
+/* layout */
+.container{ max-width:1240px; margin:0 auto; padding:0 40px; }
+.page{ display:none; }
+.page.active{ display:block; animation:pageIn .6s cubic-bezier(.22,.68,0,1); }
+@keyframes pageIn{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:translateY(0); } }
+
+/* prototype switcher (demo chrome, not part of the product) */
+.proto-bar{
+  position:sticky; top:0; z-index:200; display:flex; align-items:center; gap:8px;
+  padding:12px 24px; background:rgba(8,6,17,.88); backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border); flex-wrap:wrap;
+}
+.proto-bar .label{ font-family:var(--font-mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-faint); margin-right:8px; }
+.proto-tab{
+  font-family:var(--font-mono); font-size:12.5px; padding:7px 15px; border-radius:100px;
+  background:transparent; border:1px solid var(--border); color:var(--text-muted);
+  cursor:pointer; transition:.2s ease;
+}
+.proto-tab:hover{ color:var(--text); border-color:var(--border-strong); }
+.proto-tab.active{ background:var(--violet); color:#fff; border-color:var(--violet); box-shadow:0 4px 16px -4px rgba(123,92,255,.6); }
+
+/* buttons */
+.btn{ font-family:var(--font-body); font-weight:600; font-size:14px; padding:12px 22px; border-radius:var(--radius-sm); border:1px solid transparent; cursor:pointer; display:inline-flex; align-items:center; gap:8px; transition:.2s ease; white-space:nowrap; }
+.btn-primary{ background:var(--violet); color:#fff; box-shadow:0 10px 26px -10px rgba(123,92,255,.7); }
+.btn-primary:hover{ transform:translateY(-2px); box-shadow:0 14px 32px -10px rgba(123,92,255,.8); }
+.btn-ghost{ background:transparent; color:var(--text); border-color:var(--border-strong); }
+.btn-ghost:hover{ border-color:var(--violet); color:var(--violet); }
+.btn-outline{ background:transparent; border-color:var(--border-strong); color:var(--text-muted); }
+.btn-outline:hover{ color:var(--text); border-color:var(--border-strong); }
+.btn-sm{ padding:8px 14px; font-size:12.5px; }
+.btn[disabled]{ opacity:.4; cursor:not-allowed; pointer-events:none; }
+.btn-block{ width:100%; justify-content:center; }
+
+/* cards */
+.card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px; }
+.card-hover{ transition:.25s ease; cursor:pointer; }
+.card-hover:hover{ transform:translateY(-4px); border-color:var(--border-strong); box-shadow:var(--shadow-glow); }
+
+/* badges / chips */
+.badge{ display:inline-flex; align-items:center; gap:6px; font-size:12px; font-family:var(--font-mono); padding:4px 11px; border-radius:100px; border:1px solid var(--border-strong); color:var(--text-muted); }
+.badge-violet{ color:var(--violet); border-color:rgba(123,92,255,.4); background:var(--violet-dim); }
+.badge-mint{ color:var(--mint); border-color:rgba(53,232,180,.4); background:var(--mint-dim); }
+.badge-amber{ color:var(--amber); border-color:rgba(255,184,77,.4); background:var(--amber-dim); }
+
+/* hex shape */
+.hex{ width:60px; height:52px; clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%); display:flex; align-items:center; justify-content:center; position:relative; flex-shrink:0; }
+
+/* icons */
+.icon{ width:18px; height:18px; flex-shrink:0; }
+.icon-sm{ width:14px; height:14px; }
+.icon-lg{ width:26px; height:26px; }
+
+/* inputs */
+.field{ display:flex; flex-direction:column; gap:6px; margin-bottom:16px; }
+.field label{ font-size:13px; color:var(--text-muted); }
+.field input{ background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; color:var(--text); font-family:var(--font-body); font-size:14px; transition:.2s; width:100%; }
+.field input:focus{ outline:none; border-color:var(--violet); box-shadow:0 0 0 3px var(--violet-dim); }
+
+/* fade-up utility for staggered entrances */
+.fade-up{ opacity:0; transform:translateY(16px); animation:fadeUp .7s cubic-bezier(.22,.68,0,1) forwards; }
+@keyframes fadeUp{ to{ opacity:1; transform:translateY(0); } }
+
+/* ================= NAV (shared landing/auth) ================= */
+.site-nav{ display:flex; align-items:center; justify-content:space-between; padding:26px 0; }
+.brand{ display:flex; align-items:center; gap:10px; font-family:var(--font-display); font-weight:700; font-size:19px; }
+.brand .icon-lg{ color:var(--violet); }
+.nav-links{ display:flex; gap:32px; font-size:14px; color:var(--text-muted); }
+.nav-links a:hover{ color:var(--text); }
+.nav-actions{ display:flex; gap:10px; align-items:center; }
+
+/* ================= LANDING ================= */
+.hero{ display:grid; grid-template-columns:1.05fr .95fr; gap:60px; align-items:center; padding:64px 0 90px; }
+.hero h1{ font-size:64px; line-height:1.02; margin:18px 0 22px; }
+.hero h1 .accent{ color:var(--violet); }
+.hero p.lead{ font-size:17px; max-width:460px; margin-bottom:34px; }
+.hero-ctas{ display:flex; gap:14px; margin-bottom:46px; }
+.hero-stats{ display:flex; gap:36px; }
+.hero-stat .num{ font-family:var(--font-mono); font-size:26px; font-weight:600; color:var(--text); }
+.hero-stat .lbl{ font-size:12.5px; color:var(--text-faint); margin-top:2px; }
+
+.hero-visual{ position:relative; height:420px; }
+.constellation{ width:100%; height:100%; }
+.constellation .node{ animation:pulse 3.2s ease-in-out infinite; }
+.constellation .node:nth-child(2){ animation-delay:.6s; }
+.constellation .node:nth-child(3){ animation-delay:1.2s; }
+.constellation .node:nth-child(4){ animation-delay:1.8s; }
+@keyframes pulse{ 0%,100%{ opacity:.55; r:3; } 50%{ opacity:1; r:5; } }
+.float-card{ position:absolute; top:14%; right:2%; width:250px; background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--radius-md); padding:18px; box-shadow:var(--shadow-glow); animation:floaty 5s ease-in-out infinite; }
+@keyframes floaty{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-12px); } }
+.float-card .code-line{ font-family:var(--font-mono); font-size:11.5px; color:var(--mint); margin-top:8px; }
+.float-card .fc-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+
+.section-head{ display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:28px; }
+.section-head h2{ font-size:30px; margin-top:8px; }
+.tracks{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; padding-bottom:90px; }
+.chip{ display:flex; align-items:center; gap:14px; padding:18px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); transition:.25s ease; cursor:pointer; }
+.chip:hover{ transform:translateY(-3px); border-color:var(--violet); box-shadow:var(--shadow-glow); }
+.chip .hex{ background:var(--violet-dim); color:var(--violet); }
+.chip .ct-name{ font-weight:600; font-size:14.5px; }
+.chip .ct-sub{ font-size:12px; color:var(--text-faint); font-family:var(--font-mono); }
+
+.site-footer{ border-top:1px solid var(--border); padding:34px 0; display:flex; justify-content:space-between; align-items:center; }
+
+/* ================= AUTH ================= */
+.auth-wrap{ min-height:100vh; display:grid; grid-template-columns:1fr 1fr; }
+.auth-side{ position:relative; background:linear-gradient(160deg,#150F35,#0D0A1D 70%); padding:60px; display:flex; flex-direction:column; justify-content:space-between; overflow:hidden; border-right:1px solid var(--border); }
+.auth-side h2{ font-size:34px; line-height:1.15; max-width:380px; }
+.auth-side p{ max-width:360px; margin-top:16px; }
+.auth-form-col{ display:flex; align-items:center; justify-content:center; padding:60px; }
+.auth-box{ width:100%; max-width:380px; }
+.auth-tabs{ display:flex; gap:6px; background:var(--surface); border:1px solid var(--border); border-radius:100px; padding:4px; margin-bottom:30px; }
+.auth-tab{ flex:1; text-align:center; padding:9px 0; border-radius:100px; font-size:13.5px; font-weight:600; cursor:pointer; color:var(--text-muted); transition:.2s; }
+.auth-tab.active{ background:var(--violet); color:#fff; }
+.divider{ display:flex; align-items:center; gap:12px; margin:22px 0; color:var(--text-faint); font-size:12.5px; }
+.divider::before,.divider::after{ content:''; flex:1; height:1px; background:var(--border); }
+.auth-terms{ font-size:12px; color:var(--text-faint); text-align:center; margin-top:20px; }
+
+/* ================= QUIZ ================= */
+.quiz-shell{ max-width:760px; margin:0 auto; padding:36px 40px 80px; }
+.quiz-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; }
+.quiz-top-left{ display:flex; align-items:center; gap:14px; }
+.progress-track{ display:flex; gap:5px; margin-bottom:32px; }
+.progress-seg{ height:4px; flex:1; border-radius:2px; background:var(--border-strong); overflow:hidden; }
+.progress-seg.done{ background:var(--violet); }
+.progress-seg.current{ background:var(--violet); animation:segPulse 1.4s ease-in-out infinite; }
+@keyframes segPulse{ 0%,100%{ opacity:1; } 50%{ opacity:.45; } }
+
+.timer-wrap{ position:relative; width:54px; height:54px; }
+.timer-ring{ transform:rotate(-90deg); width:54px; height:54px; }
+.timer-ring-bg{ fill:none; stroke:var(--border-strong); stroke-width:4; }
+.timer-ring-fg{ fill:none; stroke:var(--violet); stroke-width:4; stroke-linecap:round; stroke-dasharray:150.8; transition:stroke-dashoffset 1s linear, stroke .3s; }
+.timer-value{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:13px; font-weight:600; }
+
+.q-card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:32px; margin-bottom:22px; }
+.q-card h3{ font-size:21px; line-height:1.4; font-weight:600; margin-bottom:18px; }
+.code-block{ background:#0A0817; border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px 18px; font-family:var(--font-mono); font-size:13.5px; margin-bottom:4px; }
+.code-block .kw{ color:var(--violet); } .code-block .fn{ color:var(--mint); } .code-block .pu{ color:var(--text-faint); }
+
+.options{ display:flex; flex-direction:column; gap:10px; margin-top:6px; }
+.option{ display:flex; align-items:center; gap:14px; padding:16px 18px; border-radius:var(--radius-md); border:1px solid var(--border-strong); background:var(--surface-2); cursor:pointer; transition:.2s ease; font-family:var(--font-mono); font-size:14px; }
+.option:hover{ border-color:var(--violet); transform:translateX(3px); }
+.option .opt-mark{ width:22px; height:22px; border-radius:50%; border:1.5px solid var(--border-strong); flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+.option.selected{ border-color:var(--violet); background:var(--violet-dim); }
+.option.correct{ border-color:var(--mint); background:var(--mint-dim); }
+.option.correct .opt-mark{ background:var(--mint); border-color:var(--mint); color:#08130F; }
+.option.incorrect{ border-color:var(--danger); background:var(--danger-dim); }
+.option.incorrect .opt-mark{ background:var(--danger); border-color:var(--danger); color:#1A0808; }
+.option.disabled{ pointer-events:none; }
+.option.dim{ opacity:.5; }
+
+.explain{ max-height:0; overflow:hidden; opacity:0; transition:max-height .45s ease, opacity .4s ease, margin-top .4s ease; }
+.explain.show{ max-height:200px; opacity:1; margin-top:16px; }
+.explain-inner{ background:var(--surface-2); border-left:3px solid var(--mint); border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:14px 16px; font-size:13.5px; color:var(--text-muted); }
+
+.quiz-foot{ display:flex; justify-content:flex-end; }
+
+/* results */
+.results-view{ display:none; text-align:center; padding:20px 0 10px; }
+.results-view.show{ display:block; }
+.q-view.hide{ display:none; }
+.score-ring-wrap{ position:relative; width:180px; height:180px; margin:10px auto 26px; }
+.score-ring{ transform:rotate(-90deg); width:180px; height:180px; }
+.score-ring-bg{ fill:none; stroke:var(--border-strong); stroke-width:10; }
+.score-ring-fg{ fill:none; stroke:var(--mint); stroke-width:10; stroke-linecap:round; stroke-dasharray:502; stroke-dashoffset:502; transition:stroke-dashoffset 1.4s cubic-bezier(.22,.68,0,1); }
+.score-ring-label{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.score-ring-label .big{ font-family:var(--font-mono); font-size:36px; font-weight:600; }
+.score-ring-label .pct{ font-size:12.5px; color:var(--text-faint); margin-top:2px; }
+.breakdown{ display:flex; justify-content:center; gap:8px; margin:26px 0 34px; flex-wrap:wrap; }
+.bd-dot{ width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:11px; }
+.bd-dot.ok{ background:var(--mint-dim); color:var(--mint); border:1px solid rgba(53,232,180,.4); }
+.bd-dot.bad{ background:var(--danger-dim); color:var(--danger); border:1px solid rgba(255,107,107,.4); }
+.results-ctas{ display:flex; gap:12px; justify-content:center; }
+
+/* ================= STREAKS ================= */
+.streaks-shell{ padding:50px 0 90px; }
+.streak-hero{ display:flex; align-items:center; gap:26px; margin-bottom:44px; }
+.streak-flame{ font-size:52px; line-height:1; }
+.streak-num{ font-family:var(--font-mono); font-size:52px; font-weight:600; }
+.streak-longest{ color:var(--text-faint); font-size:13px; margin-top:6px; }
+
+.week-strip{ display:flex; gap:18px; margin-bottom:50px; position:relative; }
+.day-cell{ display:flex; flex-direction:column; align-items:center; gap:10px; }
+.day-hex{ background:var(--surface-2); border:1.5px solid var(--border-strong); color:var(--text-faint); }
+.day-hex.done{ background:var(--mint-dim); border-color:var(--mint); color:var(--mint); }
+.day-hex.today{ border-color:var(--violet); color:var(--violet); animation:segPulse 1.6s ease-in-out infinite; }
+.day-lbl{ font-size:11.5px; color:var(--text-faint); font-family:var(--font-mono); }
+
+.badges-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-bottom:44px; }
+.milestone{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px 20px; text-align:center; cursor:pointer; transition:.25s ease; position:relative; overflow:visible; }
+.milestone:hover{ transform:translateY(-3px); }
+.milestone .hex{ width:70px; height:62px; margin:0 auto 14px; }
+.milestone.unlocked .hex{ background:linear-gradient(160deg,var(--violet),#5637CC); color:#fff; box-shadow:0 10px 26px -10px rgba(123,92,255,.7); }
+.milestone.locked .hex{ background:var(--surface-2); color:var(--text-faint); border:1.5px dashed var(--border-strong); }
+.milestone .m-title{ font-weight:600; font-size:13.5px; margin-bottom:4px; }
+.milestone .m-desc{ font-size:11.5px; color:var(--text-faint); }
+.milestone.shake{ animation:shake .4s; }
+@keyframes shake{ 0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-5px); } 75%{ transform:translateX(5px); } }
+
+.motivation-card{ display:flex; align-items:center; justify-content:space-between; gap:30px; }
+.mv-bar-track{ flex:1; height:8px; background:var(--surface-2); border-radius:6px; overflow:hidden; }
+.mv-bar-fill{ height:100%; width:0%; background:linear-gradient(90deg,var(--violet),var(--mint)); border-radius:6px; transition:width 1.2s cubic-bezier(.22,.68,0,1); }
+
+.particle{ position:absolute; width:6px; height:6px; border-radius:50%; pointer-events:none; animation:particleBurst .8s ease-out forwards; }
+@keyframes particleBurst{ to{ transform:translate(var(--px),var(--py)) scale(0); opacity:0; } }
+
+/* ================= LEADERBOARD ================= */
+.lb-shell{ padding:50px 0 90px; }
+.lb-tabs{ display:flex; gap:8px; margin-bottom:34px; }
+.lb-tab{ padding:9px 18px; border-radius:100px; border:1px solid var(--border-strong); font-size:13px; color:var(--text-muted); cursor:pointer; }
+.lb-tab.active{ background:var(--violet); color:#fff; border-color:var(--violet); }
+
+.podium{ display:grid; grid-template-columns:1fr 1.15fr 1fr; gap:16px; align-items:end; margin-bottom:38px; }
+.pod-card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:22px; text-align:center; }
+.pod-card.rank1{ border-color:rgba(255,184,77,.5); box-shadow:0 16px 40px -16px rgba(255,184,77,.35); padding-top:30px; }
+.pod-avatar{ width:56px; height:56px; border-radius:50%; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-weight:600; margin:0 auto 12px; border:2px solid var(--border-strong); }
+.rank1 .pod-avatar{ border-color:var(--amber); width:64px; height:64px; }
+.pod-handle{ font-weight:600; font-size:14px; margin-bottom:4px; }
+.pod-score{ font-family:var(--font-mono); color:var(--text-muted); font-size:13px; }
+.pod-rank-badge{ font-family:var(--font-mono); font-size:11px; color:var(--text-faint); margin-bottom:8px; }
+
+.lb-list{ display:flex; flex-direction:column; border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; }
+.lb-row{ display:grid; grid-template-columns:40px 40px 1fr 110px 90px 60px; align-items:center; gap:14px; padding:14px 20px; border-bottom:1px solid var(--border); transition:background .2s; opacity:0; transform:translateX(-8px); }
+.lb-row.animate{ animation:rowIn .5s ease forwards; }
+.lb-row:last-child{ border-bottom:none; }
+.lb-row:hover{ background:var(--surface); }
+@keyframes rowIn{ to{ opacity:1; transform:translateX(0); } }
+.lb-rank{ font-family:var(--font-mono); color:var(--text-faint); }
+.row-avatar{ width:32px; height:32px; border-radius:50%; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-family:var(--font-mono); font-size:11px; font-weight:600; }
+.row-name .handle{ font-weight:600; font-size:13.5px; }
+.row-name .cat{ font-size:11.5px; color:var(--text-faint); }
+.row-streak{ display:flex; align-items:center; gap:5px; font-family:var(--font-mono); font-size:12.5px; color:var(--text-muted); }
+.row-score{ font-family:var(--font-mono); font-size:13.5px; text-align:right; }
+.row-change{ display:flex; align-items:center; gap:3px; font-family:var(--font-mono); font-size:12px; justify-content:flex-end; }
+.row-change.up{ color:var(--mint); } .row-change.down{ color:var(--danger); } .row-change.flat{ color:var(--text-faint); }
+
+.you-row{ position:sticky; bottom:16px; margin-top:20px; background:var(--surface-2); border:1px solid var(--violet); border-radius:var(--radius-lg); padding:16px 22px; display:flex; align-items:center; justify-content:space-between; box-shadow:var(--shadow-glow); }
+
+/* ================= ADMIN ================= */
+.admin-shell{ display:grid; grid-template-columns:240px 1fr; min-height:100vh; }
+.admin-sidebar{ background:var(--surface); border-right:1px solid var(--border); padding:24px 18px; display:flex; flex-direction:column; }
+.admin-nav{ display:flex; flex-direction:column; gap:4px; margin-top:30px; }
+.admin-nav-item{ display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:var(--radius-sm); font-size:13.5px; color:var(--text-muted); cursor:pointer; }
+.admin-nav-item:hover{ background:var(--surface-2); color:var(--text); }
+.admin-nav-item.active{ background:var(--violet-dim); color:var(--violet); }
+.admin-profile{ margin-top:auto; display:flex; align-items:center; gap:10px; padding-top:20px; border-top:1px solid var(--border); font-size:12.5px; }
+.admin-main{ padding:28px 34px 60px; }
+.admin-topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; }
+.admin-search{ display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:100px; padding:9px 16px; width:280px; color:var(--text-faint); }
+.admin-topbar-right{ display:flex; align-items:center; gap:16px; }
+
+.stat-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+.stat-card .stat-label{ font-size:12.5px; color:var(--text-faint); margin-bottom:10px; }
+.stat-card .stat-num{ font-family:var(--font-mono); font-size:28px; font-weight:600; }
+.stat-card .stat-delta{ font-size:12px; margin-top:6px; }
+
+.admin-row2{ display:grid; grid-template-columns:1.4fr 1fr; gap:16px; margin-bottom:16px; }
+.chart-card h3{ font-size:15px; margin-bottom:20px; }
+.chart-svg{ width:100%; height:180px; }
+.chart-path{ fill:none; stroke:var(--violet); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+.chart-area{ opacity:0; transition:opacity .6s ease .6s; }
+
+.review-table{ width:100%; border-collapse:collapse; }
+.review-table th{ text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); padding-bottom:12px; font-weight:600; }
+.review-table td{ padding:12px 0; border-top:1px solid var(--border); font-size:13.5px; vertical-align:middle; }
+.review-table tr.reviewed{ opacity:0; height:0; overflow:hidden; padding:0; transition:opacity .35s ease; }
+.rt-actions{ display:flex; gap:8px; }
+.icon-btn{ width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; border:1px solid var(--border-strong); transition:.2s; }
+.icon-btn.approve:hover{ background:var(--mint-dim); border-color:var(--mint); color:var(--mint); }
+.icon-btn.reject:hover{ background:var(--danger-dim); border-color:var(--danger); color:var(--danger); }
+
+/* ================= RESPONSIVE ================= */
+@media (max-width:1100px){
+  .hero{ grid-template-columns:1fr; }
+  .hero-visual{ height:320px; }
+  .tracks{ grid-template-columns:repeat(2,1fr); }
+  .badges-row{ grid-template-columns:repeat(2,1fr); }
+  .auth-wrap{ grid-template-columns:1fr; }
+  .auth-side{ display:none; }
+  .admin-shell{ grid-template-columns:1fr; }
+  .admin-sidebar{ display:none; }
+  .stat-grid{ grid-template-columns:repeat(2,1fr); }
+  .admin-row2{ grid-template-columns:1fr; }
+  .podium{ grid-template-columns:1fr; }
+  .lb-row{ grid-template-columns:32px 32px 1fr 70px; }
+  .row-streak, .row-change{ display:none; }
+}
+/* == PAGE-SPECIFIC STYLES INSERT == */
+</style>
+</head>
+<body>
+
+<!-- icon sprite -->
+<svg style="display:none" aria-hidden="true">
+  <symbol id="icon-hexlogo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12,2 21,7 21,17 12,22 3,17 3,7"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="icon-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></symbol>
+  <symbol id="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></symbol>
+  <symbol id="icon-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="icon-arrow-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+  <symbol id="icon-arrow-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></symbol>
+  <symbol id="icon-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></symbol>
+  <symbol id="icon-chevron-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></symbol>
+  <symbol id="icon-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="icon-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.6 20c.5-3.4 3.2-6 6.4-6s5.9 2.6 6.4 6"/><circle cx="17.5" cy="9" r="2.4"/><path d="M15.2 14.2c2.6.5 4.6 2.8 4.9 5.8"/></symbol>
+  <symbol id="icon-question" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><text x="12" y="16.5" text-anchor="middle" font-size="11" fill="currentColor" stroke="none" font-family="sans-serif">?</text></symbol>
+  <symbol id="icon-analytics" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M11 20V4M18 20v-7"/></symbol>
+  <symbol id="icon-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+  <symbol id="icon-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10a6 6 0 0112 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10z"/><path d="M10 19a2 2 0 004 0"/></symbol>
+  <symbol id="icon-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v3a6 6 0 01-12 0V4z"/><path d="M6 5H3.5A2.5 2.5 0 006 7.5M18 5h2.5A2.5 2.5 0 0118 7.5"/><path d="M10.5 14v4M13.5 14v4"/><path d="M8 20h8"/></symbol>
+  <symbol id="icon-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5L12.5 2H20a1 1 0 011 1v7.5L11.5 21 3 12.5z"/><circle cx="15.5" cy="7.5" r="1.4" fill="currentColor" stroke="none"/></symbol>
+</svg>
+
+<div class="proto-bar">
+  <span class="label">Prototype —</span>
+  <button class="proto-tab active" id="tab-landing" onclick="showPage('landing')">Landing</button>
+  <button class="proto-tab" id="tab-auth" onclick="showPage('auth')">Login / Signup</button>
+  <button class="proto-tab" id="tab-quiz" onclick="showPage('quiz')">Quiz</button>
+  <button class="proto-tab" id="tab-streaks" onclick="showPage('streaks')">Streaks</button>
+  <button class="proto-tab" id="tab-leaderboard" onclick="showPage('leaderboard')">Leaderboard</button>
+  <button class="proto-tab" id="tab-admin" onclick="showPage('admin')">Admin</button>
+</div>
+
+<section class="page active" id="page-landing">
+<div class="container">
+  <nav class="site-nav">
+    <div class="brand"><svg class="icon icon-lg"><use href="#icon-hexlogo"/></svg>HexQuiz</div>
+    <div class="nav-links">
+      <a href="#">Practice</a>
+      <a href="#">Leaderboard</a>
+      <a href="#">For teams</a>
+      <a href="#">Pricing</a>
+    </div>
+    <div class="nav-actions">
+      <button class="btn btn-ghost btn-sm" onclick="showPage('auth')">Log in</button>
+      <button class="btn btn-primary btn-sm" onclick="showPage('auth')">Start free</button>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div>
+      <span class="eyebrow"><svg class="icon icon-sm"><use href="#icon-hexlogo"/></svg>180+ IT TOPICS · NO SIGNUP REQUIRED</span>
+      <h1>Prove your<br><span class="accent">stack.</span></h1>
+      <p class="lead">Sharpen JavaScript, Python, networking, SQL, and system design with quizzes built for interview prep — not trivia night.</p>
+      <div class="hero-ctas">
+        <button class="btn btn-primary" onclick="showPage('quiz')">Start a quiz — guest mode <svg class="icon icon-sm"><use href="#icon-arrow-right"/></svg></button>
+        <button class="btn btn-ghost" onclick="showPage('leaderboard')">See the leaderboard</button>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="num" data-count="48">0</div><div class="lbl">categories</div></div>
+        <div class="hero-stat"><div class="num" data-count="12400">0</div><div class="lbl">learners this month</div></div>
+        <div class="hero-stat"><div class="num" data-count="94" data-suffix="%">0</div><div class="lbl">say it's harder than expected</div></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <svg class="constellation" viewBox="0 0 480 420">
+        <line x1="60" y1="80" x2="220" y2="150" stroke="rgba(123,92,255,.25)" stroke-width="1.5"/>
+        <line x1="220" y1="150" x2="380" y2="90" stroke="rgba(123,92,255,.25)" stroke-width="1.5"/>
+        <line x1="220" y1="150" x2="160" y2="300" stroke="rgba(53,232,180,.2)" stroke-width="1.5"/>
+        <line x1="160" y1="300" x2="340" y2="330" stroke="rgba(123,92,255,.2)" stroke-width="1.5"/>
+        <line x1="380" y1="90" x2="340" y2="330" stroke="rgba(123,92,255,.15)" stroke-width="1.5"/>
+        <circle class="node" cx="60" cy="80" r="4" fill="var(--violet)"/>
+        <circle class="node" cx="220" cy="150" r="4" fill="var(--mint)"/>
+        <circle class="node" cx="380" cy="90" r="4" fill="var(--violet)"/>
+        <circle class="node" cx="160" cy="300" r="4" fill="var(--amber)"/>
+        <circle class="node" cx="340" cy="330" r="4" fill="var(--violet)"/>
+        <polygon points="220,120 245,135 245,165 220,180 195,165 195,135" fill="none" stroke="var(--violet)" stroke-width="1.5" opacity=".5"/>
+      </svg>
+      <div class="float-card">
+        <div class="fc-top"><span class="badge badge-violet">JavaScript</span><svg class="icon icon-sm faint"><use href="#icon-question"/></svg></div>
+        <div style="font-size:13px;font-weight:600;margin-bottom:4px;">typeof NaN === ?</div>
+        <div class="code-line">→ 'number'</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <div><span class="eyebrow">Pick a track</span><h2>Practice what you'll actually be asked.</h2></div>
+  </div>
+  <div class="tracks">
+    <div class="chip"><div class="hex"><svg class="icon"><use href="#icon-tag"/></svg></div><div><div class="ct-name">JavaScript</div><div class="ct-sub">32 quizzes</div></div></div>
+    <div class="chip"><div class="hex"><svg class="icon"><use href="#icon-tag"/></svg></div><div><div class="ct-name">Python</div><div class="ct-sub">28 quizzes</div></div></div>
+    <div class="chip"><div class="hex"><svg class="icon"><use href="#icon-tag"/></svg></div><div><div class="ct-name">SQL &amp; Databases</div><div class="ct-sub">24 quizzes</div></div></div>
+    <div class="chip"><div class="hex"><svg class="icon"><use href="#icon-tag"/></svg></div><div><div class="ct-name">Networking</div><div class="ct-sub">19 quizzes</div></div></div>
+    <div class="chip"><div class="hex"><svg class="icon"><use href="#icon-tag"/></svg></div><div><div class="ct-name">Cloud &amp; DevOps</div><div class="ct-sub">21 quizzes</div></div></div>
+    <div class="chip"><div class="hex"><svg class="icon"><use href="#icon-tag"/></svg></div><div><div class="ct-name">Cybersecurity</div><div class="ct-sub">17 quizzes</div></div></div>
+    <div class="chip"><div class="hex"><svg class="icon"><use href="#icon-tag"/></svg></div><div><div class="ct-name">Data Structures</div><div class="ct-sub">26 quizzes</div></div></div>
+    <div class="chip"><div class="hex"><svg class="icon"><use href="#icon-tag"/></svg></div><div><div class="ct-name">System Design</div><div class="ct-sub">15 quizzes</div></div></div>
+  </div>
+
+  <div class="site-footer">
+    <div class="brand" style="font-size:15px;"><svg class="icon"><use href="#icon-hexlogo"/></svg>HexQuiz</div>
+    <div class="faint" style="font-size:12.5px;">Practice quizzes for developers · No account required to start</div>
+  </div>
+</div>
+</section>
+<section class="page" id="page-auth">
+<div class="auth-wrap">
+  <div class="auth-side">
+    <div class="brand"><svg class="icon icon-lg"><use href="#icon-hexlogo"/></svg>HexQuiz</div>
+    <div>
+      <svg width="100%" height="180" viewBox="0 0 380 180">
+        <line x1="40" y1="40" x2="150" y2="90" stroke="rgba(123,92,255,.3)" stroke-width="1.5"/>
+        <line x1="150" y1="90" x2="280" y2="50" stroke="rgba(53,232,180,.25)" stroke-width="1.5"/>
+        <line x1="150" y1="90" x2="120" y2="160" stroke="rgba(123,92,255,.2)" stroke-width="1.5"/>
+        <line x1="280" y1="50" x2="330" y2="140" stroke="rgba(123,92,255,.2)" stroke-width="1.5"/>
+        <circle class="node" cx="40" cy="40" r="4" fill="var(--violet)"/>
+        <circle class="node" cx="150" cy="90" r="4" fill="var(--mint)"/>
+        <circle class="node" cx="280" cy="50" r="4" fill="var(--violet)"/>
+        <circle class="node" cx="120" cy="160" r="4" fill="var(--amber)"/>
+        <circle class="node" cx="330" cy="140" r="4" fill="var(--violet)"/>
+      </svg>
+      <h2>Practice makes<br>senior engineers.</h2>
+      <p>Track streaks, climb the leaderboard, and never lose your progress across sessions.</p>
+    </div>
+    <div class="faint mono" style="font-size:12px;">© HexQuiz — built for people who ship.</div>
+  </div>
+  <div class="auth-form-col">
+    <div class="auth-box">
+      <div class="auth-tabs">
+        <div class="auth-tab active">Log in</div>
+        <div class="auth-tab">Sign up</div>
+      </div>
+      <div class="field"><label>Email</label><input type="email" placeholder="you@company.com"></div>
+      <div class="field"><label>Password</label><input type="password" placeholder="••••••••••"></div>
+      <button class="btn btn-primary btn-block">Continue</button>
+      <div class="divider">or</div>
+      <button class="btn btn-ghost btn-block" onclick="showPage('quiz')">Continue as guest <svg class="icon icon-sm"><use href="#icon-arrow-right"/></svg></button>
+      <div class="auth-terms">By continuing you agree to the Terms &amp; Privacy Policy.</div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="page" id="page-quiz">
+<div class="quiz-shell">
+
+  <div class="q-view" id="quiz-question-view">
+    <div class="quiz-top">
+      <div class="quiz-top-left">
+        <svg class="icon" style="cursor:pointer;" onclick="showPage('landing')"><use href="#icon-chevron-left"/></svg>
+        <span class="badge badge-violet">JavaScript</span>
+        <span class="badge">Intermediate</span>
+      </div>
+      <div class="quiz-top-left">
+        <span class="mono muted" style="font-size:13px;">Question 4 of 10</span>
+        <div class="timer-wrap">
+          <svg class="timer-ring" viewBox="0 0 54 54"><circle class="timer-ring-bg" cx="27" cy="27" r="24"/><circle class="timer-ring-fg" id="timerRingFg" cx="27" cy="27" r="24"/></svg>
+          <div class="timer-value" id="timerValue">20</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="progress-track">
+      <div class="progress-seg done"></div><div class="progress-seg done"></div><div class="progress-seg done"></div>
+      <div class="progress-seg current"></div>
+      <div class="progress-seg"></div><div class="progress-seg"></div><div class="progress-seg"></div><div class="progress-seg"></div><div class="progress-seg"></div><div class="progress-seg"></div>
+    </div>
+
+    <div class="q-card">
+      <h3>What does <code>typeof NaN</code> return in JavaScript?</h3>
+      <div class="code-block"><span class="fn">console</span><span class="pu">.</span><span class="fn">log</span><span class="pu">(</span><span class="kw">typeof</span> NaN<span class="pu">);</span></div>
+    </div>
+
+    <div class="options" id="optionsList">
+      <div class="option" data-correct="true" onclick="selectOption(this)"><div class="opt-mark mono">A</div>'number'</div>
+      <div class="option" data-correct="false" onclick="selectOption(this)"><div class="opt-mark mono">B</div>'NaN'</div>
+      <div class="option" data-correct="false" onclick="selectOption(this)"><div class="opt-mark mono">C</div>'undefined'</div>
+      <div class="option" data-correct="false" onclick="selectOption(this)"><div class="opt-mark mono">D</div>'object'</div>
+    </div>
+
+    <div class="explain" id="explainBox">
+      <div class="explain-inner">NaN is technically a numeric value that represents an invalid number — so JavaScript classifies it under the <code>number</code> type. That's also why <code>Number.isNaN()</code> exists as a dedicated check.</div>
+    </div>
+
+    <div class="quiz-foot" style="margin-top:24px;">
+      <button class="btn btn-primary" id="nextBtn" disabled onclick="showResults()">Next question <svg class="icon icon-sm"><use href="#icon-arrow-right"/></svg></button>
+    </div>
+  </div>
+
+  <div class="results-view" id="resultsView">
+    <span class="eyebrow">Quiz complete</span>
+    <h2 style="margin:14px 0 4px;">JavaScript · Intermediate</h2>
+    <p style="margin-bottom:10px;">Here's how you did.</p>
+    <div class="score-ring-wrap">
+      <svg class="score-ring" viewBox="0 0 180 180"><circle class="score-ring-bg" cx="90" cy="90" r="80"/><circle class="score-ring-fg" id="scoreRingFg" cx="90" cy="90" r="80"/></svg>
+      <div class="score-ring-label"><div class="big mono" id="scoreBig">0/10</div><div class="pct" id="scorePct">0%</div></div>
+    </div>
+    <div class="breakdown" id="breakdownRow"></div>
+    <div class="results-ctas">
+      <button class="btn btn-outline" onclick="resetQuiz()">Try another quiz</button>
+      <button class="btn btn-primary" onclick="showPage('auth')">Save this score — sign up</button>
+    </div>
+  </div>
+
+</div>
+</section>
+<section class="page" id="page-streaks">
+<div class="container">
+  <div class="streaks-shell">
+    <span class="eyebrow">Your progress</span>
+    <div class="streak-hero" style="margin-top:14px;">
+      <div class="streak-flame">🔥</div>
+      <div>
+        <div class="streak-num"><span data-count="12">0</span>-day streak</div>
+        <div class="streak-longest">Longest streak: 27 days · Don't break the chain.</div>
+      </div>
+    </div>
+
+    <div class="week-strip" id="weekStrip">
+      <div class="day-cell"><div class="hex day-hex done"><svg class="icon icon-sm"><use href="#icon-check"/></svg></div><div class="day-lbl">MON</div></div>
+      <div class="day-cell"><div class="hex day-hex done"><svg class="icon icon-sm"><use href="#icon-check"/></svg></div><div class="day-lbl">TUE</div></div>
+      <div class="day-cell"><div class="hex day-hex done"><svg class="icon icon-sm"><use href="#icon-check"/></svg></div><div class="day-lbl">WED</div></div>
+      <div class="day-cell"><div class="hex day-hex done"><svg class="icon icon-sm"><use href="#icon-check"/></svg></div><div class="day-lbl">THU</div></div>
+      <div class="day-cell"><div class="hex day-hex today mono" style="font-size:11px;">Now</div><div class="day-lbl">FRI</div></div>
+      <div class="day-cell"><div class="hex day-hex"></div><div class="day-lbl">SAT</div></div>
+      <div class="day-cell"><div class="hex day-hex"></div><div class="day-lbl">SUN</div></div>
+    </div>
+
+    <span class="eyebrow">Milestones</span>
+    <div class="badges-row" style="margin-top:14px;">
+      <div class="milestone unlocked" onclick="badgeClick(this,true)">
+        <div class="hex"><svg class="icon"><use href="#icon-check"/></svg></div>
+        <div class="m-title">First Quiz</div><div class="m-desc">Complete your first quiz</div>
+      </div>
+      <div class="milestone unlocked" onclick="badgeClick(this,true)">
+        <div class="hex"><svg class="icon"><use href="#icon-check"/></svg></div>
+        <div class="m-title">7-Day Streak</div><div class="m-desc">A full week, no gaps</div>
+      </div>
+      <div class="milestone locked" onclick="badgeClick(this,false)">
+        <div class="hex"><svg class="icon"><use href="#icon-lock"/></svg></div>
+        <div class="m-title">30-Day Streak</div><div class="m-desc">18 days to go</div>
+      </div>
+      <div class="milestone locked" onclick="badgeClick(this,false)">
+        <div class="hex"><svg class="icon"><use href="#icon-lock"/></svg></div>
+        <div class="m-title">Perfectionist</div><div class="m-desc">Score 100% on any quiz</div>
+      </div>
+    </div>
+
+    <div class="card motivation-card">
+      <div>
+        <div style="font-weight:600;font-size:14px;margin-bottom:4px;">3 days to your next milestone</div>
+        <div class="faint" style="font-size:12.5px;">Keep today's streak alive to stay on pace.</div>
+      </div>
+      <div class="mv-bar-track" style="max-width:280px;"><div class="mv-bar-fill" id="mvBarFill"></div></div>
+      <div class="mono" style="font-size:13px;">12/15</div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="page" id="page-leaderboard">
+<div class="container">
+  <div class="lb-shell">
+    <span class="eyebrow">Rankings</span>
+    <h2 style="margin:10px 0 26px;font-size:28px;">Leaderboard</h2>
+    <div class="lb-tabs">
+      <div class="lb-tab active">Global</div>
+      <div class="lb-tab">This week</div>
+      <div class="lb-tab">By category</div>
+    </div>
+
+    <div class="podium">
+      <div class="pod-card">
+        <div class="pod-rank-badge">#2</div>
+        <div class="pod-avatar">KM</div>
+        <div class="pod-handle">kernel_mike</div>
+        <div class="pod-score">2,410 pts</div>
+      </div>
+      <div class="pod-card rank1">
+        <svg class="icon" style="color:var(--amber);margin-bottom:6px;"><use href="#icon-trophy"/></svg>
+        <div class="pod-rank-badge">#1</div>
+        <div class="pod-avatar">DS</div>
+        <div class="pod-handle">devSarah</div>
+        <div class="pod-score">2,780 pts</div>
+      </div>
+      <div class="pod-card">
+        <div class="pod-rank-badge">#3</div>
+        <div class="pod-avatar">RA</div>
+        <div class="pod-handle">rootAdmin</div>
+        <div class="pod-score">2,190 pts</div>
+      </div>
+    </div>
+
+    <div class="lb-list" id="lbList">
+      <div class="lb-row" style="animation-delay:.05s"><div class="lb-rank">4</div><div class="row-avatar">PY</div><div class="row-name"><div class="handle">pynthia</div><div class="cat">Python</div></div><div class="row-streak">🔥 9</div><div class="row-score">1,980</div><div class="row-change up"><svg class="icon icon-sm"><use href="#icon-arrow-up"/></svg>2</div></div>
+      <div class="lb-row" style="animation-delay:.1s"><div class="lb-rank">5</div><div class="row-avatar">BB</div><div class="row-name"><div class="handle">byteBrianna</div><div class="cat">System Design</div></div><div class="row-streak">🔥 14</div><div class="row-score">1,865</div><div class="row-change down"><svg class="icon icon-sm"><use href="#icon-arrow-down"/></svg>1</div></div>
+      <div class="lb-row" style="animation-delay:.15s"><div class="lb-rank">6</div><div class="row-avatar">SO</div><div class="row-name"><div class="handle">stackOverflowed</div><div class="cat">SQL</div></div><div class="row-streak">🔥 3</div><div class="row-score">1,790</div><div class="row-change flat">—</div></div>
+      <div class="lb-row" style="animation-delay:.2s"><div class="lb-rank">7</div><div class="row-avatar">NW</div><div class="row-name"><div class="handle">nullwrecker</div><div class="cat">Networking</div></div><div class="row-streak">🔥 6</div><div class="row-score">1,705</div><div class="row-change up"><svg class="icon icon-sm"><use href="#icon-arrow-up"/></svg>4</div></div>
+      <div class="lb-row" style="animation-delay:.25s"><div class="lb-rank">8</div><div class="row-avatar">CI</div><div class="row-name"><div class="handle">cidr_claire</div><div class="cat">Cybersecurity</div></div><div class="row-streak">🔥 1</div><div class="row-score">1,640</div><div class="row-change down"><svg class="icon icon-sm"><use href="#icon-arrow-down"/></svg>2</div></div>
+    </div>
+
+    <div class="you-row">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div class="row-avatar" style="border:1.5px solid var(--violet);">YOU</div>
+        <div><div class="handle" style="font-size:13.5px;">You · #128</div><div class="cat">1,240 pts</div></div>
+      </div>
+      <div class="row-change up"><svg class="icon icon-sm"><use href="#icon-arrow-up"/></svg>40 pts to rank up</div>
+    </div>
+  </div>
+</div>
+</section>
+<section class="page" id="page-admin">
+<div class="admin-shell">
+  <div class="admin-sidebar">
+    <div class="brand" style="font-size:16px;"><svg class="icon"><use href="#icon-hexlogo"/></svg>HexQuiz</div>
+    <div class="admin-nav">
+      <div class="admin-nav-item active"><svg class="icon icon-sm"><use href="#icon-grid"/></svg>Dashboard</div>
+      <div class="admin-nav-item"><svg class="icon icon-sm"><use href="#icon-question"/></svg>Questions</div>
+      <div class="admin-nav-item"><svg class="icon icon-sm"><use href="#icon-tag"/></svg>Categories</div>
+      <div class="admin-nav-item"><svg class="icon icon-sm"><use href="#icon-users"/></svg>Users</div>
+      <div class="admin-nav-item"><svg class="icon icon-sm"><use href="#icon-analytics"/></svg>Analytics</div>
+      <div class="admin-nav-item"><svg class="icon icon-sm"><use href="#icon-settings"/></svg>Settings</div>
+    </div>
+    <div class="admin-profile"><div class="row-avatar">AD</div><div>Admin<div class="faint" style="font-size:11px;">admin@hexquiz.dev</div></div></div>
+  </div>
+
+  <div class="admin-main">
+    <div class="admin-topbar">
+      <div class="admin-search"><svg class="icon icon-sm"><use href="#icon-search"/></svg>Search questions, users…</div>
+      <div class="admin-topbar-right">
+        <svg class="icon" style="cursor:pointer;"><use href="#icon-bell"/></svg>
+        <div class="row-avatar">AD</div>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="card stat-card"><div class="stat-label">Total learners</div><div class="stat-num" data-count="12483">0</div><div class="stat-delta" style="color:var(--mint)">+4.2% this week</div></div>
+      <div class="card stat-card"><div class="stat-label">Quizzes completed today</div><div class="stat-num" data-count="1204">0</div><div class="stat-delta muted">across 48 categories</div></div>
+      <div class="card stat-card"><div class="stat-label">Avg score</div><div class="stat-num" data-count="71" data-suffix="%">0</div><div class="stat-delta muted">last 30 days</div></div>
+      <div class="card stat-card"><div class="stat-label">Pending AI questions</div><div class="stat-num" data-count="9" style="color:var(--amber)">0</div><div class="stat-delta" style="color:var(--amber)">needs review</div></div>
+    </div>
+
+    <div class="admin-row2">
+      <div class="card chart-card">
+        <h3>Attempts — last 7 days</h3>
+        <svg class="chart-svg" viewBox="0 0 560 180" preserveAspectRatio="none">
+          <defs><linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--violet)" stop-opacity=".35"/><stop offset="100%" stop-color="var(--violet)" stop-opacity="0"/></linearGradient></defs>
+          <polygon class="chart-area" id="chartArea" points="0,140 80,120 160,130 240,90 320,100 400,60 480,70 560,40 560,180 0,180" fill="url(#chartGrad)"/>
+          <polyline class="chart-path" id="chartPath" points="0,140 80,120 160,130 240,90 320,100 400,60 480,70 560,40" stroke-dasharray="900" stroke-dashoffset="900"/>
+        </svg>
+      </div>
+      <div class="card">
+        <h3 style="font-size:15px;margin-bottom:20px;">Top categories today</h3>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;justify-content:space-between;font-size:13px;"><span class="muted">JavaScript</span><span class="mono">312</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;"><span class="muted">Python</span><span class="mono">288</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;"><span class="muted">SQL &amp; Databases</span><span class="mono">201</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;"><span class="muted">System Design</span><span class="mono">164</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:15px;margin-bottom:16px;">Pending AI-generated questions <span class="badge badge-amber" style="margin-left:8px;">9 waiting</span></h3>
+      <table class="review-table">
+        <thead><tr><th>Topic</th><th>Difficulty</th><th>Source</th><th>Actions</th></tr></thead>
+        <tbody id="reviewTbody">
+          <tr><td>Closures in JavaScript</td><td><span class="badge">Intermediate</span></td><td class="mono faint">Gemini</td><td class="rt-actions"><div class="icon-btn approve" onclick="reviewRow(this,true)"><svg class="icon icon-sm"><use href="#icon-check"/></svg></div><div class="icon-btn reject" onclick="reviewRow(this,false)"><svg class="icon icon-sm"><use href="#icon-x"/></svg></div></td></tr>
+          <tr><td>Docker networking basics</td><td><span class="badge">Advanced</span></td><td class="mono faint">Gemini</td><td class="rt-actions"><div class="icon-btn approve" onclick="reviewRow(this,true)"><svg class="icon icon-sm"><use href="#icon-check"/></svg></div><div class="icon-btn reject" onclick="reviewRow(this,false)"><svg class="icon icon-sm"><use href="#icon-x"/></svg></div></td></tr>
+          <tr><td>SQL joins — inner vs outer</td><td><span class="badge">Beginner</span></td><td class="mono faint">Gemini</td><td class="rt-actions"><div class="icon-btn approve" onclick="reviewRow(this,true)"><svg class="icon icon-sm"><use href="#icon-check"/></svg></div><div class="icon-btn reject" onclick="reviewRow(this,false)"><svg class="icon icon-sm"><use href="#icon-x"/></svg></div></td></tr>
+          <tr><td>Big-O of quicksort</td><td><span class="badge">Advanced</span></td><td class="mono faint">Gemini</td><td class="rt-actions"><div class="icon-btn approve" onclick="reviewRow(this,true)"><svg class="icon icon-sm"><use href="#icon-check"/></svg></div><div class="icon-btn reject" onclick="reviewRow(this,false)"><svg class="icon icon-sm"><use href="#icon-x"/></svg></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</section>
+
+<script>
+// ---------- count-up utility ----------
+function animateCount(el, target, duration, suffix){
+  suffix = suffix || '';
+  var start = 0, startTime = null;
+  function step(ts){
+    if(!startTime) startTime = ts;
+    var progress = Math.min((ts - startTime) / duration, 1);
+    var eased = 1 - Math.pow(1 - progress, 3);
+    var val = Math.floor(eased * target);
+    el.textContent = val.toLocaleString() + suffix;
+    if(progress < 1) requestAnimationFrame(step);
+    else el.textContent = target.toLocaleString() + suffix;
+  }
+  requestAnimationFrame(step);
+}
+function runCounts(scopeEl){
+  scopeEl.querySelectorAll('[data-count]').forEach(function(el){
+    var target = parseInt(el.getAttribute('data-count'), 10);
+    var suffix = el.getAttribute('data-suffix') || '';
+    animateCount(el, target, 1200, suffix);
+  });
+}
+
+// ---------- quiz timer ----------
+var timerInterval = null, timerRemaining = 20, timerTotal = 20;
+var TIMER_CIRC = 150.8;
+function startTimer(){
+  clearInterval(timerInterval);
+  timerRemaining = timerTotal;
+  updateTimerUI();
+  timerInterval = setInterval(function(){
+    timerRemaining--;
+    if(timerRemaining <= 0){ timerRemaining = timerTotal; }
+    updateTimerUI();
+  }, 1000);
+}
+function stopTimer(){ clearInterval(timerInterval); }
+function updateTimerUI(){
+  var fg = document.getElementById('timerRingFg');
+  var val = document.getElementById('timerValue');
+  if(!fg || !val) return;
+  var offset = TIMER_CIRC * (1 - timerRemaining / timerTotal);
+  fg.style.strokeDashoffset = offset;
+  fg.style.stroke = timerRemaining <= 5 ? 'var(--amber)' : 'var(--violet)';
+  val.textContent = timerRemaining;
+}
+
+// ---------- quiz option selection ----------
+var answered = false;
+function selectOption(el){
+  if(answered) return;
+  answered = true;
+  stopTimer();
+  var correctVal = el.getAttribute('data-correct') === 'true';
+  var opts = document.querySelectorAll('#optionsList .option');
+  opts.forEach(function(o){
+    o.classList.add('disabled');
+    if(o.getAttribute('data-correct') === 'true'){ o.classList.add('correct'); }
+    else if(o === el && !correctVal){ o.classList.add('incorrect'); }
+    else if(o !== el){ o.classList.add('dim'); }
+  });
+  document.getElementById('explainBox').classList.add('show');
+  document.getElementById('nextBtn').removeAttribute('disabled');
+}
+function showResults(){
+  document.getElementById('quiz-question-view').classList.add('hide');
+  var rv = document.getElementById('resultsView');
+  rv.classList.add('show');
+  var breakdown = document.getElementById('breakdownRow');
+  breakdown.innerHTML = '';
+  var results = [1,1,1,0,1,1,0,1,1,1];
+  results.forEach(function(r, i){
+    var d = document.createElement('div');
+    d.className = 'bd-dot ' + (r ? 'ok' : 'bad');
+    d.textContent = (i+1);
+    breakdown.appendChild(d);
+  });
+  var scoreBig = document.getElementById('scoreBig');
+  var scorePct = document.getElementById('scorePct');
+  var ring = document.getElementById('scoreRingFg');
+  var correct = results.reduce(function(a,b){ return a+b; }, 0);
+  var pct = Math.round(correct/results.length*100);
+  setTimeout(function(){
+    ring.style.strokeDashoffset = 502 * (1 - correct/results.length);
+  }, 150);
+  var n = 0;
+  var iv = setInterval(function(){
+    n++;
+    scoreBig.textContent = n + '/' + results.length;
+    scorePct.textContent = Math.round(n/results.length*100) + '%';
+    if(n >= correct){ clearInterval(iv); scorePct.textContent = pct + '%'; }
+  }, 90);
+}
+function resetQuiz(){
+  answered = false;
+  document.getElementById('quiz-question-view').classList.remove('hide');
+  document.getElementById('resultsView').classList.remove('show');
+  document.querySelectorAll('#optionsList .option').forEach(function(o){
+    o.classList.remove('disabled','correct','incorrect','dim','selected');
+  });
+  document.getElementById('explainBox').classList.remove('show');
+  document.getElementById('nextBtn').setAttribute('disabled','true');
+  startTimer();
+}
+
+// ---------- streak badges / particles ----------
+function badgeClick(el, unlocked){
+  if(!unlocked){
+    el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
+    return;
+  }
+  var rect = el.getBoundingClientRect();
+  var colors = ['#7B5CFF','#35E8B4','#FFB84D'];
+  for(var i=0;i<14;i++){
+    var p = document.createElement('div');
+    p.className = 'particle';
+    var angle = Math.random()*Math.PI*2;
+    var dist = 40 + Math.random()*50;
+    p.style.setProperty('--px', Math.cos(angle)*dist + 'px');
+    p.style.setProperty('--py', Math.sin(angle)*dist + 'px');
+    p.style.background = colors[i % colors.length];
+    p.style.left = (rect.left + rect.width/2 + window.scrollX) + 'px';
+    p.style.top = (rect.top + rect.height/2 + window.scrollY) + 'px';
+    document.body.appendChild(p);
+    (function(node){ setTimeout(function(){ node.remove(); }, 850); })(p);
+  }
+}
+
+// ---------- admin: chart draw + review actions ----------
+function drawChart(){
+  var path = document.getElementById('chartPath');
+  var area = document.getElementById('chartArea');
+  if(!path) return;
+  path.style.transition = 'none';
+  path.style.strokeDashoffset = 900;
+  void path.offsetWidth;
+  path.style.transition = 'stroke-dashoffset 1.4s cubic-bezier(.22,.68,0,1)';
+  path.style.strokeDashoffset = 0;
+  if(area){ area.style.opacity = 0; setTimeout(function(){ area.style.opacity = 1; }, 50); }
+}
+function reviewRow(el, approved){
+  var row = el.closest('tr');
+  row.style.background = approved ? 'var(--mint-dim)' : 'var(--danger-dim)';
+  setTimeout(function(){ row.classList.add('reviewed'); }, 300);
+}
+
+// ---------- per-page init dispatch ----------
+function initPageAnimations(id){
+  if(id === 'landing'){ runCounts(document.getElementById('page-landing')); }
+  if(id === 'quiz'){ resetQuiz(); }
+  if(id === 'streaks'){
+    runCounts(document.getElementById('page-streaks'));
+    setTimeout(function(){ document.getElementById('mvBarFill').style.width = '80%'; }, 200);
+  }
+  if(id === 'leaderboard'){
+    document.querySelectorAll('#lbList .lb-row').forEach(function(r){
+      r.style.animation = 'none'; void r.offsetWidth; r.style.animation = null;
+    });
+  }
+  if(id === 'admin'){
+    runCounts(document.getElementById('page-admin'));
+    drawChart();
+  }
+}
+window.addEventListener('DOMContentLoaded', function(){ initPageAnimations('landing'); });
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.proto-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+  window.scrollTo({top:0, behavior:'instant'});
+  requestAnimationFrame(function(){ initPageAnimations(id); });
+}
+function initPageAnimations(id){ /* filled below per page */ }
+</script>
+</body>
+</html>

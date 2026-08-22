@@ -14,54 +14,54 @@ import type {
 	UserStatsDto,
 } from "@/lib/types";
 import { useAuthStore } from "@/lib/auth-store";
+import { Button, Eyebrow } from "@/components/ui";
+import { IconCheck, IconLock } from "@/components/icons";
+
+const DAY_LABELS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
 export default function MyProgressPage() {
 	const router = useRouter();
 	const queryClient = useQueryClient();
 	const user = useAuthStore((s) => s.user);
-
 	const hydrated = useAuthStore.persist?.hasHydrated?.() ?? false;
 
 	useEffect(() => {
 		if (hydrated && !user) {
-			router.replace("/login");
+			router.replace("/auth");
 		}
 	}, [hydrated, user, router]);
+
+	const enabled = Boolean(user);
 
 	const statsQuery = useQuery({
 		queryKey: ["me", "stats"],
 		queryFn: () => api<UserStatsDto>("/api/users/me/stats"),
-		enabled: Boolean(user),
+		enabled,
 	});
-
 	const historyQuery = useQuery({
 		queryKey: ["me", "history"],
 		queryFn: () => api<AttemptResultDto[]>("/api/users/me/history"),
-		enabled: Boolean(user),
+		enabled,
 	});
-
 	const bookmarksQuery = useQuery({
 		queryKey: ["bookmarks"],
 		queryFn: () => api<QuizDto[]>("/api/bookmarks"),
-		enabled: Boolean(user),
+		enabled,
 	});
-
 	const badgesQuery = useQuery({
 		queryKey: ["me", "badges"],
 		queryFn: () => api<BadgeDto[]>("/api/users/me/badges"),
-		enabled: Boolean(user),
+		enabled,
 	});
-
 	const certProgressQuery = useQuery({
 		queryKey: ["me", "certificates", "progress"],
 		queryFn: () => api<CategoryProgressDto[]>("/api/certificates/categories"),
-		enabled: Boolean(user),
+		enabled,
 	});
-
 	const myCertsQuery = useQuery({
 		queryKey: ["me", "certificates"],
 		queryFn: () => api<CertificateDto[]>("/api/certificates/mine"),
-		enabled: Boolean(user),
+		enabled,
 	});
 
 	const claimMutation = useMutation({
@@ -77,124 +77,222 @@ export default function MyProgressPage() {
 		},
 	});
 
-	if (!user || statsQuery.isPending || historyQuery.isPending) {
-		return <div className="h-64 animate-pulse rounded-xl bg-slate-100" />;
+	if (!hydrated || !user || statsQuery.isPending || historyQuery.isPending) {
+		return <div className="h-64 animate-pulse rounded-xl bg-surface2 mt-10" />;
 	}
 
 	const stats = statsQuery.data;
 	const history = historyQuery.data ?? [];
 
+	function nextMilestone(): {
+		title: string;
+		sub: string;
+		cur: number;
+		target: number;
+	} | null {
+		if (!stats) return null;
+		const completed = stats.completedAttempts;
+		const streak = Math.max(stats.currentStreak, stats.bestStreak);
+		if (completed < 1)
+			return { title: "First Steps", sub: "Complete your first quiz", cur: 0, target: 1 };
+		if (streak < 3)
+			return { title: "Consistent", sub: "Reach a 3-day answering streak", cur: streak, target: 3 };
+		if (streak < 7)
+			return { title: "On Fire", sub: "Reach a 7-day answering streak", cur: streak, target: 7 };
+		if (completed < 10)
+			return { title: "Quiz Machine", sub: "Complete 10 quizzes", cur: completed, target: 10 };
+		if (!(completed >= 5 && stats.averagePercentage >= 75))
+			return {
+				title: "Sharp Shooter",
+				sub: "Average 75%+ across 5+ quizzes",
+				cur: Math.min(Math.round((stats.averagePercentage / 75) * completed), 5),
+				target: 5,
+			};
+		return null;
+	}
+	const milestone = nextMilestone();
+
+	const activeDates = new Set(
+		history
+			.filter((h) => h.completedAt)
+			.map((h) => new Date(h.completedAt as string).toDateString())
+	);
+	const week = Array.from({ length: 7 }, (_, i) => {
+		const d = new Date();
+		d.setDate(d.getDate() - (6 - i));
+		return d;
+	});
+	const todayIdx = 6;
+
 	return (
-		<div>
-			<h1 className="text-3xl font-bold tracking-tight text-slate-900">
-				My progress
-			</h1>
-			<p className="mt-1 text-slate-500">Keep it up, {user.name}!</p>
+		<div className="py-10">
+			<Eyebrow>Your progress</Eyebrow>
+			<h1 className="text-[34px] mt-2">Hey, {user.name.split(" ")[0]}.</h1>
 
 			{stats && (
-				<div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-5">
-					<StatCard label="Quizzes played" value={stats.totalAttempts} />
-					<StatCard label="Completed" value={stats.completedAttempts} />
-					<StatCard label="Average score" value={`${stats.averagePercentage}%`} />
-					<StatCard label="Best score" value={`${stats.bestPercentage}%`} />
-					<StatCard
-						label="Streak"
-						value={`${stats.currentStreak}🔥`}
-						hint={`best ${stats.bestStreak} days`}
-					/>
-				</div>
+				<>
+					<div className="flex items-center gap-6 mt-8 mb-10">
+						<div className="streak-flame">🔥</div>
+						<div>
+							<div className="streak-num">
+								{stats.currentStreak}-day streak
+							</div>
+							<div className="streak-longest">
+								Longest streak: {stats.bestStreak} day
+								{stats.bestStreak === 1 ? "" : "s"} · Don&apos;t break the chain.
+							</div>
+						</div>
+						<div className="hidden sm:flex gap-8 ml-auto">
+							<div className="hero-stat">
+								<div className="num">{stats.completedAttempts}</div>
+								<div className="lbl">quizzes passed</div>
+							</div>
+							<div className="hero-stat">
+								<div className="num">{Math.round(stats.averagePercentage)}%</div>
+								<div className="lbl">average score</div>
+							</div>
+							<div className="hero-stat">
+								<div className="num">{stats.totalPointsEarned}</div>
+								<div className="lbl">points earned</div>
+							</div>
+						</div>
+					</div>
+
+					<div className="week-strip flex-wrap !gap-4 sm:!gap-6">
+						{week.map((day, i) => {
+							const done = activeDates.has(day.toDateString());
+							const isToday = i === todayIdx;
+							return (
+								<div key={i} className="day-cell">
+									<div
+										className={`hex day-hex ${done ? "done" : ""} ${isToday && !done ? "today" : ""}`}
+									>
+										{done ? (
+											<IconCheck size={14} />
+										) : isToday ? (
+											<span className="mono text-[11px]">Now</span>
+										) : null}
+									</div>
+									<div className="day-lbl">
+										{i === todayIdx ? "TODAY" : DAY_LABELS[day.getDay()]}
+									</div>
+								</div>
+							);
+						})}
+					</div>
+				</>
 			)}
 
-			<h2 className="mb-4 mt-10 text-lg font-bold text-slate-900">Badges</h2>
-			<div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+			<Eyebrow>Milestones</Eyebrow>
+			<div className="badges-row mt-3">
 				{(badgesQuery.data ?? []).map((badge) => (
 					<div
 						key={badge.code}
-						className={`rounded-xl border p-4 ${
-							badge.earned
-								? "border-indigo-200 bg-indigo-50/60"
-								: "border-slate-200 bg-white opacity-60"
-						}`}
+						className={`milestone ${badge.earned ? "unlocked" : "locked"}`}
 					>
-						<div className="text-2xl">{badge.earned ? "🏅" : "🔒"}</div>
-						<p className="mt-1 text-sm font-bold text-slate-800">{badge.name}</p>
-						<p className="text-xs text-slate-500">{badge.description}</p>
+						<div className="hex">
+							{badge.earned ? <IconCheck size={20} /> : <IconLock size={20} />}
+						</div>
+						<div className="m-title">{badge.name}</div>
+						<div className="m-desc">{badge.description}</div>
 					</div>
 				))}
 			</div>
 
-			<h2 className="mb-4 mt-10 text-lg font-bold text-slate-900">Certificates</h2>
+			{milestone && (
+				<div className="card flex items-center justify-between gap-6 flex-wrap mb-12">
+					<div>
+						<div className="font-semibold text-sm text-ink mb-1">
+							Next milestone: {milestone.title}
+						</div>
+						<div className="text-xs text-faintc">{milestone.sub}</div>
+					</div>
+					<div className="mv-bar-track">
+						<div
+							className="mv-bar-fill"
+							style={{
+								width: `${Math.min(100, (milestone.cur / milestone.target) * 100)}%`,
+							}}
+						/>
+					</div>
+					<div className="mono text-[13px]">
+						{Math.min(milestone.cur, milestone.target)}/{milestone.target}
+					</div>
+				</div>
+			)}
+
+			<Eyebrow>Certificates</Eyebrow>
 			{(myCertsQuery.data ?? []).length > 0 && (
-				<ul className="mb-4 space-y-2">
+				<ul className="mt-4 mb-4 space-y-2">
 					{(myCertsQuery.data ?? []).map((cert) => (
 						<li key={cert.code}>
 							<Link
 								href={`/certificate/${cert.code}`}
-								className="flex items-center justify-between rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 transition hover:border-indigo-400"
+								className="flex items-center justify-between rounded-xl border border-violet/30 bg-violetdim p-4 transition hover:border-violet"
 							>
-								<span className="font-semibold text-slate-800">
+								<span className="font-semibold text-ink">
 									🎓 {cert.categoryName} series
 								</span>
-								<span className="font-mono text-xs text-slate-500">
-									{cert.code}
-								</span>
+								<span className="mono text-xs text-faintc">{cert.code}</span>
 							</Link>
 						</li>
 					))}
 				</ul>
 			)}
-			<ul className="space-y-2">
+			<ul className="space-y-2 mb-14">
 				{(certProgressQuery.data ?? []).map((progress) => (
 					<li
 						key={progress.categoryId}
-						className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+						className="card flex items-center justify-between gap-4 flex-wrap"
 					>
 						<div>
-							<p className="font-medium text-slate-800">{progress.categoryName}</p>
-							<div className="mt-1 h-1.5 w-40 overflow-hidden rounded-full bg-slate-100">
+							<p className="font-medium text-ink text-sm">{progress.categoryName}</p>
+							<div className="mv-bar-track mt-2 !max-w-none w-44">
 								<div
-									className="h-full bg-emerald-500"
+									className="mv-bar-fill"
 									style={{
-										width: `${progress.totalQuizzes ? (progress.completedQuizzes / progress.totalQuizzes) * 100 : 0}%`,
+										width: `${
+											progress.totalQuizzes
+												? (progress.completedQuizzes / progress.totalQuizzes) * 100
+												: 0
+										}%`,
 									}}
 								/>
 							</div>
-							<p className="mt-1 text-xs text-slate-400">
-								{progress.completedQuizzes}/{progress.totalQuizzes} quizzes passed (60%+)
+							<p className="mt-1.5 mono text-[11px] text-faintc">
+								{progress.completedQuizzes}/{progress.totalQuizzes} quizzes at 60%+
 							</p>
 						</div>
 						{progress.eligible ? (
-							<button
+							<Button
+								size="sm"
 								disabled={claimMutation.isPending}
 								onClick={() => claimMutation.mutate(progress.categoryId)}
-								className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
 							>
 								Claim 🎓
-							</button>
+							</Button>
 						) : (
-							<span className="text-xs text-slate-400">Keep going…</span>
+							<span className="badge">In progress</span>
 						)}
 					</li>
 				))}
 			</ul>
 
-			<h2 className="mb-4 mt-10 text-lg font-bold text-slate-900">
-				Saved quizzes
-			</h2>
+			<Eyebrow>Saved quizzes</Eyebrow>
 			{(bookmarksQuery.data?.length ?? 0) === 0 ? (
-				<div className="rounded-xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
+				<div className="card mt-4 mb-14 p-6 text-center text-sm text-mutedc">
 					No saved quizzes yet — tap the ♡ on any quiz to bookmark it.
 				</div>
 			) : (
-				<ul className="space-y-2">
+				<ul className="mt-4 space-y-2 mb-14">
 					{(bookmarksQuery.data ?? []).map((quiz) => (
 						<li key={quiz.id}>
 							<Link
 								href={`/quiz/${quiz.id}`}
-								className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-indigo-300"
+								className="card card-hover flex items-center justify-between gap-4"
 							>
-								<span className="font-medium text-slate-800">{quiz.title}</span>
-								<span className="text-xs text-slate-400">
+								<span className="font-medium text-ink text-sm">{quiz.title}</span>
+								<span className="mono text-xs text-faintc">
 									{quiz.categoryName} · {Math.round(quiz.timeLimitSec / 60)} min
 								</span>
 							</Link>
@@ -203,45 +301,42 @@ export default function MyProgressPage() {
 				</ul>
 			)}
 
-			<h2 className="mb-4 mt-10 text-lg font-bold text-slate-900">
-				Quiz history
-			</h2>
-
+			<Eyebrow>Quiz history</Eyebrow>
 			{history.length === 0 ? (
-				<div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
+				<div className="card mt-4 p-10 text-center text-sm text-mutedc">
 					No completed quizzes yet.{" "}
-					<Link href="/" className="font-medium text-indigo-600 hover:underline">
+					<Link href="/browse" className="text-violet hover:underline">
 						Take your first quiz
 					</Link>
 				</div>
 			) : (
-				<ul className="space-y-3">
+				<ul className="mt-4 space-y-3">
 					{history.map((item) => (
 						<li key={item.attemptId}>
 							<Link
 								href={`/result/${item.attemptId}`}
-								className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-indigo-300 hover:shadow"
+								className="lb-row !grid-cols-[1fr_auto] items-center !py-4 rounded-xl border border-line bg-surface hover:bg-surface2 transition"
 							>
 								<div>
-									<p className="font-semibold text-slate-800">{item.quizTitle}</p>
-									<p className="text-xs text-slate-400">
+									<div className="handle font-semibold text-ink text-sm">
+										{item.quizTitle}
+									</div>
+									<div className="cat text-xs text-faintc">
 										{item.completedAt
 											? new Date(item.completedAt).toLocaleString()
 											: ""}
-									</p>
+									</div>
 								</div>
 								<div className="flex items-center gap-3">
 									<span
-										className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-											item.percentage >= 60
-												? "bg-emerald-50 text-emerald-600"
-												: "bg-rose-50 text-rose-500"
+										className={`badge ${
+											item.percentage >= 60 ? "badge-mint" : "badge-danger"
 										}`}
 									>
 										{Math.round(item.percentage)}%
 									</span>
-									<span className="text-sm text-slate-500">
-										{item.score}/{item.totalPoints} pts
+									<span className="row-score">
+										{item.score}/{item.totalPoints}
 									</span>
 								</div>
 							</Link>
@@ -249,24 +344,6 @@ export default function MyProgressPage() {
 					))}
 				</ul>
 			)}
-		</div>
-	);
-}
-
-function StatCard({
-	label,
-	value,
-	hint,
-}: {
-	label: string;
-	value: string | number;
-	hint?: string;
-}) {
-	return (
-		<div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-			<div className="text-xs uppercase tracking-wide text-slate-400">{label}</div>
-			<div className="mt-1 text-2xl font-bold text-slate-900">{value}</div>
-			{hint && <div className="text-[10px] text-slate-400">{hint}</div>}
 		</div>
 	);
 }

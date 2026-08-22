@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { LiveRoomInfo, QuizDto } from "@/lib/types";
+import { Button, Eyebrow } from "@/components/ui";
 
 export default function CreateLiveRoomPage() {
 	const router = useRouter();
@@ -35,24 +36,20 @@ export default function CreateLiveRoomPage() {
 	}
 
 	return (
-		<div className="mx-auto max-w-lg">
-			<h1 className="text-3xl font-bold tracking-tight text-slate-900">
-				Host a live game
-			</h1>
-			<p className="mt-1 text-slate-500">
+		<div className="mx-auto max-w-md py-10">
+			<Eyebrow>Live arena</Eyebrow>
+			<h1 className="text-[32px] mt-2 mb-1">Host a live game.</h1>
+			<p className="text-mutedc text-sm">
 				Create a room, share the code and race friends in real time.
 			</p>
 
-			<div className="mt-6 space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-				<div>
-					<label htmlFor="quiz" className="block text-sm font-medium text-slate-700">
-						Quiz to play
-					</label>
+			<div className="card mt-6">
+				<div className="field">
+					<label>Quiz to play</label>
 					<select
-						id="quiz"
+						className="input"
 						value={quizId ?? ""}
 						onChange={(e) => setQuizId(Number(e.target.value))}
-						className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
 					>
 						<option value="" disabled>
 							Choose a quiz…
@@ -68,22 +65,18 @@ export default function CreateLiveRoomPage() {
 				</div>
 
 				{error && (
-					<div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-600">
+					<div className="rounded-lg border border-dangerc/40 bg-dangerdim px-3 py-2 text-sm text-dangerc mb-4">
 						{error}
 					</div>
 				)}
 
-				<button
-					disabled={!quizId || pending}
-					onClick={handleCreate}
-					className="w-full rounded-xl bg-indigo-600 py-3 font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-50"
-				>
+				<Button block disabled={!quizId || pending} onClick={handleCreate}>
 					{pending ? "Creating…" : "Create room"}
-				</button>
+				</Button>
 
 				<button
 					onClick={() => router.push("/live/join")}
-					className="w-full rounded-xl border border-slate-300 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+					className="btn btn-outline btn-block mt-3"
 				>
 					Have a code? Join a room →
 				</button>

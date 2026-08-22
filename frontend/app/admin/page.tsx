@@ -7,7 +7,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type {
 	BulkUploadResult,
-	Difficulty,
+	CategoryDto,
 	GenerateQuestionsPayload,
 	GeneratedQuestionsResult,
 	QuestionAdminDto,
@@ -15,21 +15,29 @@ import type {
 	QuizDto,
 } from "@/lib/types";
 import { useAuthStore } from "@/lib/auth-store";
+import { Button, Eyebrow, initials } from "@/components/ui";
+import {
+	IconCheck,
+	IconGrid,
+	IconQuestion,
+	IconTag,
+	IconX,
+} from "@/components/icons";
 
-const TABS = ["questions", "upload", "generate", "review"] as const;
-type Tab = (typeof TABS)[number];
+const SECTIONS = [
+	{ id: "dashboard", label: "Dashboard", icon: IconGrid },
+	{ id: "questions", label: "Question bank", icon: IconQuestion },
+	{ id: "generate", label: "AI generate", icon: IconTag },
+	{ id: "upload", label: "Bulk import", icon: IconTag },
+	{ id: "review", label: "Review queue", icon: IconCheck },
+] as const;
 
-const TAB_LABELS: Record<Tab, string> = {
-	questions: "Question bank",
-	upload: "Bulk upload",
-	generate: "AI generate",
-	review: "Review queue",
-};
+type SectionId = (typeof SECTIONS)[number]["id"];
 
 const STATUS_STYLES: Record<string, string> = {
-	PENDING_REVIEW: "bg-amber-50 text-amber-600",
-	APPROVED: "bg-emerald-50 text-emerald-600",
-	REJECTED: "bg-rose-50 text-rose-500",
+	PENDING_REVIEW: "badge-amber",
+	APPROVED: "badge-mint",
+	REJECTED: "badge-danger",
 };
 
 export default function AdminPage() {
@@ -43,7 +51,7 @@ export default function AdminPage() {
 		}
 	}, [hydrated, user, router]);
 
-	const [tab, setTab] = useState<Tab>("questions");
+	const [section, setSection] = useState<SectionId>("dashboard");
 	const [quizId, setQuizId] = useState<number | null>(null);
 
 	const quizzesQuery = useQuery({
@@ -51,208 +59,317 @@ export default function AdminPage() {
 		queryFn: () => api<QuizDto[]>("/api/admin/quizzes"),
 		enabled: Boolean(user && user.role === "ADMIN"),
 	});
+	const pendingCountQuery = useQuery({
+		queryKey: ["admin", "pending"],
+		queryFn: () => api<QuestionAdminDto[]>("/api/admin/questions/pending"),
+		enabled: Boolean(user && user.role === "ADMIN"),
+	});
+	const categoriesQuery = useQuery({
+		queryKey: ["categories"],
+		queryFn: () => api<CategoryDto[]>("/api/categories", { auth: false }),
+	});
 
 	const quizzes = quizzesQuery.data ?? [];
-	const activeQuizId =
-		quizId ?? (quizzes.length > 0 ? quizzes[0].id : null);
+	const pendingCount = (pendingCountQuery.data ?? []).length;
+	const activeQuizId = quizId ?? (quizzes.length > 0 ? quizzes[0].id : null);
+	const totalQuestions = quizzes.reduce((sum, q) => sum + q.questionCount, 0);
 
 	if (!hydrated || !user || user.role !== "ADMIN") {
-		return <div className="h-64 animate-pulse rounded-xl bg-slate-100" />;
+		return <div className="h-64 animate-pulse rounded-xl bg-surface2 mt-10" />;
 	}
 
 	return (
-		<div>
-			<div className="flex flex-wrap items-end justify-between gap-4">
-				<div>
-					<h1 className="text-3xl font-bold tracking-tight text-slate-900">
-						Admin console
-					</h1>
-					<p className="mt-1 text-slate-500">
-						Manage questions, bulk import content and review AI-generated items.
-					</p>
-				</div>
-				<label className="text-sm">
-					<span className="mr-2 font-medium text-slate-500">Quiz</span>
-					<select
-						value={activeQuizId ?? ""}
-						onChange={(e) => setQuizId(Number(e.target.value))}
-						className="max-w-xs rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
-					>
-						{quizzes.map((q) => (
-							<option key={q.id} value={q.id}>
-								{q.title}
-								{q.isPublished ? "" : " (draft)"}
-							</option>
+		<div className="py-8">
+			<div className="admin-shell">
+				<aside className="admin-sidebar">
+					<Link href="/" className="brand !text-base">
+						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+							<polygon points="12,2 21,7 21,17 12,22 3,17 3,7" />
+							<circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none" />
+						</svg>
+						HexQuiz
+					</Link>
+					<nav className="admin-nav">
+						{SECTIONS.map(({ id, label, icon: Icon }) => (
+							<button
+								key={id}
+								className={`admin-nav-item ${section === id ? "active" : ""}`}
+								onClick={() => setSection(id)}
+							>
+								<Icon size={14} />
+								{label}
+								{id === "review" && pendingCount > 0 && (
+									<span className="badge badge-amber ml-auto">{pendingCount}</span>
+								)}
+							</button>
 						))}
-					</select>
-				</label>
-			</div>
+					</nav>
+					<div className="admin-profile">
+						<div className="row-avatar">{initials(user.name)}</div>
+						<div className="min-w-0">
+							<div className="truncate font-semibold text-ink text-xs">
+								{user.name}
+							</div>
+							<div className="text-[11px] text-faintc truncate">{user.email}</div>
+						</div>
+					</div>
+				</aside>
 
-			<div className="mt-6 flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1">
-				{TABS.map((t) => (
-					<button
-						key={t}
-						onClick={() => setTab(t)}
-						className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
-							tab === t
-								? "bg-white text-slate-900 shadow"
-								: "text-slate-500 hover:text-slate-800"
-						}`}
-					>
-						{TAB_LABELS[t]}
-						{t === "review" ? " 🕓" : ""}
-					</button>
-				))}
-			</div>
+				<main className="min-w-0">
+					{(section === "questions" || section === "upload") && quizzes.length > 0 && (
+						<div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
+							<span className="mono text-xs text-faintc">Working on</span>
+							<select
+								value={activeQuizId ?? ""}
+								onChange={(e) => setQuizId(Number(e.target.value))}
+								className="input max-w-sm"
+							>
+								{quizzes.map((q) => (
+									<option key={q.id} value={q.id}>
+										{q.title}
+										{q.isPublished ? "" : " (draft)"}
+									</option>
+								))}
+							</select>
+						</div>
+					)}
 
-			{quizzesQuery.isPending ? (
-				<div className="mt-6 h-40 animate-pulse rounded-xl bg-slate-100" />
-			) : quizzes.length === 0 ? (
-				<div className="mt-6 rounded-xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
-					No quizzes exist yet. Create one via{" "}
-					<code className="rounded bg-slate-100 px-1">POST /api/quizzes</code>{" "}
-					or the Swagger UI.
-				</div>
-			) : activeQuizId == null ? null : tab === "questions" ? (
-				<QuestionsTab quizId={activeQuizId} />
-			) : tab === "upload" ? (
-				<UploadTab quizId={activeQuizId} />
-			) : tab === "generate" ? (
-				<GenerateTab quizId={activeQuizId} onGoReview={() => setTab("review")} />
-			) : (
-				<ReviewTab quizzes={quizzes} />
-			)}
+					{section === "dashboard" && (
+						<DashboardSection
+							quizzes={quizzes}
+							totalQuestions={totalQuestions}
+							categoryCount={(categoriesQuery.data ?? []).length}
+							pendingCount={pendingCount}
+							onGoReview={() => setSection("review")}
+						/>
+					)}
+					{section === "questions" &&
+						(quizzes.length === 0 || activeQuizId == null ? (
+							<EmptyCard text="No quizzes exist yet." />
+						) : (
+							<QuestionsTab quizId={activeQuizId} />
+						))}
+					{section === "generate" &&
+						(activeQuizId == null ? (
+							<EmptyCard text="No quizzes exist yet." />
+						) : (
+							<GenerateTab quizId={activeQuizId} onGoReview={() => setSection("review")} />
+						))}
+					{section === "upload" &&
+						(activeQuizId == null ? (
+							<EmptyCard text="No quizzes exist yet." />
+						) : (
+							<UploadTab quizId={activeQuizId} />
+						))}
+					{section === "review" && <ReviewTab quizzes={quizzes} />}
+				</main>
+			</div>
 		</div>
 	);
 }
 
-function useInvalidate() {
-	const queryClient = useQueryClient();
-	return (...keys: unknown[][]) =>
-		Promise.all(
-			keys.map((key) => queryClient.invalidateQueries({ queryKey: key }))
-		);
+function EmptyCard({ text }: { text: string }) {
+	return (
+		<div className="card p-10 text-center text-sm text-mutedc">{text}</div>
+	);
+}
+
+function SectionHead({ title }: { title: string }) {
+	return (
+		<>
+			<Eyebrow>Admin</Eyebrow>
+			<h1 className="text-[28px] mt-2 mb-6">{title}</h1>
+		</>
+	);
+}
+
+function DashboardSection({
+	quizzes,
+	totalQuestions,
+	categoryCount,
+	pendingCount,
+	onGoReview,
+}: {
+	quizzes: QuizDto[];
+	totalQuestions: number;
+	categoryCount: number;
+	pendingCount: number;
+	onGoReview: () => void;
+}) {
+	return (
+		<div>
+			<SectionHead title="Dashboard" />
+			<div className="stat-grid">
+				<div className="card stat-card">
+					<div className="stat-label">Quizzes</div>
+					<div className="stat-num">{quizzes.length}</div>
+					<div className="stat-delta text-[12px] mutedc">across all categories</div>
+				</div>
+				<div className="card stat-card">
+					<div className="stat-label">Active questions</div>
+					<div className="stat-num">{totalQuestions}</div>
+					<div className="stat-delta text-[12px] mutedc">approved & playable</div>
+				</div>
+				<div className="card stat-card">
+					<div className="stat-label">Categories</div>
+					<div className="stat-num">{categoryCount}</div>
+					<div className="stat-delta text-[12px] mutedc">tracks</div>
+				</div>
+				<div className="card stat-card">
+					<div className="stat-label">Pending AI questions</div>
+					<div
+						className="stat-num"
+						style={{ color: pendingCount > 0 ? "#FFB84D" : undefined }}
+					>
+						{pendingCount}
+					</div>
+					<button
+						className="stat-delta text-[12px] text-left"
+						style={{ color: "#FFB84D" }}
+						onClick={onGoReview}
+					>
+						review queue →
+					</button>
+				</div>
+			</div>
+
+			<div className="card">
+				<h3 className="text-[15px] mb-4">All quizzes</h3>
+				<table className="review-table">
+					<thead>
+						<tr>
+							<th>Title</th>
+							<th>Category</th>
+							<th>Status</th>
+							<th className="text-right">Questions</th>
+						</tr>
+					</thead>
+					<tbody>
+						{quizzes.map((q) => (
+							<tr key={q.id}>
+								<td className="font-medium text-ink">
+									<Link href={`/quiz/${q.id}`} className="hover:text-violet">
+										{q.title}
+									</Link>
+								</td>
+								<td className="mutedc">{q.categoryName}</td>
+								<td>
+									<span className={`badge ${q.isPublished ? "badge-mint" : ""}`}>
+										{q.isPublished ? "live" : "draft"}
+									</span>
+								</td>
+								<td className="mono text-right">{q.questionCount}</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	);
 }
 
 function QuestionsTab({ quizId }: { quizId: number }) {
-	const invalidate = useInvalidate();
+	const queryClient = useQueryClient();
 
 	const questionsQuery = useQuery({
 		queryKey: ["admin", "quiz", String(quizId), "questions"],
-		queryFn: () =>
-			api<QuestionAdminDto[]>(`/api/admin/quizzes/${quizId}/questions`),
+		queryFn: () => api<QuestionAdminDto[]>(`/api/admin/quizzes/${quizId}/questions`),
 	});
+
+	function invalidate() {
+		void queryClient.invalidateQueries({
+			queryKey: ["admin", "quiz", String(quizId), "questions"],
+		});
+		void queryClient.invalidateQueries({ queryKey: ["admin", "pending"] });
+	}
 
 	const actMutation = useMutation({
 		mutationFn: ({ id, action }: { id: number; action: string }) =>
 			api(`/api/admin/questions/${id}/${action}`, { method: "POST" }),
-		onSuccess: () =>
-			invalidate(["admin", "quiz", quizId, "questions"], ["admin", "pending"]),
+		onSuccess: invalidate,
 	});
 
 	const deleteMutation = useMutation({
 		mutationFn: (id: number) =>
 			api(`/api/admin/questions/${id}`, { method: "DELETE" }),
-		onSuccess: () =>
-			invalidate(["admin", "quiz", quizId, "questions"], ["admin", "pending"]),
+		onSuccess: invalidate,
 	});
 
-	function runAction(id: number, action: string, confirmText?: string) {
-		if (confirmText && !window.confirm(confirmText)) return;
-		actMutation.mutate({ id, action });
-	}
-
 	if (questionsQuery.isPending) {
-		return <div className="mt-6 h-40 animate-pulse rounded-xl bg-slate-100" />;
+		return <div className="card h-40 animate-pulse" />;
 	}
 	const questions = questionsQuery.data ?? [];
 
 	return (
-		<div className="mt-6 space-y-3">
-			<p className="text-sm text-slate-500">{questions.length} question(s)</p>
-			{questions.length === 0 && (
-				<div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
-					No questions yet — import a CSV or generate with AI.
+		<div>
+			<SectionHead title="Question bank" />
+			<p className="text-sm text-mutedc -mt-3 mb-5">{questions.length} question(s)</p>
+
+			{questions.length === 0 ? (
+				<EmptyCard text="No questions yet — import a CSV or generate with AI." />
+			) : (
+				<div className="card !p-0 overflow-hidden">
+					<table className="review-table">
+						<tbody>
+							{questions.map((question) => (
+								<tr key={question.questionId}>
+									<td>
+										<div className="flex items-center gap-2 mb-1">
+											<span className={`badge ${STATUS_STYLES[question.status]}`}>
+												{question.status.replace("_", " ").toLowerCase()}
+											</span>
+											<span className="badge">{question.type}</span>
+											<span className="badge">{question.points} pt</span>
+										</div>
+										<div className="font-medium text-ink">{question.questionText}</div>
+										<div className="text-xs mt-1 space-x-3">
+											{question.options.map((o) => (
+												<span key={o.optionId} className={o.isCorrect ? "text-mint" : "mutedc"}>
+													{o.isCorrect ? "✓" : "·"} {o.optionText.length > 40 ? o.optionText.slice(0, 40) + "…" : o.optionText}
+												</span>
+											))}
+										</div>
+									</td>
+									<td className="rt-actions !justify-end">
+										{question.status !== "APPROVED" && (
+											<button
+												title="Approve"
+												disabled={actMutation.isPending}
+												className="icon-btn approve"
+												onClick={() => actMutation.mutate({ id: question.questionId, action: "approve" })}
+											>
+												<IconCheck size={13} />
+											</button>
+										)}
+										{question.status !== "REJECTED" && (
+											<button
+												title="Reject"
+												disabled={actMutation.isPending}
+												className="icon-btn reject"
+												onClick={() => actMutation.mutate({ id: question.questionId, action: "reject" })}
+											>
+												<IconX size={13} />
+											</button>
+										)}
+										<button
+											title="Delete permanently"
+											disabled={deleteMutation.isPending}
+											className="icon-btn reject"
+											onClick={() => {
+												if (window.confirm("Delete this question permanently?")) {
+													deleteMutation.mutate(question.questionId);
+												}
+											}}
+										>
+											🗑
+										</button>
+									</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
 				</div>
 			)}
-			{questions.map((question) => (
-				<div
-					key={question.questionId}
-					className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
-				>
-					<div className="flex flex-wrap items-start justify-between gap-3">
-						<div className="min-w-0 flex-1">
-							<div className="mb-1.5 flex flex-wrap items-center gap-2">
-								<span
-									className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-										STATUS_STYLES[question.status]
-									}`}
-								>
-									{question.status.replace("_", " ")}
-								</span>
-								<span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
-									{question.type}
-								</span>
-								<span className="text-xs text-slate-400">
-									{question.points} pt
-								</span>
-							</div>
-							<p className="font-medium text-slate-900">
-								{question.questionText}
-							</p>
-							<ul className="mt-2 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
-								{question.options.map((option) => (
-									<li
-										key={option.optionId}
-										className={
-											option.isCorrect ? "font-semibold text-emerald-600" : "text-slate-600"
-										}
-									>
-										{option.isCorrect ? "✓ " : "• "}
-										{option.optionText}
-									</li>
-								))}
-							</ul>
-							{question.explanation && (
-								<p className="mt-2 text-xs italic text-slate-400">
-									{question.explanation}
-								</p>
-							)}
-						</div>
-						<div className="flex flex-none gap-2">
-							{question.status !== "APPROVED" && (
-								<button
-									disabled={actMutation.isPending}
-									onClick={() => runAction(question.questionId, "approve")}
-									className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-								>
-									Approve
-								</button>
-							)}
-							{question.status !== "REJECTED" && (
-								<button
-									disabled={actMutation.isPending}
-									onClick={() => runAction(question.questionId, "reject")}
-									className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-								>
-									Reject
-								</button>
-							)}
-							<button
-								disabled={deleteMutation.isPending}
-								onClick={() => {
-									if (window.confirm("Delete this question permanently?")) {
-										deleteMutation.mutate(question.questionId);
-									}
-								}}
-								className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-semibold text-rose-500 hover:bg-rose-50 disabled:opacity-50"
-							>
-								Delete
-							</button>
-						</div>
-					</div>
-				</div>
-			))}
 		</div>
 	);
 }
@@ -263,7 +380,7 @@ Select valid NoSQL stores,MULTI_SELECT,2,,MongoDB,Cassandra,MySQL,Redis,1|2|4
 REST is stateless.,TRUE_FALSE,,,True,False,,2`;
 
 function UploadTab({ quizId }: { quizId: number }) {
-	const invalidate = useInvalidate();
+	const queryClient = useQueryClient();
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [file, setFile] = useState<File | null>(null);
 
@@ -279,20 +396,25 @@ function UploadTab({ quizId }: { quizId: number }) {
 		onSuccess: () => {
 			setFile(null);
 			if (fileInputRef.current) fileInputRef.current.value = "";
-			return invalidate(["admin", "quiz", quizId, "questions"]);
+			void queryClient.invalidateQueries({
+				queryKey: ["admin", "quiz", String(quizId), "questions"],
+			});
 		},
 	});
 
 	return (
-		<div className="mt-6 max-w-3xl space-y-4">
-			<div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-				<h2 className="font-semibold text-slate-900">CSV bulk import</h2>
-				<p className="mt-1 text-sm text-slate-500">
-					Header row required: <code>question_text,type,points,explanation,
-					option_1…N,correct_options</code>. Indices in{" "}
-					<code>correct_options</code> are 1-based, joined by <code>|</code>.
+		<div className="max-w-3xl">
+			<SectionHead title="Bulk import" />
+			<div className="card">
+				<p className="text-sm text-mutedc">
+					Header row required:{" "}
+					<code className="mono text-violet">
+						question_text,type,points,explanation,option_1…N,correct_options
+					</code>
+					. Indices in <code className="mono text-violet">correct_options</code>{" "}
+					are 1-based, joined by <code className="mono text-violet">|</code>.
 				</p>
-				<pre className="mt-3 overflow-x-auto rounded-lg bg-slate-900 p-4 text-xs leading-relaxed text-slate-100">
+				<pre className="overflow-x-auto rounded-lg bg-bg border border-line p-4 text-xs leading-relaxed text-mint mono mt-4">
 					{CSV_TEMPLATE}
 				</pre>
 
@@ -301,35 +423,35 @@ function UploadTab({ quizId }: { quizId: number }) {
 					type="file"
 					accept=".csv,text/csv"
 					onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-					className="mt-4 block w-full cursor-pointer rounded-lg border border-slate-300 p-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-indigo-50 file:px-3 file:py-1.5 file:text-indigo-600"
+					className="mt-5 block w-full cursor-pointer rounded-lg border border-line bg-surface2 p-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-violetdim file:px-3 file:py-1.5 file:text-violet"
 				/>
 
-				<button
+				<Button
+					block
 					disabled={!file || uploadMutation.isPending}
 					onClick={() => uploadMutation.mutate()}
-					className="mt-4 w-full rounded-xl bg-indigo-600 py-2.5 font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+					className="mt-4"
 				>
 					{uploadMutation.isPending
 						? "Importing…"
 						: `Import ${file ? `"${file.name}"` : ""}`}
-				</button>
+				</Button>
 
 				{uploadMutation.isError && (
-					<div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-600">
+					<div className="mt-3 rounded-lg border border-dangerc/40 bg-dangerdim px-3 py-2 text-sm text-dangerc">
 						{(uploadMutation.error as Error).message}
 					</div>
 				)}
 
 				{uploadMutation.isSuccess && (
-					<div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+					<div className="mt-3 rounded-lg border border-mint/30 bg-mintdim px-3 py-2 text-sm text-mint">
 						Imported {uploadMutation.data.imported} question(s).
 						{uploadMutation.data.failures.length > 0 && (
-							<span className="font-semibold text-amber-600">
-								{" "}
+							<span className="font-semibold text-amberc block mt-1">
 								{uploadMutation.data.failures.length} row(s) failed:
 							</span>
 						)}
-						<ul className="mt-1 list-inside list-disc text-amber-700">
+						<ul className="list-inside list-disc text-amberc/80 mt-1">
 							{uploadMutation.data.failures.map((f) => (
 								<li key={f.lineNumber}>
 									Line {f.lineNumber}: {f.error}
@@ -350,11 +472,11 @@ function GenerateTab({
 	quizId: number;
 	onGoReview: () => void;
 }) {
-	const invalidate = useInvalidate();
+	const queryClient = useQueryClient();
 	const [topic, setTopic] = useState("");
 	const [count, setCount] = useState(5);
 	const [questionType, setQuestionType] = useState<QuestionType>("MCQ");
-	const [difficulty, setDifficulty] = useState<Difficulty | "">("");
+	const [difficulty, setDifficulty] = useState("");
 
 	const generateMutation = useMutation({
 		mutationFn: (payload: GenerateQuestionsPayload) =>
@@ -362,8 +484,12 @@ function GenerateTab({
 				`/api/admin/questions/generate?quizId=${quizId}`,
 				{ method: "POST", body: payload }
 			),
-		onSuccess: () =>
-			invalidate(["admin", "quiz", quizId, "questions"], ["admin", "pending"]),
+		onSuccess: () => {
+			void queryClient.invalidateQueries({
+				queryKey: ["admin", "quiz", String(quizId), "questions"],
+			});
+			void queryClient.invalidateQueries({ queryKey: ["admin", "pending"] });
+		},
 	});
 
 	async function handleSubmit(e: React.FormEvent) {
@@ -372,49 +498,38 @@ function GenerateTab({
 			topic,
 			count,
 			questionType,
-			difficulty: difficulty === "" ? undefined : difficulty,
+			difficulty: difficulty === "" ? undefined : (difficulty as GenerateQuestionsPayload["difficulty"]),
 		});
 	}
 
 	return (
-		<div className="mt-6 max-w-2xl">
-			<form
-				onSubmit={handleSubmit}
-				className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
-			>
-				<div>
-					<h2 className="font-semibold text-slate-900">AI question generation</h2>
-					<p className="mt-1 text-sm text-slate-500">
-						Gemini drafts questions into the{" "}
-						<strong className="text-amber-600">PENDING_REVIEW</strong> state.
-						Nothing goes live until you approve it.
-					</p>
-				</div>
+		<div className="max-w-2xl">
+			<SectionHead title="AI question studio" />
+			<form onSubmit={handleSubmit} className="card">
+				<p className="text-sm text-mutedc mb-5">
+					Gemini drafts questions into the{" "}
+					<strong className="text-amberc">PENDING_REVIEW</strong> state. Nothing
+					goes live until you approve it.
+				</p>
 
-				<div>
-					<label htmlFor="topic" className="block text-sm font-medium text-slate-700">
-						Topic
-					</label>
+				<div className="field">
+					<label>Topic</label>
 					<input
-						id="topic"
+						className="input"
 						required
 						placeholder='e.g. "JavaScript closures and event loop"'
 						value={topic}
 						onChange={(e) => setTopic(e.target.value)}
-						className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none"
 					/>
 				</div>
 
 				<div className="grid grid-cols-3 gap-3">
-					<div>
-						<label htmlFor="count" className="block text-sm font-medium text-slate-700">
-							Count
-						</label>
+					<div className="field">
+						<label>Count</label>
 						<select
-							id="count"
+							className="input"
 							value={count}
 							onChange={(e) => setCount(Number(e.target.value))}
-							className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
 						>
 							{Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
 								<option key={n} value={n}>
@@ -423,15 +538,12 @@ function GenerateTab({
 							))}
 						</select>
 					</div>
-					<div>
-						<label htmlFor="qtype" className="block text-sm font-medium text-slate-700">
-							Type
-						</label>
+					<div className="field">
+						<label>Type</label>
 						<select
-							id="qtype"
+							className="input"
 							value={questionType}
 							onChange={(e) => setQuestionType(e.target.value as QuestionType)}
-							className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
 						>
 							{["MCQ", "MULTI_SELECT", "TRUE_FALSE"].map((t) => (
 								<option key={t} value={t}>
@@ -440,19 +552,16 @@ function GenerateTab({
 							))}
 						</select>
 					</div>
-					<div>
-						<label htmlFor="diff" className="block text-sm font-medium text-slate-700">
-							Difficulty
-						</label>
+					<div className="field">
+						<label>Difficulty</label>
 						<select
-							id="diff"
+							className="input"
 							value={difficulty}
-							onChange={(e) => setDifficulty(e.target.value as Difficulty | "")}
-							className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm capitalize"
+							onChange={(e) => setDifficulty(e.target.value)}
 						>
 							<option value="">Any</option>
 							{["BEGINNER", "INTERMEDIATE", "ADVANCED"].map((d) => (
-								<option key={d} value={d} className="capitalize">
+								<option key={d} value={d}>
 									{d.charAt(0) + d.slice(1).toLowerCase()}
 								</option>
 							))}
@@ -460,34 +569,29 @@ function GenerateTab({
 					</div>
 				</div>
 
-				<button
-					disabled={
-						generateMutation.isPending || !topic.trim()
-					}
-					className="w-full rounded-xl bg-indigo-600 py-2.5 font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+				<Button
+					block
+					type="submit"
+					disabled={generateMutation.isPending || !topic.trim()}
 				>
 					{generateMutation.isPending
 						? "Asking Gemini… (can take ~10s)"
 						: "Generate questions"}
-				</button>
+				</Button>
 
 				{generateMutation.isError && (
-					<div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-600">
+					<div className="mt-4 rounded-lg border border-dangerc/40 bg-dangerdim px-3 py-2 text-sm text-dangerc">
 						{(generateMutation.error as Error).message}
 					</div>
 				)}
 
 				{generateMutation.isSuccess && (
-					<div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-						Created {generateMutation.data.created} draft question(s)
+					<div className="mt-4 rounded-lg border border-mint/30 bg-mintdim px-3 py-2 text-sm text-mint">
+						Created {generateMutation.data.created} draft(s)
 						{generateMutation.data.discarded > 0 &&
 							` · discarded ${generateMutation.data.discarded} malformed`}{" "}
 						—{" "}
-						<button
-							type="button"
-							onClick={onGoReview}
-							className="font-semibold underline"
-						>
+						<button type="button" onClick={onGoReview} className="underline font-semibold">
 							open the review queue
 						</button>
 					</div>
@@ -498,7 +602,7 @@ function GenerateTab({
 }
 
 function ReviewTab({ quizzes }: { quizzes: QuizDto[] }) {
-	const invalidate = useInvalidate();
+	const queryClient = useQueryClient();
 
 	const pendingQuery = useQuery({
 		queryKey: ["admin", "pending"],
@@ -508,80 +612,87 @@ function ReviewTab({ quizzes }: { quizzes: QuizDto[] }) {
 	const actMutation = useMutation({
 		mutationFn: ({ id, action }: { id: number; action: string }) =>
 			api(`/api/admin/questions/${id}/${action}`, { method: "POST" }),
-		onSuccess: () =>
-			invalidate(["admin", "pending"], ["admin", "quizzes"]),
+		onSuccess: () => {
+			void queryClient.invalidateQueries({ queryKey: ["admin", "pending"] });
+			void queryClient.invalidateQueries({ queryKey: ["admin", "quizzes"] });
+		},
 	});
 
 	const titleFor = (quizId: number) =>
 		quizzes.find((q) => q.id === quizId)?.title ?? `Quiz #${quizId}`;
 
 	if (pendingQuery.isPending) {
-		return <div className="mt-6 h-40 animate-pulse rounded-xl bg-slate-100" />;
+		return <div className="card h-40 animate-pulse" />;
 	}
 	const pending = pendingQuery.data ?? [];
 
 	return (
-		<div className="mt-6 space-y-3">
+		<div>
+			<SectionHead title="Review queue" />
 			{pending.length === 0 ? (
-				<div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
-					Nothing awaiting review. AI-generated drafts will appear here.
-				</div>
+				<EmptyCard text="Nothing awaiting review. AI-generated drafts will appear here." />
 			) : (
-				pending.map((question) => (
-					<div
-						key={question.questionId}
-						className="rounded-xl border border-amber-200 bg-white p-5 shadow-sm"
-					>
-						<div className="mb-1.5 flex flex-wrap items-center gap-2 text-xs">
-							<span className="rounded-full bg-amber-50 px-2 py-0.5 font-semibold text-amber-600">
-								{question.type}
-							</span>
-							<Link
-								href={`/quiz/${question.quizId}`}
-								className="text-slate-400 hover:text-indigo-500"
-							>
-								{titleFor(question.quizId)}
-							</Link>
-						</div>
-						<p className="font-medium text-slate-900">{question.questionText}</p>
-						<ul className="mt-2 grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
-							{question.options.map((option) => (
-								<li
-									key={option.optionId}
-									className={
-										option.isCorrect
-											? "font-semibold text-emerald-600"
-											: "text-slate-600"
-									}
-								>
-									{option.isCorrect ? "✓ " : "• "}
-									{option.optionText}
-								</li>
+				<div className="card">
+					<h3 className="text-[15px] mb-4">
+						Pending AI-generated questions{" "}
+						<span className="badge badge-amber ml-2">{pending.length} waiting</span>
+					</h3>
+					<table className="review-table">
+						<thead>
+							<tr>
+								<th>Question</th>
+								<th>Type</th>
+								<th>Quiz</th>
+								<th className="!text-right">Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							{pending.map((question) => (
+								<tr key={question.questionId}>
+									<td>
+										<div className="font-medium text-ink max-w-md">
+											{question.questionText}
+										</div>
+										<div className="text-xs mt-1 space-x-3">
+											{question.options.map((o) => (
+												<span key={o.optionId} className={o.isCorrect ? "text-mint" : "mutedc"}>
+													{o.isCorrect ? "✓" : "·"}{" "}
+													{o.optionText.length > 34 ? o.optionText.slice(0, 34) + "…" : o.optionText}
+												</span>
+											))}
+										</div>
+									</td>
+									<td>
+										<span className="badge">{question.type}</span>
+									</td>
+									<td className="mutedc text-xs">{titleFor(question.quizId)}</td>
+									<td className="rt-actions !justify-end">
+										<button
+											title="Approve & publish"
+											disabled={actMutation.isPending}
+											className="icon-btn approve"
+											onClick={() =>
+												actMutation.mutate({ id: question.questionId, action: "approve" })
+											}
+										>
+											<IconCheck size={13} />
+										</button>
+										<button
+											title="Reject"
+											disabled={actMutation.isPending}
+											className="icon-btn reject"
+											onClick={() =>
+												actMutation.mutate({ id: question.questionId, action: "reject" })
+											}
+										>
+											<IconX size={13} />
+										</button>
+									</td>
+								</tr>
 							))}
-						</ul>
-						{question.explanation && (
-							<p className="mt-2 rounded-lg bg-indigo-50/60 p-2 text-xs italic text-slate-500">
-								{question.explanation}
-							</p>
-						)}
-						<div className="mt-3 flex gap-2">
-							<button
-								disabled={actMutation.isPending}
-								onClick={() => actMutation.mutate({ id: question.questionId, action: "approve" })}
-								className="rounded-lg bg-emerald-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-							>
-								Approve & publish
-							</button>
-							<button
-								disabled={actMutation.isPending}
-								onClick={() => actMutation.mutate({ id: question.questionId, action: "reject" })}
-								className="rounded-lg border border-slate-300 px-4 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-							>
-								Reject
-							</button>
-						</div>
-					</div>
-				))
+						</tbody>
+					</table>
+				</div>
 			)}
 		</div>
 	);

@@ -10,6 +10,7 @@ import type {
 	LiveQuestionPayload,
 	LiveRoomInfo,
 } from "@/lib/types";
+import { Button, Eyebrow, initials } from "@/components/ui";
 
 type Identity = { playerId: string; nickname: string };
 
@@ -29,11 +30,6 @@ function readIdentity(code: string): Identity | null {
 		} catch {}
 	}
 	return cachedIdentityValue;
-}
-
-function formatMs(ms: number): string {
-	const s = Math.max(0, Math.ceil(ms / 1000));
-	return String(s).padStart(2, "0");
 }
 
 export default function LiveRoomPage() {
@@ -118,14 +114,13 @@ export default function LiveRoomPage() {
 
 	if (notFound) {
 		return (
-			<div className="mx-auto max-w-md rounded-xl border border-slate-200 bg-white p-10 text-center">
-				<h1 className="text-lg font-semibold text-slate-900">Room not found</h1>
-				<p className="mt-2 text-sm text-slate-500">
-					Room <span className="font-mono">{code}</span> doesn&apos;t exist or has
-					expired.
+			<div className="max-w-md mx-auto card p-10 text-center mt-10">
+				<h2 className="text-lg font-semibold text-ink">Room not found</h2>
+				<p className="mt-2 text-sm text-mutedc">
+					Room <span className="mono">{code}</span> doesn&apos;t exist or has expired.
 				</p>
-				<Link href="/live/join" className="mt-4 inline-block text-indigo-600 hover:underline">
-					Try another code →
+				<Link href="/live/join" className="btn btn-primary mt-5 inline-flex">
+					Try another code
 				</Link>
 			</div>
 		);
@@ -133,42 +128,35 @@ export default function LiveRoomPage() {
 
 	if (finalResults) {
 		return (
-			<div className="mx-auto max-w-xl text-center">
-				<h1 className="text-3xl font-bold tracking-tight text-slate-900">
-					Final results 🏁
-				</h1>
-				<p className="mt-1 text-slate-500">{finalResults.quizTitle}</p>
-				<div className="mt-8 space-y-2">
+			<div className="mx-auto max-w-xl py-10">
+				<div className="text-center mb-8">
+					<Eyebrow>Final results</Eyebrow>
+					<h1 className="text-[32px] mt-2">{finalResults.quizTitle}</h1>
+				</div>
+				<div className="space-y-3">
 					{finalResults.entries.map((entry, i) => (
 						<div
 							key={entry.playerId}
-							className={`flex items-center justify-between rounded-xl border p-4 ${
-								i === 0
-									? "border-amber-300 bg-amber-50"
-									: "border-slate-200 bg-white"
+							className={`card flex items-center justify-between ${
+								i === 0 ? "!border-amberc/50" : ""
 							}`}
 						>
-							<span className="text-lg">
+							<span className="flex items-center gap-3 font-semibold text-ink">
+								<span className="row-avatar">{initials(entry.nickname)}</span>
 								{i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}{" "}
-								<strong className="ml-2">{entry.nickname}</strong>
+								{entry.nickname}
 							</span>
-							<span className="font-mono font-bold text-indigo-600">
+							<span className="row-score !text-base text-mint">
 								{entry.score}
 							</span>
 						</div>
 					))}
 				</div>
-				<div className="mt-8 flex justify-center gap-3">
-					<Link
-						href="/live/create"
-						className="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
-					>
+				<div className="mt-10 flex justify-center gap-3 flex-wrap">
+					<Link href="/live/create" className="btn btn-primary">
 						Host another game
 					</Link>
-					<button
-						onClick={() => router.push("/")}
-						className="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-					>
+					<button onClick={() => router.push("/browse")} className="btn btn-outline">
 						Browse quizzes
 					</button>
 				</div>
@@ -176,134 +164,100 @@ export default function LiveRoomPage() {
 		);
 	}
 
-	if (question && identity) {
+	if (question) {
 		const isMulti = question.question.type === "MULTI_SELECT";
 		const myAnswered =
 			answeredNow ||
-			(question.scoreboard.find((s) => s.playerId === identity.playerId)
-				?.answeredCurrent ?? false);
-		const timeFraction = Math.max(
-			0,
-			Math.min(1, remainingMs / (20 * 1000))
-		);
+			(identity
+				? (question.scoreboard.find((s) => s.playerId === identity.playerId)
+						?.answeredCurrent ?? false)
+				: false);
+		const timeFraction = Math.max(0, Math.min(1, remainingMs / (20 * 1000)));
 
 		return (
-			<div className="mx-auto max-w-2xl">
-				<div className="flex items-center justify-between">
-					<span className="text-sm font-medium text-slate-400">
+			<div className="mx-auto max-w-2xl py-10">
+				<div className="flex items-center justify-between mb-4">
+					<span className="mono text-[13px] text-mutedc">
 						Question {question.index + 1} of {question.total}
 					</span>
-					<span
-						className={`rounded-lg px-3 py-1 font-mono text-lg font-bold tabular-nums ${
-							remainingMs < 5000 ? "bg-rose-50 text-rose-600" : "bg-slate-100 text-slate-700"
-						}`}
-					>
-						{formatMs(remainingMs)}
-					</span>
-				</div>
-				<div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
-					<div
-						className="h-full bg-indigo-500 transition-all duration-300"
-						style={{ width: `${timeFraction * 100}%` }}
-					/>
-				</div>
-
-				<h2 className="mt-6 text-xl font-semibold leading-relaxed text-slate-900">
-					{question.question.questionText}
-				</h2>
-
-				{!myAnswered ? (
-					<>
-						<div className="mt-6 grid gap-3 sm:grid-cols-2">
-							{question.question.options.map((option) => {
-								const isSelected = selected.includes(option.optionId);
-								return (
-									<button
-										key={option.optionId}
-										onClick={() =>
-											isMulti
-												? setSelected((prev) =>
-														prev.includes(option.optionId)
-															? prev.filter((id) => id !== option.optionId)
-															: [...prev, option.optionId]
-													)
-												: lockIn([option.optionId])
-										}
-										className={`rounded-xl border px-4 py-4 text-left transition ${
-											isSelected
-												? "border-indigo-500 bg-indigo-50 ring-1 ring-indigo-500"
-												: "border-slate-200 hover:border-indigo-300 hover:bg-slate-50"
-										}`}
-									>
-										{option.optionText}
-									</button>
-								);
-							})}
+					<div className="timer-wrap">
+						<svg className="timer-ring" viewBox="0 0 54 54">
+							<circle className="timer-ring-bg" cx="27" cy="27" r="24" />
+							<circle
+								className="timer-ring-fg"
+								cx="27"
+								cy="27"
+								r="24"
+								style={{
+									strokeDashoffset: 150.8 * (1 - timeFraction),
+									stroke: remainingMs < 5000 ? "#FFB84D" : "#7B5CFF",
+								}}
+							/>
+						</svg>
+						<div className="timer-value" style={{ color: remainingMs < 5000 ? "#FFB84D" : undefined }}>
+							{Math.max(0, Math.ceil(remainingMs / 1000))}
 						</div>
-						{isMulti && selected.length > 0 && (
+					</div>
+				</div>
+
+				<div className="q-card">
+					<h3>{question.question.questionText}</h3>
+				</div>
+
+				<div className="options">
+					{question.question.options.map((option, i) => {
+						const isSelected = selected.includes(option.optionId);
+						const marks = ["A", "B", "C", "D", "E", "F"];
+						return (
 							<button
-								onClick={() => lockIn(selected)}
-								className="mt-4 w-full rounded-xl bg-emerald-600 py-3 font-semibold text-white hover:bg-emerald-700"
+								key={option.optionId}
+								onClick={() =>
+									isMulti
+										? setSelected((prev) =>
+												prev.includes(option.optionId)
+													? prev.filter((id) => id !== option.optionId)
+													: [...prev, option.optionId]
+											)
+										: lockIn([option.optionId])
+								}
+								className={`option ${isSelected ? "selected" : ""}`}
 							>
-								Lock in answer ({selected.length})
+								<div className="opt-mark">{marks[i]}</div>
+								{option.optionText}
 							</button>
-						)}
-					</>
-				) : (
-					<div className="mt-6 rounded-xl bg-indigo-50 px-4 py-6 text-center text-sm font-medium text-indigo-700">
+						);
+					})}
+				</div>
+
+				{isMulti && selected.length > 0 && !myAnswered && (
+					<Button block className="mt-4" onClick={() => lockIn(selected)}>
+						Lock in answer ({selected.length})
+					</Button>
+				)}
+
+				{identity && myAnswered && (
+					<div className="explain-inner mt-6 text-center">
 						Answer locked in — waiting for other players…
 					</div>
 				)}
-
-				<Scoreboard players={question.scoreboard} />
-			</div>
-		);
-	}
-
-	if (info) {
-		return (
-			<div className="mx-auto max-w-lg text-center">
-				<p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-					Room code — share it!
-				</p>
-				<h1 className="mt-2 font-mono text-5xl font-black tracking-[0.25em] text-indigo-600">
-					{info.code}
-				</h1>
-				<p className="mt-3 font-medium text-slate-700">{info.quizTitle}</p>
-				<p className="text-sm text-slate-400">hosted by {info.hostName}</p>
-
-				{!identity && !isHost && (
-					<Link
-						href={`/live/join`}
-						className="mt-6 inline-block rounded-xl bg-rose-50 px-5 py-3 text-sm font-semibold text-rose-600"
-					>
-						You haven&apos;t joined this room — enter your nickname →
-					</Link>
-				)}
-				{isHost && info.status === "LOBBY" && (
-					<button
-						onClick={startGame}
-						disabled={info.players.length < 1}
-						className="mt-6 w-full rounded-xl bg-emerald-600 py-3 font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-					>
-						Start game ({info.players.length} player
-						{info.players.length === 1 ? "" : "s"})
-					</button>
-				)}
-				{info.status === "ACTIVE" && !question && (
-					<p className="mt-6 animate-pulse text-sm text-slate-500">
-						Game starting…
+				{!identity && (
+					<p className="mt-6 text-center text-xs text-faintc">
+						Spectator mode — you&apos;re watching without joining.
 					</p>
 				)}
 
-				<div className="mt-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-					<p className="mb-3 text-xs uppercase tracking-wide text-slate-400">
-						Players in lobby
+				<div className="card mt-8">
+					<p className="mb-3 text-xs uppercase tracking-wide text-faintc mono">
+						Live scoreboard
 					</p>
-					<ul className="space-y-1.5">
-						{info.players.map((player) => (
-							<li key={player.playerId} className="text-sm font-medium text-slate-700">
-								{player.nickname}
+					<ul className="space-y-2">
+						{question.scoreboard.map((player, i) => (
+							<li key={player.playerId} className="flex items-center justify-between text-sm">
+								<span className="font-medium text-ink">
+									{i + 1}. {player.nickname}
+									{player.answeredCurrent && <span className="ml-2 badge badge-mint">in</span>}
+								</span>
+								<span className="row-score text-mint">{player.score}</span>
 							</li>
 						))}
 					</ul>
@@ -312,31 +266,52 @@ export default function LiveRoomPage() {
 		);
 	}
 
-	return <div className="h-64 animate-pulse rounded-xl bg-slate-100" />;
-}
+	if (info) {
+		return (
+			<div className="mx-auto max-w-lg py-12 text-center">
+				<Eyebrow>Room code — share it!</Eyebrow>
+				<div className="mono text-[56px] font-bold tracking-[0.22em] text-violet mt-3 leading-none">
+					{info.code}
+				</div>
+				<p className="mt-4 font-semibold text-ink">{info.quizTitle}</p>
+				<p className="text-sm text-faintc">hosted by {info.hostName}</p>
 
-function Scoreboard({ players }: { players: LiveRoomInfo["players"] }) {
-	return (
-		<div className="mt-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-			<p className="mb-3 text-xs uppercase tracking-wide text-slate-400">
-				Scoreboard
-			</p>
-			<ul className="space-y-1.5">
-				{players.map((player, i) => (
-					<li
-						key={player.playerId}
-						className="flex items-center justify-between text-sm"
+				{!identity && !isHost && (
+					<Link href="/live/join" className="btn btn-primary mt-7 inline-flex">
+						You haven&apos;t joined — enter your nickname →
+					</Link>
+				)}
+				{isHost && info.status === "LOBBY" && (
+					<Button
+						block
+						className="mt-7"
+						disabled={info.players.length < 1}
+						onClick={() => void startGame()}
 					>
-						<span className="font-medium text-slate-700">
-							{i + 1}. {player.nickname}
-							{player.answeredCurrent ? " ✓" : ""}
-						</span>
-						<span className="font-mono tabular-nums text-indigo-600">
-							{player.score}
-						</span>
-					</li>
-				))}
-			</ul>
-		</div>
-	);
+						Start game ({info.players.length} player
+						{info.players.length === 1 ? "" : "s"})
+					</Button>
+				)}
+				{info.status === "ACTIVE" && !question && (
+					<p className="mt-7 animate-pulse text-sm text-mutedc">Game starting…</p>
+				)}
+
+				<div className="card mt-9 text-left">
+					<p className="mb-3 text-xs uppercase tracking-wide text-faintc mono">
+						Players in lobby
+					</p>
+					<ul className="space-y-2">
+						{info.players.map((player) => (
+							<li key={player.playerId} className="flex items-center gap-3 text-sm">
+								<div className="row-avatar">{initials(player.nickname)}</div>
+								<span className="font-medium text-ink">{player.nickname}</span>
+							</li>
+						))}
+					</ul>
+				</div>
+			</div>
+		);
+	}
+
+	return <div className="h-64 animate-pulse rounded-xl bg-surface2 mt-10 max-w-lg mx-auto" />;
 }
