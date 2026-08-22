@@ -41,7 +41,7 @@ export default function CertificatePage() {
 		<div className="max-w-2xl mx-auto py-12">
 			<div
 				id="certificate"
-				className="rounded-2xl border-[10px] border-double border-violet/40 bg-gradient-to-br from-surface to-violetdim p-10 text-center shadow-glow"
+				className="rounded-2xl border-[10px] border-double border-violet/40 bg-gradient-to-br from-surface to-violetdim p-6 sm:p-10 text-center shadow-glow"
 			>
 				<div className="flex justify-center text-violet mb-4">
 					<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4}>
@@ -53,7 +53,7 @@ export default function CertificatePage() {
 					Certificate of Achievement
 				</p>
 				<p className="mt-8 text-sm text-mutedc">This certifies that</p>
-				<h1 className="mt-3 font-display text-[42px] font-bold text-ink leading-tight">
+				<h1 className="mt-3 font-display text-3xl sm:text-[42px] font-bold text-ink leading-tight">
 					{cert.userName}
 				</h1>
 				<p className="mt-5 text-sm text-mutedc">

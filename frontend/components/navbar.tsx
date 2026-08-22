@@ -18,10 +18,21 @@ export function Navbar() {
 		() => false
 	);
 
+	const mobileLinks = [
+		{ href: "/browse", label: "Practice" },
+		{ href: "/leaderboard", label: "Leaderboard" },
+		...(mounted && user
+			? [
+					{ href: "/build", label: "Build" },
+					{ href: "/live/create", label: "Live" },
+				]
+			: []),
+	];
+
 	return (
 		<header className="sticky top-0 z-30 border-b border-line bg-[rgba(13,10,29,0.82)] backdrop-blur-md">
 			<div className="max-w-[1240px] mx-auto px-5 sm:px-10">
-				<nav className="site-nav !py-4">
+				<nav className="site-nav !py-3.5 flex-wrap gap-y-2">
 					<Link href="/" className="brand">
 						<IconHexLogo size={24} />
 						HexQuiz
@@ -36,7 +47,7 @@ export function Navbar() {
 							</>
 						)}
 					</div>
-					<nav className="flex items-center gap-2.5">
+					<nav className="flex items-center gap-2 ml-auto">
 						{mounted && user ? (
 							<>
 								{user.role === "ADMIN" && (
@@ -44,10 +55,7 @@ export function Navbar() {
 										Admin
 									</Link>
 								)}
-								<Link
-									href="/me"
-									className="btn btn-ghost btn-sm"
-								>
+								<Link href="/me" className="btn btn-ghost btn-sm">
 									{user.name.split(" ")[0]} · Progress
 								</Link>
 								<button
@@ -84,6 +92,17 @@ export function Navbar() {
 						)}
 					</nav>
 				</nav>
+				<div className="md:hidden flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+					{mobileLinks.map((link) => (
+						<Link
+							key={link.href}
+							href={link.href}
+							className="badge whitespace-nowrap shrink-0 hover:border-violet hover:text-violet"
+						>
+							{link.label}
+						</Link>
+					))}
+				</div>
 			</div>
 		</header>
 	);

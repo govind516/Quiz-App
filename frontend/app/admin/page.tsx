@@ -81,8 +81,8 @@ export default function AdminPage() {
 
 	return (
 		<div className="py-8">
-			<div className="admin-shell">
-				<aside className="admin-sidebar">
+			<div className="flex flex-col lg:grid lg:grid-cols-[240px_minmax(0,1fr)] gap-5 items-start">
+				<aside className="admin-sidebar hidden lg:flex sticky top-[84px] max-h-[calc(100vh-110px)] overflow-y-auto w-full lg:w-auto box-border">
 					<Link href="/" className="brand !text-base">
 						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
 							<polygon points="12,2 21,7 21,17 12,22 3,17 3,7" />
@@ -116,7 +116,25 @@ export default function AdminPage() {
 					</div>
 				</aside>
 
-				<main className="min-w-0">
+				<main className="min-w-0 flex-1 w-full">
+					<div className="admin-nav-mobile lg:hidden">
+						{SECTIONS.map(({ id, label, icon: Icon }) => (
+							<button
+								key={id}
+								className={`admin-nav-item shrink-0 whitespace-nowrap border border-line bg-surface ${
+									section === id ? "active" : ""
+								}`}
+								onClick={() => setSection(id)}
+							>
+								<Icon size={14} />
+								{label}
+								{id === "review" && pendingCount > 0 && (
+									<span className="badge badge-amber ml-1.5">{pendingCount}</span>
+								)}
+							</button>
+						))}
+					</div>
+
 					{(section === "questions" || section === "upload") && quizzes.length > 0 && (
 						<div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
 							<span className="mono text-xs text-faintc">Working on</span>
@@ -329,7 +347,7 @@ function DashboardSection({
 
 			<div className="card">
 				<h3 className="text-[15px] mb-4">All quizzes</h3>
-				<table className="review-table">
+				<div className="overflow-x-auto"><table className="review-table">
 					<thead>
 						<tr>
 							<th>Title</th>
@@ -356,7 +374,7 @@ function DashboardSection({
 							</tr>
 						))}
 					</tbody>
-				</table>
+				</table></div>
 			</div>
 		</div>
 	);
@@ -403,7 +421,7 @@ function QuestionsTab({ quizId }: { quizId: number }) {
 				<EmptyCard text="No questions yet — import a CSV or generate with AI." />
 			) : (
 				<div className="card !p-0 overflow-hidden">
-					<table className="review-table">
+					<div className="overflow-x-auto"><table className="review-table">
 						<tbody>
 							{questions.map((question) => (
 								<tr key={question.questionId}>
@@ -461,7 +479,7 @@ function QuestionsTab({ quizId }: { quizId: number }) {
 								</tr>
 							))}
 						</tbody>
-					</table>
+					</table></div>
 				</div>
 			)}
 		</div>
@@ -754,7 +772,7 @@ function ReviewTab({ quizzes }: { quizzes: QuizDto[] }) {
 						Pending AI-generated questions{" "}
 						<span className="badge badge-amber ml-2">{pending.length} waiting</span>
 					</h3>
-					<table className="review-table">
+					<div className="overflow-x-auto"><table className="review-table">
 						<thead>
 							<tr>
 								<th>Question</th>
@@ -817,7 +835,7 @@ function ReviewTab({ quizzes }: { quizzes: QuizDto[] }) {
 								);
 							})}
 						</tbody>
-					</table>
+					</table></div>
 				</div>
 			)}
 		</div>

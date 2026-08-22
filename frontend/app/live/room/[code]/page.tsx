@@ -270,7 +270,7 @@ export default function LiveRoomPage() {
 		return (
 			<div className="mx-auto max-w-lg py-12 text-center">
 				<Eyebrow>Room code — share it!</Eyebrow>
-				<div className="mono text-[56px] font-bold tracking-[0.22em] text-violet mt-3 leading-none">
+				<div className="mono text-4xl sm:text-[56px] font-bold tracking-[0.12em] sm:tracking-[0.22em] text-violet mt-3 leading-none">
 					{info.code}
 				</div>
 				<p className="mt-4 font-semibold text-ink">{info.quizTitle}</p>
