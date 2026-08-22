@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.quizapp.attempt.dto.AttemptResultDto;
 import com.example.quizapp.auth.CurrentUserProvider;
 import com.example.quizapp.user.UserService;
+import com.example.quizapp.user.dto.BadgeDto;
 import com.example.quizapp.user.dto.UserStatsDto;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,5 +33,10 @@ public class UserController {
 	@GetMapping("/stats")
 	public ResponseEntity<UserStatsDto> stats() {
 		return ResponseEntity.ok(userService.stats(currentUserProvider.requireCurrentUser().getId()));
+	}
+
+	@GetMapping("/badges")
+	public ResponseEntity<List<BadgeDto>> badges() {
+		return ResponseEntity.ok(userService.badges(currentUserProvider.requireCurrentUser().getId()));
 	}
 }

@@ -269,10 +269,10 @@ POST /api/admin/questions/:id/approve    -> publish an AI-generated or pending q
 - [x] Rate limiting (Bucket4j: submit/start/auth endpoints, keyed by user/guest-session/IP; attempt time validation already hardened via server-side buffer + optimistic locking)
 
 ### Phase 4
-- [ ] Custom quiz builder, badges/streaks
-- [ ] Multiplayer live quiz mode (Spring WebSocket / STOMP)
-- [ ] Certificates on quiz series completion
-- [ ] Image support (Cloudinary/Supabase Storage), if the need comes up later
+- [x] Custom quiz builder (`POST /api/custom-quizzes` + `/build` page), badges & daily streaks (rule-based badges, streak calc in `/api/users/me/stats|badges`)
+- [x] Multiplayer live quiz mode (Spring WebSocket / STOMP: in-memory rooms, host controls, 20s timed questions w/ speed bonus, live scoreboard; `/live/create`, `/live/join`, `/live/room/[code]`)
+- [x] Certificates on category series completion (60%+ per quiz; claim → verifiable public page `/certificate/[code]`)
+- [ ] Image support (Cloudinary/Supabase Storage) — intentionally deferred until the need arises
 
 ---
 

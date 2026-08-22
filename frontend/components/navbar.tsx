@@ -34,6 +34,22 @@ export function Navbar() {
 					</Link>
 					{mounted && user ? (
 						<>
+							<Link
+								href="/build"
+								className="rounded-md px-2 py-1 font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+							>
+								Build
+							</Link>
+							<Link
+								href="/live/create"
+								className="rounded-md px-2 py-1 font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+							>
+								Live
+							</Link>
+						</>
+					) : null}
+					{mounted && user ? (
+						<>
 							{user.role === "ADMIN" && (
 								<Link
 									href="/admin"

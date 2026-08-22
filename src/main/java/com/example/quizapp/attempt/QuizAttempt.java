@@ -47,9 +47,15 @@ public class QuizAttempt {
 	@Column(name = "guest_session_id", length = 36)
 	private String guestSessionId;
 
-	@ManyToOne(fetch = FetchType.LAZY, optional = false)
-	@JoinColumn(name = "quiz_id", nullable = false)
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "quiz_id")
 	private Quiz quiz;
+
+	@Column(nullable = false, length = 200)
+	private String title;
+
+	@Column(name = "time_limit_sec", nullable = false)
+	private int timeLimitSec;
 
 	@Column(nullable = false)
 	@Builder.Default

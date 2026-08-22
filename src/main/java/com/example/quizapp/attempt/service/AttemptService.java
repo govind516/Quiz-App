@@ -16,11 +16,13 @@ import java.util.Set;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.example.quizapp.attempt.AttemptAnswer;
 import com.example.quizapp.attempt.AttemptStatus;
 import com.example.quizapp.attempt.QuizAttempt;
 import com.example.quizapp.attempt.dto.AttemptResultDto;
+import com.example.quizapp.attempt.dto.CustomQuizRequest;
 import com.example.quizapp.attempt.dto.QuestionResultDto;
 import com.example.quizapp.attempt.dto.StartAttemptRequest;
 import com.example.quizapp.attempt.dto.StartAttemptResponse;
@@ -32,10 +34,13 @@ import com.example.quizapp.auth.CurrentUserProvider;
 import com.example.quizapp.common.exception.BadRequestException;
 import com.example.quizapp.common.exception.ConflictException;
 import com.example.quizapp.common.exception.ResourceNotFoundException;
+import com.example.quizapp.leaderboard.LeaderboardService;
 import com.example.quizapp.quiz.Option;
 import com.example.quizapp.quiz.Question;
 import com.example.quizapp.quiz.QuestionStatus;
 import com.example.quizapp.quiz.Quiz;
+import com.example.quizapp.quiz.dto.OptionPublicDto;
+import com.example.quizapp.quiz.dto.QuestionPublicDto;
 import com.example.quizapp.quiz.repository.QuestionRepository;
 import com.example.quizapp.quiz.repository.QuizRepository;
 import com.example.quizapp.user.User;
@@ -57,7 +62,7 @@ public class AttemptService {
 	private final QuestionRepository questionRepository;
 	private final CurrentUserProvider currentUserProvider;
 	private final ObjectMapper objectMapper;
-	private final com.example.quizapp.leaderboard.LeaderboardService leaderboardService;
+	private final LeaderboardService leaderboardService;
 
 	@Transactional
 	public StartAttemptResponse start(Long quizId, StartAttemptRequest request) {
@@ -76,12 +81,39 @@ public class AttemptService {
 		if (user == null) {
 			guestSessionId = requireGuestSessionId(request == null ? null : request.guestSessionId());
 		}
+		return createAttempt(quiz.getTitle(), quiz.getTimeLimitSec(), questions, user, guestSessionId, quiz);
+	}
 
+	@Transactional
+	public StartAttemptResponse startCustom(CustomQuizRequest request) {
+		User user = currentUserProvider.requireCurrentUser();
+		List<Question> pool = questionRepository.searchApproved(
+				StringUtils.hasText(request.categorySlug()) ? request.categorySlug() : null,
+				request.difficulty(),
+				StringUtils.hasText(request.tagSlug()) ? request.tagSlug() : null);
+		if (pool.isEmpty()) {
+			throw new ConflictException("No approved questions match these filters yet");
+		}
+		java.util.Collections.shuffle(pool);
+		int count = Math.min(request.count(), pool.size());
+		List<Question> picked = new ArrayList<>(pool.subList(0, count)).stream()
+				.sorted(Comparator.comparing(Question::getId))
+				.toList();
+		String title = "Custom: "
+				+ (StringUtils.hasText(request.categorySlug()) ? request.categorySlug() : "Mixed")
+				+ " · " + count + " Qs";
+		return createAttempt(title, request.timeLimitSec(), picked, user, null, null);
+	}
+
+	private StartAttemptResponse createAttempt(String title, int timeLimitSec,
+			List<Question> questions, User user, String guestSessionId, Quiz quiz) {
 		Instant startedAt = Instant.now();
 		QuizAttempt attempt = attemptRepository.save(QuizAttempt.builder()
 				.user(user)
 				.guestSessionId(guestSessionId)
 				.quiz(quiz)
+				.title(title)
+				.timeLimitSec(timeLimitSec)
 				.startedAt(startedAt)
 				.status(AttemptStatus.IN_PROGRESS)
 				.score(0)
@@ -107,17 +139,17 @@ public class AttemptService {
 		}
 		attemptRepository.save(attempt);
 
-		List<com.example.quizapp.quiz.dto.QuestionPublicDto> publicQuestions = new ArrayList<>();
+		List<QuestionPublicDto> publicQuestions = new ArrayList<>();
 		for (Question question : orderedQuestions) {
-			publicQuestions.add(toPublicQuestion(question, new LinkedHashSet<>(optionOrderMap.get(question.getId()))));
+			publicQuestions.add(toPublicQuestion(question, optionOrderMap.get(question.getId())));
 		}
 		return new StartAttemptResponse(
 				attempt.getId(),
-				quiz.getId(),
-				quiz.getTitle(),
-				quiz.getTimeLimitSec(),
+				quiz == null ? null : quiz.getId(),
+				title,
+				timeLimitSec,
 				startedAt,
-				startedAt.plusSeconds(quiz.getTimeLimitSec()),
+				startedAt.plusSeconds(timeLimitSec),
 				publicQuestions);
 	}
 
@@ -127,8 +159,7 @@ public class AttemptService {
 		if (attempt.getStatus() != AttemptStatus.IN_PROGRESS) {
 			throw new ConflictException("This attempt has already been submitted");
 		}
-		Quiz quiz = attempt.getQuiz();
-		int timeLimitSec = quiz.getTimeLimitSec();
+		int timeLimitSec = attempt.getTimeLimitSec();
 
 		Set<Long> seenQuestionIds = new HashSet<>();
 		for (SubmitAnswerDto answer : request.answers()) {
@@ -136,7 +167,9 @@ public class AttemptService {
 				throw new BadRequestException("Duplicate answers for question " + answer.questionId());
 			}
 		}
-		Map<Long, Question> quizQuestions = quiz.getQuestions().stream()
+		List<Long> orderedIds = parseQuestionOrder(attempt);
+		Map<Long, Question> quizQuestions = questionRepository.findAllByIdIn(
+						orderedIds.isEmpty() ? List.of(-1L) : orderedIds).stream()
 				.filter(q -> q.getStatus() == QuestionStatus.APPROVED)
 				.collect(HashMap::new, (m, q) -> m.put(q.getId(), q), HashMap::putAll);
 
@@ -187,7 +220,8 @@ public class AttemptService {
 		}
 		attemptRepository.saveAndFlush(attempt);
 
-		if (attempt.getUser() != null && attempt.getStatus() == AttemptStatus.SUBMITTED) {
+		Quiz quiz = attempt.getQuiz();
+		if (attempt.getUser() != null && attempt.getStatus() == AttemptStatus.SUBMITTED && quiz != null) {
 			long totalPoints = quizQuestions.values().stream()
 					.mapToLong(Question::getPoints)
 					.sum();
@@ -247,7 +281,7 @@ public class AttemptService {
 		List<Long> orderedQuestionIds = parseQuestionOrder(attempt);
 		List<Question> orderedQuestions;
 		if (orderedQuestionIds.isEmpty()) {
-			orderedQuestions = quiz.getQuestions().stream()
+			orderedQuestions = quiz == null ? List.of() : quiz.getQuestions().stream()
 					.sorted(Comparator.comparing(Question::getId))
 					.toList();
 		} else {
@@ -288,8 +322,8 @@ public class AttemptService {
 				: 0.0;
 		return new AttemptResultDto(
 				attempt.getId(),
-				quiz.getId(),
-				quiz.getTitle(),
+				quiz == null ? null : quiz.getId(),
+				attempt.getTitle(),
 				attempt.getStatus(),
 				attempt.getScore(),
 				totalPoints,
@@ -312,18 +346,19 @@ public class AttemptService {
 		}
 	}
 
-	private com.example.quizapp.quiz.dto.QuestionPublicDto toPublicQuestion(
-			Question question, Set<Long> optionOrder) {
-		List<com.example.quizapp.quiz.dto.OptionPublicDto> options = new ArrayList<>();
+	private QuestionPublicDto toPublicQuestion(Question question, List<Long> optionOrder) {
+		Map<Long, Option> byId = new HashMap<>();
+		for (Option option : question.getOptions()) {
+			byId.put(option.getId(), option);
+		}
+		List<OptionPublicDto> options = new ArrayList<>();
 		for (Long optionId : optionOrder) {
-			for (Option option : question.getOptions()) {
-				if (option.getId().equals(optionId)) {
-					options.add(new com.example.quizapp.quiz.dto.OptionPublicDto(option.getId(), option.getOptionText()));
-					break;
-				}
+			Option option = byId.get(optionId);
+			if (option != null) {
+				options.add(new OptionPublicDto(option.getId(), option.getOptionText()));
 			}
 		}
-		return new com.example.quizapp.quiz.dto.QuestionPublicDto(
+		return new QuestionPublicDto(
 				question.getId(),
 				question.getQuestionText(),
 				question.getType(),

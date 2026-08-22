@@ -104,6 +104,8 @@ export interface UserStatsDto {
 	averagePercentage: number;
 	bestPercentage: number;
 	totalPointsEarned: number;
+	currentStreak: number;
+	bestStreak: number;
 }
 
 export interface QuestionAdminOption {
@@ -146,4 +148,58 @@ export interface LeaderboardEntryDto {
 	userId: number;
 	name: string;
 	score: number;
+}
+
+export interface BadgeDto {
+	code: string;
+	name: string;
+	description: string;
+	earned: boolean;
+}
+
+export interface CategoryProgressDto {
+	categoryId: number;
+	categoryName: string;
+	totalQuizzes: number;
+	completedQuizzes: number;
+	eligible: boolean;
+}
+
+export interface CertificateDto {
+	code: string;
+	userName: string;
+	categoryId: number;
+	categoryName: string;
+	issuedAt: string;
+}
+
+export interface PlayerInfo {
+	playerId: string;
+	nickname: string;
+	score: number;
+	answeredCurrent: boolean;
+}
+
+export type LiveRoomStatus = "LOBBY" | "ACTIVE" | "ENDED";
+
+export interface LiveRoomInfo {
+	code: string;
+	quizTitle: string;
+	hostName: string;
+	status: LiveRoomStatus;
+	players: PlayerInfo[];
+}
+
+export interface LiveQuestionPayload {
+	index: number;
+	total: number;
+	question: QuestionPublicDto;
+	endsAtEpochMs: number;
+	scoreboard: PlayerInfo[];
+}
+
+export interface FinalResultsPayload {
+	code: string;
+	quizTitle: string;
+	entries: PlayerInfo[];
 }
