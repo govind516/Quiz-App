@@ -70,7 +70,7 @@ public class AttemptService {
 				.orElseThrow(() -> new ResourceNotFoundException("Published quiz", quizId));
 		List<Question> questions = quiz.getQuestions().stream()
 				.filter(q -> q.getStatus() == QuestionStatus.APPROVED)
-				.sorted(Comparator.comparing(Question::getId))
+				.sorted(Comparator.comparing(q -> q.getId()))
 				.toList();
 		if (questions.isEmpty()) {
 			throw new ConflictException("This quiz has no active questions yet");
@@ -97,7 +97,7 @@ public class AttemptService {
 		java.util.Collections.shuffle(pool);
 		int count = Math.min(request.count(), pool.size());
 		List<Question> picked = new ArrayList<>(pool.subList(0, count)).stream()
-				.sorted(Comparator.comparing(Question::getId))
+				.sorted(Comparator.comparing(q -> q.getId()))
 				.toList();
 		String title = "Custom: "
 				+ (StringUtils.hasText(request.categorySlug()) ? request.categorySlug() : "Mixed")
@@ -125,14 +125,14 @@ public class AttemptService {
 		Map<Long, List<Long>> optionOrderMap = new LinkedHashMap<>();
 		for (Question question : orderedQuestions) {
 			List<Option> options = question.getOptions().stream()
-					.sorted(Comparator.comparing(Option::getId))
+					.sorted(Comparator.comparing(o -> o.getId()))
 					.collect(java.util.stream.Collectors.toCollection(ArrayList::new));
 			java.util.Collections.shuffle(options, random);
-			optionOrderMap.put(question.getId(), options.stream().map(Option::getId).toList());
+			optionOrderMap.put(question.getId(), options.stream().map(o -> o.getId()).toList());
 		}
 		try {
 			attempt.setQuestionOrder(objectMapper.writeValueAsString(
-					orderedQuestions.stream().map(Question::getId).toList()));
+					orderedQuestions.stream().map(q -> q.getId()).toList()));
 			attempt.setOptionOrder(objectMapper.writeValueAsString(optionOrderMap));
 		} catch (JsonProcessingException e) {
 			throw new IllegalStateException("Failed to persist attempt order", e);
@@ -155,7 +155,10 @@ public class AttemptService {
 
 	@Transactional
 	public AttemptResultDto submit(Long attemptId, SubmitAttemptRequest request) {
-		QuizAttempt attempt = getOwnedAttempt(attemptId, request == null ? null : request.guestSessionId());
+		if (request == null) {
+			throw new BadRequestException("Request body with answers is required");
+		}
+		QuizAttempt attempt = getOwnedAttempt(attemptId, request.guestSessionId());
 		if (attempt.getStatus() != AttemptStatus.IN_PROGRESS) {
 			throw new ConflictException("This attempt has already been submitted");
 		}
@@ -171,7 +174,7 @@ public class AttemptService {
 		Map<Long, Question> quizQuestions = questionRepository.findAllByIdIn(
 						orderedIds.isEmpty() ? List.of(-1L) : orderedIds).stream()
 				.filter(q -> q.getStatus() == QuestionStatus.APPROVED)
-				.collect(HashMap::new, (m, q) -> m.put(q.getId(), q), HashMap::putAll);
+				.collect(HashMap::new, (m, q) -> m.put(q.getId(), q), (m2, extra) -> m2.putAll(extra));
 
 		for (SubmitAnswerDto answer : request.answers()) {
 			Question question = quizQuestions.get(answer.questionId());
@@ -206,7 +209,7 @@ public class AttemptService {
 		answerRepository.saveAll(rows);
 
 		int earnedPoints = rows.stream()
-				.filter(AttemptAnswer::isCorrect)
+				.filter(a -> a.isCorrect())
 				.mapToInt(row -> quizQuestions.get(row.getQuestion().getId()).getPoints())
 				.sum();
 
@@ -223,7 +226,7 @@ public class AttemptService {
 		Quiz quiz = attempt.getQuiz();
 		if (attempt.getUser() != null && attempt.getStatus() == AttemptStatus.SUBMITTED && quiz != null) {
 			long totalPoints = quizQuestions.values().stream()
-					.mapToLong(Question::getPoints)
+					.mapToLong(q -> q.getPoints())
 					.sum();
 			double percentage = totalPoints > 0 ? (earnedPoints * 100.0 / totalPoints) : 0.0;
 			leaderboardService.recordSubmission(
@@ -293,13 +296,13 @@ public class AttemptService {
 		List<Question> orderedQuestions;
 		if (orderedQuestionIds.isEmpty()) {
 			orderedQuestions = quiz == null ? List.of() : quiz.getQuestions().stream()
-					.sorted(Comparator.comparing(Question::getId))
+					.sorted(Comparator.comparing(q -> q.getId()))
 					.toList();
 		} else {
 			Map<Long, Question> byId = questionRepository.findAllByIdIn(orderedQuestionIds).stream()
-					.collect(HashMap::new, (m, q) -> m.put(q.getId(), q), HashMap::putAll);
+					.collect(HashMap::new, (m, q) -> m.put(q.getId(), q), (m2, extra) -> m2.putAll(extra));
 			orderedQuestions = orderedQuestionIds.stream()
-					.map(byId::get)
+					.map(id -> byId.get(id))
 					.filter(java.util.Objects::nonNull)
 					.toList();
 		}
@@ -310,8 +313,8 @@ public class AttemptService {
 			totalPoints += question.getPoints();
 			AttemptAnswer answer = answersByQuestionId.get(question.getId());
 			Set<Long> correctOptionIds = question.getOptions().stream()
-					.filter(Option::isCorrect)
-					.map(Option::getId)
+					.filter(o -> o.isCorrect())
+					.map(o -> o.getId())
 					.collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
 			Set<Long> selected = answer == null ? Set.of() : answer.getSelectedOptionIds();
 			boolean correct = answer != null && answer.isCorrect();

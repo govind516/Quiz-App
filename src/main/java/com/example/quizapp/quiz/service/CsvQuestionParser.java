@@ -159,7 +159,7 @@ public class CsvQuestionParser {
 				options.set(idx - 1, new CsvOption(options.get(idx - 1).text(), true));
 			}
 
-			long correctCount = options.stream().filter(CsvOption::correct).count();
+			long correctCount = options.stream().filter(o -> o.correct()).count();
 			if ((type == QuestionType.MCQ || type == QuestionType.TRUE_FALSE) && correctCount > 1) {
 				return RowResult.fail(lineNumber, type + " allows exactly one correct option");
 			}

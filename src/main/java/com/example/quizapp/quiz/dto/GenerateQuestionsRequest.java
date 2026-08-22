@@ -1,6 +1,5 @@
 package com.example.quizapp.quiz.dto;
 
-import java.util.List;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

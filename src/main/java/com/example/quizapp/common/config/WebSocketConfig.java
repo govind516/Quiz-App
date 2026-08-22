@@ -1,6 +1,7 @@
 package com.example.quizapp.common.config;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.lang.NonNull;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.scheduling.TaskScheduler;
@@ -14,6 +15,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	@Bean
+	@NonNull
 	public TaskScheduler heartbeatScheduler() {
 		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
 		scheduler.setPoolSize(1);
@@ -32,7 +34,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	}
 
 	@Override
-	public void configureMessageBroker(MessageBrokerRegistry registry) {
+	public void configureMessageBroker(@NonNull MessageBrokerRegistry registry) {
 		registry.enableSimpleBroker("/topic")
 				.setTaskScheduler(heartbeatScheduler())
 				.setHeartbeatValue(new long[] { 10_000, 10_000 });
@@ -40,7 +42,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 	}
 
 	@Override
-	public void registerStompEndpoints(StompEndpointRegistry registry) {
+	public void registerStompEndpoints(@NonNull StompEndpointRegistry registry) {
 		registry.addEndpoint("/ws").setAllowedOriginPatterns("*");
 	}
 }

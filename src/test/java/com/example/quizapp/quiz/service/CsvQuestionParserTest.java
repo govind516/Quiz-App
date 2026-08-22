@@ -48,7 +48,7 @@ class CsvQuestionParserTest {
 
 		assertThat(results).allSatisfy(r -> assertThat(r.error()).isNull());
 		assertThat(results.get(0).question().options().stream()
-				.filter(CsvQuestionParser.CsvOption::correct).count()).isEqualTo(2);
+				.filter(o -> o.correct()).count()).isEqualTo(2);
 		CsvQuestionParser.ParsedQuestion tf = results.get(1).question();
 		assertThat(tf.type()).isEqualTo(QuestionType.TRUE_FALSE);
 		assertThat(tf.points()).isEqualTo(1);

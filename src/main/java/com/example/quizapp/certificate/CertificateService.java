@@ -112,7 +112,7 @@ public class CertificateService {
 				.findAllByUserIdAndStatusOrderByCompletedAtDesc(userId, AttemptStatus.SUBMITTED)) {
 			long totalPoints = questionRepository.sumPointsByQuizId(attempt.getQuiz().getId());
 			double pct = totalPoints > 0 ? Math.min(attempt.getScore() * 100.0 / totalPoints, 100.0) : 0;
-			best.merge(attempt.getQuiz().getId(), pct, Math::max);
+			best.merge(attempt.getQuiz().getId(), pct, (a, b) -> Math.max(a, b));
 		}
 		return best;
 	}

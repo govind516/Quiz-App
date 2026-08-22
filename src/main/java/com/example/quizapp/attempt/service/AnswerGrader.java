@@ -13,8 +13,8 @@ public final class AnswerGrader {
 
 	public static boolean isCorrect(Question question, Set<Long> selectedOptionIds) {
 		Set<Long> correctIds = question.getOptions().stream()
-				.filter(Option::isCorrect)
-				.map(Option::getId)
+				.filter(o -> o.isCorrect())
+				.map(o -> o.getId())
 				.collect(Collectors.toSet());
 		if (correctIds.isEmpty() || selectedOptionIds == null || selectedOptionIds.isEmpty()) {
 			return false;

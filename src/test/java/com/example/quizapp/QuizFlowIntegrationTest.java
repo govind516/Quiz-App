@@ -19,11 +19,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import com.example.quizapp.attempt.AttemptStatus;
-import com.example.quizapp.attempt.repository.QuizAttemptRepository;
 import com.example.quizapp.quiz.Option;
-import com.example.quizapp.quiz.Question;
-import com.example.quizapp.quiz.repository.QuizRepository;
 import com.example.quizapp.user.Role;
 import com.example.quizapp.user.UserRepository;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -41,13 +37,7 @@ class QuizFlowIntegrationTest {
 	private ObjectMapper objectMapper;
 
 	@Autowired
-	private QuizRepository quizRepository;
-
-	@Autowired
 	private com.example.quizapp.quiz.repository.OptionRepository optionRepository;
-
-	@Autowired
-	private QuizAttemptRepository attemptRepository;
 
 	@Autowired
 	private UserRepository userRepository;

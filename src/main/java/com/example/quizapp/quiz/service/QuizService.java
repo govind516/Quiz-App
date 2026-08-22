@@ -1,6 +1,5 @@
 package com.example.quizapp.quiz.service;
 
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -14,7 +13,6 @@ import com.example.quizapp.common.exception.BadRequestException;
 import com.example.quizapp.common.exception.ResourceNotFoundException;
 import com.example.quizapp.quiz.Category;
 import com.example.quizapp.quiz.Difficulty;
-import com.example.quizapp.quiz.Option;
 import com.example.quizapp.quiz.QuestionStatus;
 import com.example.quizapp.quiz.QuestionType;
 import com.example.quizapp.quiz.Quiz;
@@ -164,7 +162,7 @@ public class QuizService {
 	}
 
 	private void validateOptions(QuestionType type, List<OptionRequest> options) {
-		long correctCount = options.stream().filter(OptionRequest::isCorrect).count();
+		long correctCount = options.stream().filter(o -> o.isCorrect()).count();
 		if (correctCount == 0) {
 			throw new BadRequestException("At least one option must be marked correct");
 		}
@@ -201,7 +199,7 @@ public class QuizService {
 				quiz.getTimeLimitSec(),
 				quiz.isPublished(),
 				(int) questionRepository.countByQuizIdAndStatus(quiz.getId(), QuestionStatus.APPROVED),
-				quiz.getTags().stream().map(Tag::getSlug).collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new)),
+				quiz.getTags().stream().map(t -> t.getSlug()).collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new)),
 				quiz.getCreatedBy() == null ? null : quiz.getCreatedBy().getName(),
 				quiz.getCreatedAt());
 	}

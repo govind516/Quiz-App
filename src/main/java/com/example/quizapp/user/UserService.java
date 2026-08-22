@@ -2,7 +2,6 @@ package com.example.quizapp.user;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
