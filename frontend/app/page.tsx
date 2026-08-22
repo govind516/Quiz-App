@@ -34,7 +34,7 @@ function CountUp({ value, suffix = "" }: { value: number; suffix?: string }) {
 	);
 }
 
-function Constellation({ firstQuiz }: { firstQuiz?: QuizDto }) {
+function Constellation() {
 	return (
 		<div className="relative hidden lg:block h-[420px]">
 			<svg className="constellation w-full h-full" viewBox="0 0 480 420">
@@ -56,18 +56,16 @@ function Constellation({ firstQuiz }: { firstQuiz?: QuizDto }) {
 					opacity=".5"
 				/>
 			</svg>
-			{firstQuiz && (
-				<div className="float-card">
-					<div className="flex items-center justify-between mb-2.5">
-						<span className="badge badge-violet">{firstQuiz.categoryName}</span>
-						<span className="text-faintc"><IconQuestion size={14} /></span>
-					</div>
-					<div className="text-[13px] font-semibold mb-1">
-						{firstQuiz.title}
-					</div>
-					<div className="code-line">→ {firstQuiz.questionCount} questions ready</div>
+			<div className="float-card">
+				<div className="flex items-center justify-between mb-2">
+					<span className="badge badge-violet">JavaScript</span>
+					<span className="text-faintc"><IconQuestion size={14} /></span>
 				</div>
-			)}
+				<div className="text-[13px] font-semibold text-ink mb-1">
+					typeof NaN === ?
+				</div>
+				<div className="code-line">→ &apos;number&apos;</div>
+			</div>
 		</div>
 	);
 }
@@ -131,7 +129,7 @@ export default function LandingPage() {
 						</div>
 					</div>
 				</div>
-				<Constellation firstQuiz={quizzes[0]} />
+				<Constellation />
 			</div>
 
 			<div className="section-head">

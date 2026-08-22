@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type {
@@ -14,10 +14,55 @@ import type {
 	UserStatsDto,
 } from "@/lib/types";
 import { useAuthStore } from "@/lib/auth-store";
-import { Button, Eyebrow } from "@/components/ui";
+import { Button, CountUp, Eyebrow } from "@/components/ui";
 import { IconCheck, IconLock } from "@/components/icons";
 
 const DAY_LABELS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+
+function nextMilestone(stats: UserStatsDto | undefined): {
+	title: string;
+	sub: string;
+	cur: number;
+	target: number;
+} | null {
+	if (!stats) return null;
+	const completed = stats.completedAttempts;
+	const streak = Math.max(stats.currentStreak, stats.bestStreak);
+	if (completed < 1)
+		return { title: "First Steps", sub: "Complete your first quiz", cur: 0, target: 1 };
+	if (streak < 3)
+		return { title: "Consistent", sub: "Reach a 3-day answering streak", cur: streak, target: 3 };
+	if (streak < 7)
+		return { title: "On Fire", sub: "Reach a 7-day answering streak", cur: streak, target: 7 };
+	if (completed < 10)
+		return { title: "Quiz Machine", sub: "Complete 10 quizzes", cur: completed, target: 10 };
+	if (!(completed >= 5 && stats.averagePercentage >= 75))
+		return {
+			title: "Sharp Shooter",
+			sub: "Average 75%+ across 5+ quizzes",
+			cur: Math.min(Math.round((stats.averagePercentage / 75) * completed), 5),
+			target: 5,
+		};
+	return null;
+}
+
+function fireParticles(el: HTMLElement) {
+	const colors = ["#7B5CFF", "#35E8B4", "#FFB84D"];
+	const rect = el.getBoundingClientRect();
+	for (let i = 0; i < 14; i++) {
+		const p = document.createElement("div");
+		p.className = "particle";
+		const angle = Math.random() * Math.PI * 2;
+		const dist = 40 + Math.random() * 50;
+		p.style.setProperty("--px", `${Math.cos(angle) * dist}px`);
+		p.style.setProperty("--py", `${Math.sin(angle) * dist}px`);
+		p.style.background = colors[i % colors.length];
+		p.style.left = `${rect.left + rect.width / 2}px`;
+		p.style.top = `${rect.top + rect.height / 2}px`;
+		document.body.appendChild(p);
+		setTimeout(() => p.remove(), 850);
+	}
+}
 
 export default function MyProgressPage() {
 	const router = useRouter();
@@ -77,40 +122,49 @@ export default function MyProgressPage() {
 		},
 	});
 
+	const stats = statsQuery.data;
+	const milestone = useMemo(() => nextMilestone(stats), [stats]);
+
+	const barRef = useRef<HTMLDivElement>(null);
+	useEffect(() => {
+		const el = barRef.current;
+		if (!el || !milestone) return;
+		el.style.width = "0%";
+		const timer = setTimeout(() => {
+			if (barRef.current) {
+				barRef.current.style.width = `${Math.min(
+					100,
+					(milestone.cur / milestone.target) * 100
+				)}%`;
+			}
+		}, 200);
+		return () => clearTimeout(timer);
+	}, [milestone]);
+
 	if (!hydrated || !user || statsQuery.isPending || historyQuery.isPending) {
 		return <div className="h-64 animate-pulse rounded-xl bg-surface2 mt-10" />;
 	}
 
-	const stats = statsQuery.data;
 	const history = historyQuery.data ?? [];
 
-	function nextMilestone(): {
-		title: string;
-		sub: string;
-		cur: number;
-		target: number;
-	} | null {
-		if (!stats) return null;
-		const completed = stats.completedAttempts;
+	function lockedCaption(badge: BadgeDto): string {
+		if (!stats) return badge.description;
 		const streak = Math.max(stats.currentStreak, stats.bestStreak);
-		if (completed < 1)
-			return { title: "First Steps", sub: "Complete your first quiz", cur: 0, target: 1 };
-		if (streak < 3)
-			return { title: "Consistent", sub: "Reach a 3-day answering streak", cur: streak, target: 3 };
-		if (streak < 7)
-			return { title: "On Fire", sub: "Reach a 7-day answering streak", cur: streak, target: 7 };
-		if (completed < 10)
-			return { title: "Quiz Machine", sub: "Complete 10 quizzes", cur: completed, target: 10 };
-		if (!(completed >= 5 && stats.averagePercentage >= 75))
-			return {
-				title: "Sharp Shooter",
-				sub: "Average 75%+ across 5+ quizzes",
-				cur: Math.min(Math.round((stats.averagePercentage / 75) * completed), 5),
-				target: 5,
-			};
-		return null;
+		switch (badge.code) {
+			case "CONSISTENT":
+				return `${Math.max(0, 3 - streak)} day${3 - streak === 1 ? "" : "s"} to go`;
+			case "ON_FIRE":
+				return `${Math.max(0, 7 - streak)} days to go`;
+			case "QUIZ_MACHINE":
+				return `${Math.max(0, 10 - stats.completedAttempts)} more quiz${10 - stats.completedAttempts === 1 ? "" : "zes"}`;
+			case "FIRST_STEPS":
+				return "Complete your first quiz";
+			case "PERFECT_SCORE":
+				return "Score 100% on any quiz";
+			default:
+				return badge.description;
+		}
 	}
-	const milestone = nextMilestone();
 
 	const activeDates = new Set(
 		history
@@ -135,7 +189,7 @@ export default function MyProgressPage() {
 						<div className="streak-flame">🔥</div>
 						<div>
 							<div className="streak-num">
-								{stats.currentStreak}-day streak
+								<CountUp value={stats.currentStreak} />-day streak
 							</div>
 							<div className="streak-longest">
 								Longest streak: {stats.bestStreak} day
@@ -173,9 +227,7 @@ export default function MyProgressPage() {
 											<span className="mono text-[11px]">Now</span>
 										) : null}
 									</div>
-									<div className="day-lbl">
-										{i === todayIdx ? "TODAY" : DAY_LABELS[day.getDay()]}
-									</div>
+								<div className="day-lbl">{DAY_LABELS[day.getDay()]}</div>
 								</div>
 							);
 						})}
@@ -188,13 +240,24 @@ export default function MyProgressPage() {
 				{(badgesQuery.data ?? []).map((badge) => (
 					<div
 						key={badge.code}
-						className={`milestone ${badge.earned ? "unlocked" : "locked"}`}
+						className={`milestone ${badge.earned ? "unlocked cursor-pointer" : "locked"}`}
+						onClick={(e) => {
+							if (badge.earned) fireParticles(e.currentTarget);
+							else {
+								const el = e.currentTarget;
+								el.classList.remove("shake");
+								void el.offsetWidth;
+								el.classList.add("shake");
+							}
+						}}
 					>
 						<div className="hex">
 							{badge.earned ? <IconCheck size={20} /> : <IconLock size={20} />}
 						</div>
 						<div className="m-title">{badge.name}</div>
-						<div className="m-desc">{badge.description}</div>
+						<div className="m-desc">
+							{badge.earned ? badge.description : lockedCaption(badge)}
+						</div>
 					</div>
 				))}
 			</div>
@@ -208,12 +271,7 @@ export default function MyProgressPage() {
 						<div className="text-xs text-faintc">{milestone.sub}</div>
 					</div>
 					<div className="mv-bar-track">
-						<div
-							className="mv-bar-fill"
-							style={{
-								width: `${Math.min(100, (milestone.cur / milestone.target) * 100)}%`,
-							}}
-						/>
+						<div ref={barRef} className="mv-bar-fill" />
 					</div>
 					<div className="mono text-[13px]">
 						{Math.min(milestone.cur, milestone.target)}/{milestone.target}

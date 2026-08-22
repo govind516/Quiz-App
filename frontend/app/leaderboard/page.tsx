@@ -66,8 +66,14 @@ export default function LeaderboardPage() {
 	});
 
 	const entries = entriesQuery.data ?? [];
+	const youIndex = user ? entries.findIndex((e) => e.userId === user.id) : -1;
+	const youEntry = youIndex >= 0 ? entries[youIndex] : undefined;
+	const youInPodium = youIndex >= 0 && youIndex < 3;
 	const podium = [entries[1], entries[0], entries[2]].filter(Boolean);
-	const rest = entries.slice(3);
+	const rest = (youIndex >= 3
+		? entries.filter((_, i) => i !== youIndex)
+		: entries
+	).slice(3);
 
 	return (
 		<div className="py-10 max-w-3xl mx-auto">
@@ -137,28 +143,50 @@ export default function LeaderboardPage() {
 					)}
 
 					<div className="lb-list">
-						{rest.map((entry) => {
-							const isYou = user && entry.userId === user.id;
-							return (
-								<div
-									key={entry.userId}
-									className={`lb-row ${isYou ? "!bg-violetdim" : ""}`}
-								>
-									<div className="lb-rank">#{entry.rank}</div>
-									<div className="row-avatar">{initials(entry.name)}</div>
-									<div className="row-name">
-										<div className="handle flex items-center gap-2">
-											{entry.name}
-											{isYou && <span className="badge badge-violet">you</span>}
-										</div>
-									</div>
-									<div className="row-score text-right mono text-mint">
-										{entry.score.toLocaleString()}
+						{rest.map((entry, i) => (
+							<div
+								key={entry.userId}
+								className={`lb-row row-animate ${entry.userId === user?.id ? "!bg-violetdim" : ""}`}
+								style={{ animationDelay: `${0.05 * (i + 1)}s` }}
+							>
+								<div className="lb-rank">#{entry.rank}</div>
+								<div className="row-avatar">{initials(entry.name)}</div>
+								<div className="row-name">
+									<div className="handle flex items-center gap-2">
+										{entry.name}
+										{entry.userId === user?.id && (
+											<span className="badge badge-violet">you</span>
+										)}
 									</div>
 								</div>
-							);
-						})}
+								<div className="row-score text-right mono text-mint">
+									{entry.score.toLocaleString()}
+								</div>
+							</div>
+						))}
 					</div>
+
+					{youEntry && !youInPodium && (
+						<div className="you-row">
+							<div className="flex items-center gap-3.5">
+								<div
+									className="row-avatar"
+									style={{ border: "1.5px solid var(--color-violet)" }}
+								>
+									{initials(youEntry.name)}
+								</div>
+								<div>
+									<div className="handle font-semibold text-[13.5px] text-ink">
+										You · #{youEntry.rank}
+									</div>
+									<div className="text-xs text-faintc mono">
+										{youEntry.score.toLocaleString()} pts
+									</div>
+								</div>
+							</div>
+							<span className="badge badge-violet">Keep climbing 🚀</span>
+						</div>
+					)}
 				</>
 			)}
 

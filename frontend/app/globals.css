@@ -1124,6 +1124,34 @@ select.input option {
   transform: translateX(-8px);
   animation: rowIn 0.5s ease forwards;
 }
+.page-enter {
+  animation: fadeUp 0.6s cubic-bezier(0.22, 0.68, 0, 1);
+}
+
+/* particle burst (milestone badges) */
+.particle {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 100;
+  animation: particleBurst 0.8s ease-out forwards;
+}
+@keyframes particleBurst {
+  to {
+    transform: translate(var(--px), var(--py)) scale(0);
+    opacity: 0;
+  }
+}
+
+/* review table row tint -> collapse */
+.review-table tr {
+  transition: opacity 0.35s ease, background-color 0.3s ease;
+}
+.review-table tr.cleared {
+  opacity: 0;
+}
 
 /* ---------- responsive ---------- */
 @media (max-width: 1100px) {

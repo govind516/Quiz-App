@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type {
+	AdminAnalyticsDto,
 	BulkUploadResult,
 	CategoryDto,
 	GenerateQuestionsPayload,
@@ -15,7 +16,7 @@ import type {
 	QuizDto,
 } from "@/lib/types";
 import { useAuthStore } from "@/lib/auth-store";
-import { Button, Eyebrow, initials } from "@/components/ui";
+import { Button, CountUp, Eyebrow, initials } from "@/components/ui";
 import {
 	IconCheck,
 	IconGrid,
@@ -67,6 +68,11 @@ export default function AdminPage() {
 	const categoriesQuery = useQuery({
 		queryKey: ["categories"],
 		queryFn: () => api<CategoryDto[]>("/api/categories", { auth: false }),
+	});
+	const analyticsQuery = useQuery({
+		queryKey: ["admin", "analytics"],
+		queryFn: () => api<AdminAnalyticsDto>("/api/admin/analytics/attempts?days=7"),
+		enabled: Boolean(user && user.role === "ADMIN" && section === "dashboard"),
 	});
 
 	const quizzes = quizzesQuery.data ?? [];
@@ -138,8 +144,8 @@ export default function AdminPage() {
 						<DashboardSection
 							quizzes={quizzes}
 							totalQuestions={totalQuestions}
-							categoryCount={(categoriesQuery.data ?? []).length}
 							pendingCount={pendingCount}
+							analytics={analyticsQuery.data}
 							onGoReview={() => setSection("review")}
 						/>
 					)}
@@ -183,17 +189,77 @@ function SectionHead({ title }: { title: string }) {
 	);
 }
 
+function AttemptsChart({ daily }: { daily: { date: string; count: number }[] }) {
+	const pathRef = useRef<SVGPolylineElement>(null);
+	const areaRef = useRef<SVGPolygonElement>(null);
+
+	const W = 560;
+	const H = 180;
+	const PAD = 18;
+
+	let points = "";
+	if (daily.length > 0) {
+		const max = Math.max(1, ...daily.map((d) => d.count));
+		const stepX = daily.length === 1 ? W : W / (daily.length - 1);
+		points = daily
+			.map((d, i) => {
+				const x = i * stepX;
+				const y = H - PAD - (d.count / max) * (H - PAD * 2);
+				return `${x.toFixed(1)},${y.toFixed(1)}`;
+			})
+			.join(" ");
+	}
+	const areaPoints = points ? `${points} ${W},${H} 0,${H}` : "";
+
+	useEffect(() => {
+		const path = pathRef.current;
+		if (!path || !points) return;
+		let length = 900;
+		try {
+			length = path.getTotalLength();
+		} catch {}
+		path.style.transition = "none";
+		path.style.strokeDasharray = String(length);
+		path.style.strokeDashoffset = String(length);
+		void path.getBoundingClientRect();
+		path.style.transition =
+			"stroke-dashoffset 1.4s cubic-bezier(.22,.68,0,1)";
+		path.style.strokeDashoffset = "0";
+		if (areaRef.current) {
+			areaRef.current.style.opacity = "0";
+			setTimeout(() => {
+				if (areaRef.current) areaRef.current.style.opacity = "1";
+			}, 600);
+		}
+	}, [points]);
+
+	if (!daily.length) return null;
+
+	return (
+		<svg className="chart-svg w-full h-[180px]" viewBox="0 0 560 180" preserveAspectRatio="none">
+			<defs>
+				<linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stopColor="#7B5CFF" stopOpacity=".35" />
+					<stop offset="100%" stopColor="#7B5CFF" stopOpacity="0" />
+				</linearGradient>
+			</defs>
+			<polygon ref={areaRef} className="transition-opacity duration-700" points={areaPoints} fill="url(#chartGrad)" />
+			<polyline ref={pathRef} className="chart-path" points={points} />
+		</svg>
+	);
+}
+
 function DashboardSection({
 	quizzes,
 	totalQuestions,
-	categoryCount,
 	pendingCount,
+	analytics,
 	onGoReview,
 }: {
 	quizzes: QuizDto[];
 	totalQuestions: number;
-	categoryCount: number;
 	pendingCount: number;
+	analytics?: AdminAnalyticsDto;
 	onGoReview: () => void;
 }) {
 	return (
@@ -202,18 +268,24 @@ function DashboardSection({
 			<div className="stat-grid">
 				<div className="card stat-card">
 					<div className="stat-label">Quizzes</div>
-					<div className="stat-num">{quizzes.length}</div>
+					<div className="stat-num">
+						<CountUp value={quizzes.length} />
+					</div>
 					<div className="stat-delta text-[12px] mutedc">across all categories</div>
 				</div>
 				<div className="card stat-card">
 					<div className="stat-label">Active questions</div>
-					<div className="stat-num">{totalQuestions}</div>
+					<div className="stat-num">
+						<CountUp value={totalQuestions} />
+					</div>
 					<div className="stat-delta text-[12px] mutedc">approved & playable</div>
 				</div>
 				<div className="card stat-card">
-					<div className="stat-label">Categories</div>
-					<div className="stat-num">{categoryCount}</div>
-					<div className="stat-delta text-[12px] mutedc">tracks</div>
+					<div className="stat-label">Completions today</div>
+					<div className="stat-num">
+						<CountUp value={analytics?.today ?? 0} />
+					</div>
+					<div className="stat-delta text-[12px] mutedc">last 24 hours</div>
 				</div>
 				<div className="card stat-card">
 					<div className="stat-label">Pending AI questions</div>
@@ -221,7 +293,7 @@ function DashboardSection({
 						className="stat-num"
 						style={{ color: pendingCount > 0 ? "#FFB84D" : undefined }}
 					>
-						{pendingCount}
+						<CountUp value={pendingCount} />
 					</div>
 					<button
 						className="stat-delta text-[12px] text-left"
@@ -232,6 +304,33 @@ function DashboardSection({
 					</button>
 				</div>
 			</div>
+
+			{analytics && (
+				<div className="admin-row2 mb-4">
+					<div className="card">
+						<h3 className="text-[15px] mb-5">Attempts — last 7 days</h3>
+						<AttemptsChart daily={analytics.daily} />
+					</div>
+					<div className="card">
+						<h3 className="text-[15px] mb-5">Top categories this week</h3>
+						{analytics.topCategories.length === 0 ? (
+							<p className="text-sm text-mutedc">No completed quizzes yet.</p>
+						) : (
+							<div className="flex flex-col gap-3.5 text-[13px]">
+								{analytics.topCategories.map((cat, i) => (
+									<div key={cat.name} className="flex items-center justify-between">
+										<span className="mutedc flex items-center gap-2.5">
+											<span className="mono text-faintc">{i + 1}</span>
+											{cat.name}
+										</span>
+										<span className="mono">{cat.count}</span>
+									</div>
+								))}
+							</div>
+						)}
+					</div>
+				</div>
+			)}
 
 			<div className="card">
 				<h3 className="text-[15px] mb-4">All quizzes</h3>
@@ -603,6 +702,9 @@ function GenerateTab({
 
 function ReviewTab({ quizzes }: { quizzes: QuizDto[] }) {
 	const queryClient = useQueryClient();
+	const [clearing, setClearing] = useState<
+		Record<number, "approved" | "rejected" | "cleared">
+	>({});
 
 	const pendingQuery = useQuery({
 		queryKey: ["admin", "pending"],
@@ -617,6 +719,26 @@ function ReviewTab({ quizzes }: { quizzes: QuizDto[] }) {
 			void queryClient.invalidateQueries({ queryKey: ["admin", "quizzes"] });
 		},
 	});
+
+	function review(id: number, action: "approve" | "reject") {
+		if (clearing[id]) return;
+		setClearing((prev) => ({
+			...prev,
+			[id]: action === "approve" ? "approved" : "rejected",
+		}));
+		setTimeout(
+			() => setClearing((prev) => ({ ...prev, [id]: "cleared" })),
+			300
+		);
+		setTimeout(() => {
+			actMutation.mutate({ id, action });
+			setClearing((prev) => {
+				const next = { ...prev };
+				delete next[id];
+				return next;
+			});
+		}, 700);
+	}
 
 	const titleFor = (quizId: number) =>
 		quizzes.find((q) => q.id === quizId)?.title ?? `Quiz #${quizId}`;
@@ -647,49 +769,58 @@ function ReviewTab({ quizzes }: { quizzes: QuizDto[] }) {
 							</tr>
 						</thead>
 						<tbody>
-							{pending.map((question) => (
-								<tr key={question.questionId}>
-									<td>
-										<div className="font-medium text-ink max-w-md">
-											{question.questionText}
-										</div>
-										<div className="text-xs mt-1 space-x-3">
-											{question.options.map((o) => (
-												<span key={o.optionId} className={o.isCorrect ? "text-mint" : "mutedc"}>
-													{o.isCorrect ? "✓" : "·"}{" "}
-													{o.optionText.length > 34 ? o.optionText.slice(0, 34) + "…" : o.optionText}
-												</span>
-											))}
-										</div>
-									</td>
-									<td>
-										<span className="badge">{question.type}</span>
-									</td>
-									<td className="mutedc text-xs">{titleFor(question.quizId)}</td>
-									<td className="rt-actions !justify-end">
-										<button
-											title="Approve & publish"
-											disabled={actMutation.isPending}
-											className="icon-btn approve"
-											onClick={() =>
-												actMutation.mutate({ id: question.questionId, action: "approve" })
-											}
-										>
-											<IconCheck size={13} />
-										</button>
-										<button
-											title="Reject"
-											disabled={actMutation.isPending}
-											className="icon-btn reject"
-											onClick={() =>
-												actMutation.mutate({ id: question.questionId, action: "reject" })
-											}
-										>
-											<IconX size={13} />
-										</button>
-									</td>
-								</tr>
-							))}
+							{pending.map((question) => {
+								const state = clearing[question.questionId];
+								const tint =
+									state === "approved"
+										? "rgba(53,232,180,.12)"
+										: state === "rejected"
+											? "rgba(255,107,107,.12)"
+											: undefined;
+								return (
+									<tr
+										key={question.questionId}
+										className={state === "cleared" ? "cleared" : ""}
+										style={{ backgroundColor: tint }}
+									>
+										<td>
+											<div className="font-medium text-ink max-w-md">
+												{question.questionText}
+											</div>
+											<div className="text-xs mt-1 space-x-3">
+												{question.options.map((o) => (
+													<span key={o.optionId} className={o.isCorrect ? "text-mint" : "mutedc"}>
+														{o.isCorrect ? "✓" : "·"}{" "}
+														{o.optionText.length > 34 ? o.optionText.slice(0, 34) + "…" : o.optionText}
+													</span>
+												))}
+											</div>
+										</td>
+										<td>
+											<span className="badge">{question.type}</span>
+										</td>
+										<td className="mutedc text-xs">{titleFor(question.quizId)}</td>
+										<td className="rt-actions !justify-end">
+											<button
+												title="Approve & publish"
+												disabled={actMutation.isPending || Boolean(state)}
+												className="icon-btn approve"
+												onClick={() => review(question.questionId, "approve")}
+											>
+												<IconCheck size={13} />
+											</button>
+											<button
+												title="Reject"
+												disabled={actMutation.isPending || Boolean(state)}
+												className="icon-btn reject"
+												onClick={() => review(question.questionId, "reject")}
+											>
+												<IconX size={13} />
+											</button>
+										</td>
+									</tr>
+								);
+							})}
 						</tbody>
 					</table>
 				</div>

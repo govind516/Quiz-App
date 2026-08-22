@@ -203,3 +203,19 @@ export interface FinalResultsPayload {
 	quizTitle: string;
 	entries: PlayerInfo[];
 }
+
+export interface DailyPoint {
+	date: string;
+	count: number;
+}
+
+export interface TopCategory {
+	name: string;
+	count: number;
+}
+
+export interface AdminAnalyticsDto {
+	daily: DailyPoint[];
+	topCategories: TopCategory[];
+	today: number;
+}

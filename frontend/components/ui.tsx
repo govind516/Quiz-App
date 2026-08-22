@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -86,4 +87,38 @@ export function initials(name: string): string {
 		.join("")
 		.slice(0, 2)
 		.toUpperCase();
+}
+
+export function CountUp({
+	value,
+	suffix = "",
+	className = "",
+}: {
+	value: number;
+	suffix?: string;
+	className?: string;
+}) {
+	const ref = useRef<HTMLSpanElement>(null);
+	useEffect(() => {
+		const el = ref.current;
+		if (!el || value <= 0) return;
+		let raf = 0;
+		let startTime: number | null = null;
+		const duration = 1200;
+		const step = (ts: number) => {
+			if (startTime === null) startTime = ts;
+			const progress = Math.min((ts - startTime) / duration, 1);
+			const eased = 1 - Math.pow(1 - progress, 3);
+			el.textContent = Math.floor(eased * value).toLocaleString() + suffix;
+			if (progress < 1) raf = requestAnimationFrame(step);
+			else el.textContent = value.toLocaleString() + suffix;
+		};
+		raf = requestAnimationFrame(step);
+		return () => cancelAnimationFrame(raf);
+	}, [value, suffix]);
+	return (
+		<span ref={ref} className={className}>
+			0{suffix}
+		</span>
+	);
 }

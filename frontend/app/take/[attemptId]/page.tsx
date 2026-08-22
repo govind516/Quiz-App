@@ -3,13 +3,15 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import type { AttemptResultDto, StartAttemptResponse } from "@/lib/types";
+import type { AttemptResultDto, QuizDto, StartAttemptResponse } from "@/lib/types";
 import { useAuthStore } from "@/lib/auth-store";
 import {
 	getGuestSessionId,
 	readStartPayloadCached,
 } from "@/lib/guest-session";
+import { DifficultyBadge } from "@/components/difficulty-badge";
 
 type AnswerMap = Record<number, number[]>;
 
@@ -44,6 +46,12 @@ export default function TakeQuizPage() {
 	useEffect(() => {
 		answersRef.current = answers;
 	}, [answers]);
+
+	const metaQuery = useQuery({
+		queryKey: ["quiz", payload?.quizId],
+		queryFn: () => api<QuizDto>(`/api/quizzes/${payload!.quizId}`, { auth: false }),
+		enabled: Boolean(payload?.quizId),
+	});
 
 	useEffect(() => {
 		if (!payload) return;
@@ -147,6 +155,12 @@ export default function TakeQuizPage() {
 						</svg>
 					</Link>
 					<span className="badge badge-violet">{payload.quizTitle}</span>
+					{metaQuery.data && (
+						<>
+							<DifficultyBadge level={metaQuery.data.difficulty} />
+							<span className="badge hidden sm:inline-flex">{metaQuery.data.categoryName}</span>
+						</>
+					)}
 					<span className="badge hidden sm:inline-flex">
 						{answeredCount}/{questions.length} answered
 					</span>
