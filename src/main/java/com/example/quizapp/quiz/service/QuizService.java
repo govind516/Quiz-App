@@ -55,6 +55,14 @@ public class QuizService {
 	}
 
 	@Transactional(readOnly = true)
+	public List<QuizDto> listAllForAdmin() {
+		return quizRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "id"))
+				.stream()
+				.map(this::toDto)
+				.toList();
+	}
+
+	@Transactional(readOnly = true)
 	public QuizDto getDetail(Long id) {
 		Quiz quiz = quizRepository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Quiz", id));

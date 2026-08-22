@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.example.quizapp.common.exception.BadRequestException;
 import com.example.quizapp.common.exception.ResourceNotFoundException;
@@ -12,6 +14,10 @@ import com.example.quizapp.quiz.Option;
 import com.example.quizapp.quiz.Question;
 import com.example.quizapp.quiz.QuestionStatus;
 import com.example.quizapp.quiz.QuestionType;
+import com.example.quizapp.quiz.Quiz;
+import com.example.quizapp.quiz.dto.BulkUploadResultDto;
+import com.example.quizapp.quiz.dto.GenerateQuestionsRequest;
+import com.example.quizapp.quiz.dto.GeneratedQuestionsDto;
 import com.example.quizapp.quiz.dto.OptionAdminDto;
 import com.example.quizapp.quiz.dto.OptionRequest;
 import com.example.quizapp.quiz.dto.QuestionAdminDto;
@@ -28,6 +34,8 @@ public class AdminQuestionService {
 	private final QuestionRepository questionRepository;
 	private final QuizRepository quizRepository;
 	private final QuizService quizService;
+	private final CsvQuestionParser csvQuestionParser;
+	private final GeminiClient geminiClient;
 
 	@Transactional(readOnly = true)
 	public List<QuestionAdminDto> listByQuiz(Long quizId) {
@@ -88,6 +96,141 @@ public class AdminQuestionService {
 				.orElseThrow(() -> new ResourceNotFoundException("Question", id));
 		question.setStatus(QuestionStatus.APPROVED);
 		return toAdminDto(questionRepository.save(question));
+	}
+
+	@Transactional
+	public QuestionAdminDto reject(Long id) {
+		Question question = questionRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Question", id));
+		question.setStatus(QuestionStatus.REJECTED);
+		return toAdminDto(questionRepository.save(question));
+	}
+
+	@Transactional(readOnly = true)
+	public List<QuestionAdminDto> listPending() {
+		return questionRepository.findAllByStatus(QuestionStatus.PENDING_REVIEW).stream()
+				.map(this::toAdminDto)
+				.toList();
+	}
+
+	@Transactional
+	public BulkUploadResultDto bulkImport(Long quizId, MultipartFile file) {
+		Quiz quiz = quizRepository.findById(quizId)
+				.orElseThrow(() -> new ResourceNotFoundException("Quiz", quizId));
+		if (file == null || file.isEmpty()) {
+			throw new BadRequestException("Please upload a non-empty CSV file");
+		}
+		List<CsvQuestionParser.RowResult> rows;
+		try {
+			rows = csvQuestionParser.parse(file.getInputStream());
+		} catch (java.io.IOException e) {
+			throw new BadRequestException("Could not read the uploaded file");
+		}
+		if (rows.isEmpty()) {
+			throw new BadRequestException("No data rows found in the CSV");
+		}
+
+		int imported = 0;
+		List<BulkUploadResultDto.FailedRow> failures = new ArrayList<>();
+		for (CsvQuestionParser.RowResult row : rows) {
+			if (row.error() != null) {
+				failures.add(new BulkUploadResultDto.FailedRow(row.lineNumber(), row.error()));
+				continue;
+			}
+			CsvQuestionParser.ParsedQuestion parsed = row.question();
+			Question question = Question.builder()
+					.quiz(quiz)
+					.questionText(parsed.questionText())
+					.type(parsed.type())
+					.points(parsed.points())
+					.explanation(parsed.explanation())
+					.status(QuestionStatus.APPROVED)
+					.build();
+			for (CsvQuestionParser.CsvOption opt : parsed.options()) {
+				question.getOptions().add(Option.builder()
+						.question(question)
+						.optionText(opt.text())
+						.isCorrect(opt.correct())
+						.build());
+			}
+			questionRepository.save(question);
+			imported++;
+		}
+		return new BulkUploadResultDto(imported, failures);
+	}
+
+	@Transactional
+	public GeneratedQuestionsDto generate(Long quizId, GenerateQuestionsRequest request) {
+		Quiz quiz = quizRepository.findById(quizId)
+				.orElseThrow(() -> new ResourceNotFoundException("Quiz", quizId));
+
+		String prompt = buildPrompt(request);
+		String raw = geminiClient.generateJson(prompt);
+		List<GeminiResponseParser.AiQuestion> aiQuestions = GeminiResponseParser.parse(raw);
+
+		List<QuestionAdminDto> created = new ArrayList<>();
+		int discarded = 0;
+		for (GeminiResponseParser.AiQuestion ai : aiQuestions) {
+			if (created.size() >= request.count()) {
+				break;
+			}
+			if (!isValidAiQuestion(ai, request.questionType())) {
+				discarded++;
+				continue;
+			}
+			Question question = Question.builder()
+					.quiz(quiz)
+					.questionText(ai.questionText())
+					.type(ai.type() == null ? request.questionType() : ai.type())
+					.points(ai.points() == null || ai.points() < 1 ? 1 : Math.min(ai.points(), 100))
+					.explanation(ai.explanation())
+					.status(QuestionStatus.PENDING_REVIEW)
+					.build();
+			for (GeminiResponseParser.AiOption opt : ai.options()) {
+				question.getOptions().add(Option.builder()
+						.question(question)
+						.optionText(opt.text())
+						.isCorrect(opt.isCorrect())
+						.build());
+			}
+			questionRepository.save(question);
+			created.add(toAdminDto(question));
+		}
+		return new GeneratedQuestionsDto(created.size(), discarded, created);
+	}
+
+	private boolean isValidAiQuestion(GeminiResponseParser.AiQuestion ai, QuestionType fallbackType) {
+		QuestionType type = ai.type() == null ? fallbackType : ai.type();
+		if (!StringUtils.hasText(ai.questionText()) || ai.options() == null || ai.options().size() < 2) {
+			return false;
+		}
+		long correct = ai.options().stream().filter(GeminiResponseParser.AiOption::isCorrect).count();
+		if (correct == 0) {
+			return false;
+		}
+		if ((type == QuestionType.MCQ || type == QuestionType.TRUE_FALSE) && correct > 1) {
+			return false;
+		}
+		return type != QuestionType.TRUE_FALSE || ai.options().size() == 2;
+	}
+
+	private String buildPrompt(GenerateQuestionsRequest request) {
+		String difficulty = request.difficulty() == null
+				? "intermediate"
+				: request.difficulty().name().toLowerCase();
+		String typeRule = switch (request.questionType()) {
+			case MCQ -> "\"type\":\"MCQ\" with exactly 4 options and exactly one option having \"isCorrect\":true";
+			case TRUE_FALSE -> "\"type\":\"TRUE_FALSE\" with exactly two options (\"True\" and \"False\") and exactly one correct";
+			case MULTI_SELECT -> "\"type\":\"MULTI_SELECT\" with 4-5 options where one or more options have \"isCorrect\":true";
+		};
+		return """
+				You are an expert IT exam author. Create exactly %d %s-level quiz questions about "%s" for IT students and professionals.
+				Each question must follow this rule: %s.
+				Every question must include a short explanation of the correct answer(s).
+				Vary the questions; avoid duplicates or trivial variations.
+				Return STRICT VALID JSON ONLY - a bare JSON array, no markdown fences, no commentary:
+				[{"questionText":"...","type":"MCQ","points":1,"explanation":"...","options":[{"text":"...","isCorrect":false}]}]
+				""".formatted(request.count(), difficulty, request.topic(), typeRule);
 	}
 
 	private void validateOptions(QuestionType type, List<OptionRequest> options) {

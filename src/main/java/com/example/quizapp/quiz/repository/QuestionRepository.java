@@ -13,6 +13,8 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
 
 	List<Question> findAllByIdIn(List<Long> ids);
 
+	List<Question> findAllByStatus(QuestionStatus status);
+
 	long countByQuizIdAndStatus(Long quizId, QuestionStatus status);
 
 	@Query("SELECT COALESCE(SUM(q.points), 0) FROM Question q WHERE q.quiz.id = :quizId AND q.status = 'APPROVED'")

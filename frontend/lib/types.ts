@@ -4,6 +4,8 @@ export type QuestionType = "MCQ" | "MULTI_SELECT" | "TRUE_FALSE";
 
 export type AttemptStatus = "IN_PROGRESS" | "SUBMITTED" | "EXPIRED";
 
+export type QuestionStatus = "PENDING_REVIEW" | "APPROVED" | "REJECTED";
+
 export interface UserDto {
 	id: number;
 	name: string;
@@ -102,4 +104,39 @@ export interface UserStatsDto {
 	averagePercentage: number;
 	bestPercentage: number;
 	totalPointsEarned: number;
+}
+
+export interface QuestionAdminOption {
+	optionId: number;
+	optionText: string;
+	isCorrect: boolean;
+}
+
+export interface QuestionAdminDto {
+	questionId: number;
+	quizId: number;
+	questionText: string;
+	type: QuestionType;
+	points: number;
+	explanation: string | null;
+	status: QuestionStatus;
+	options: QuestionAdminOption[];
+}
+
+export interface BulkUploadResult {
+	imported: number;
+	failures: { lineNumber: number; error: string }[];
+}
+
+export interface GenerateQuestionsPayload {
+	topic: string;
+	count: number;
+	questionType: QuestionType;
+	difficulty?: Difficulty;
+}
+
+export interface GeneratedQuestionsResult {
+	created: number;
+	discarded: number;
+	questions: QuestionAdminDto[];
 }

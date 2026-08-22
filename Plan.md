@@ -257,11 +257,11 @@ POST /api/admin/questions/:id/approve    -> publish an AI-generated or pending q
 - [ ] Deploy both services to Render (basic working version, even before all features are done — validates the deployment pipeline early)
 
 ### Phase 2
-- [ ] Admin endpoints (protected) for question CRUD + CSV bulk import
-- [ ] Gemini-based AI question generation with admin review/approval flow
-- [ ] User history + profile stats (registered users only)
-- [ ] "Sign up to save your score" prompt for guests after quiz completion
-- [ ] Swagger/OpenAPI docs
+- [x] Admin endpoints (protected) for question CRUD + CSV bulk import
+- [x] Gemini-based AI question generation with admin review/approval flow (`/admin` console: question bank, CSV upload, AI generate, review queue)
+- [x] User history + profile stats (registered users only)
+- [x] "Sign up to save your score" prompt for guests after quiz completion
+- [x] Swagger/OpenAPI docs
 
 ### Phase 3
 - [ ] Upstash Redis leaderboard

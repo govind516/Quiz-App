@@ -58,7 +58,8 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
 	const { method = "GET", body, auth = true, retry = true } = options;
 
 	const headers: Record<string, string> = {};
-	if (body !== undefined) {
+	const isFormBody = body instanceof FormData;
+	if (body !== undefined && !isFormBody) {
 		headers["Content-Type"] = "application/json";
 	}
 	const { accessToken } = useAuthStore.getState();
@@ -69,7 +70,12 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
 	const res = await fetch(`${API_BASE_URL}${path}`, {
 		method,
 		headers,
-		body: body === undefined ? undefined : JSON.stringify(body),
+		body:
+			body === undefined
+				? undefined
+				: isFormBody
+					? (body as FormData)
+					: JSON.stringify(body),
 		cache: "no-store",
 	});
 

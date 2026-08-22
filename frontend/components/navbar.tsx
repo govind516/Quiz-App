@@ -28,6 +28,14 @@ export function Navbar() {
 					</Link>
 					{mounted && user ? (
 						<>
+							{user.role === "ADMIN" && (
+								<Link
+									href="/admin"
+									className="rounded-md px-2 py-1 font-medium text-indigo-600 hover:bg-indigo-50"
+								>
+									Admin
+								</Link>
+							)}
 							<Link
 								href="/me"
 								className="rounded-md px-2 py-1 font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900"

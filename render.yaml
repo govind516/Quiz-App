@@ -25,6 +25,10 @@ services:
         generateValue: true
       - key: SEED_DEMO_DATA
         value: "true"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: "gemini-2.0-flash"
 
   - type: web
     name: quiz-app-frontend

@@ -3,6 +3,7 @@ package com.example.quizapp.quiz.controller;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,7 +15,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.example.quizapp.quiz.dto.BulkUploadResultDto;
+import com.example.quizapp.quiz.dto.GenerateQuestionsRequest;
+import com.example.quizapp.quiz.dto.GeneratedQuestionsDto;
 import com.example.quizapp.quiz.dto.QuestionAdminDto;
 import com.example.quizapp.quiz.dto.QuestionUpsertRequest;
 import com.example.quizapp.quiz.service.AdminQuestionService;
@@ -54,6 +59,32 @@ public class AdminQuestionController {
 	@PostMapping("/questions/{id}/approve")
 	public ResponseEntity<QuestionAdminDto> approve(@PathVariable Long id) {
 		return ResponseEntity.ok(adminQuestionService.approve(id));
+	}
+
+	@PostMapping("/questions/{id}/reject")
+	public ResponseEntity<QuestionAdminDto> reject(@PathVariable Long id) {
+		return ResponseEntity.ok(adminQuestionService.reject(id));
+	}
+
+	@GetMapping("/questions/pending")
+	public ResponseEntity<List<QuestionAdminDto>> pending() {
+		return ResponseEntity.ok(adminQuestionService.listPending());
+	}
+
+	@PostMapping(value = "/questions/bulk-upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<BulkUploadResultDto> bulkUpload(
+			@RequestParam("quizId") Long quizId,
+			@RequestParam("file") MultipartFile file) {
+		return ResponseEntity.status(HttpStatus.CREATED)
+				.body(adminQuestionService.bulkImport(quizId, file));
+	}
+
+	@PostMapping("/questions/generate")
+	public ResponseEntity<GeneratedQuestionsDto> generate(
+			@RequestParam("quizId") Long quizId,
+			@Valid @RequestBody GenerateQuestionsRequest request) {
+		return ResponseEntity.status(HttpStatus.CREATED)
+				.body(adminQuestionService.generate(quizId, request));
 	}
 
 	@DeleteMapping("/questions/{id}")
