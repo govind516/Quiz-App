@@ -36,7 +36,6 @@ public class AttemptController {
 			HttpServletRequest httpRequest) {
 		rateLimitService.checkSubmit(ClientIdentifiers.identity(
 				currentUserProvider.get().map(com.example.quizapp.user.User::getId).orElse(null),
-				request.guestSessionId(),
 				httpRequest));
 		return ResponseEntity.ok(attemptService.submit(id, request));
 	}

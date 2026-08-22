@@ -38,11 +38,12 @@ public class JwtService {
 	}
 
 	public String generateAccessToken(User user) {
-		return buildToken(user, TYPE_ACCESS, accessExpirationMs);
+		return buildToken(user, TYPE_ACCESS, accessExpirationMs, null);
 	}
 
 	public String generateRefreshToken(User user) {
-		return buildToken(user, TYPE_REFRESH, refreshExpirationMs);
+		return buildToken(user, TYPE_REFRESH, refreshExpirationMs,
+				java.util.UUID.randomUUID().toString());
 	}
 
 	public Claims parse(String token) {
@@ -63,16 +64,18 @@ public class JwtService {
 		return accessExpirationMs;
 	}
 
-	private String buildToken(User user, String type, long ttlMs) {
+	private String buildToken(User user, String type, long ttlMs, String jti) {
 		Date now = new Date();
-		return Jwts.builder()
+		var builder = Jwts.builder()
 				.subject(user.getEmail())
 				.claim(CLAIM_UID, user.getId())
 				.claim(CLAIM_ROLE, "ROLE_" + user.getRole().name())
 				.claim(CLAIM_TYPE, type)
 				.issuedAt(now)
-				.expiration(new Date(now.getTime() + ttlMs))
-				.signWith(signingKey)
-				.compact();
+				.expiration(new Date(now.getTime() + ttlMs));
+		if (jti != null) {
+			builder.id(jti);
+		}
+		return builder.signWith(signingKey).compact();
 	}
 }

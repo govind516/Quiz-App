@@ -267,7 +267,7 @@ Notable: `QUIZ_ATTEMPTS.quiz_id` is **nullable** — custom-builder attempts hav
 
 | Route group | Method(s) | Access |
 |---|---|---|
-| `/api/auth/**` | POST | Public (register/login/refresh) — rate-limit 5/min/IP |
+| `/api/auth/**` | POST | Public (register/login/refresh/logout) — rate-limit 5/min/IP |
 | `/api/quizzes`, `/api/categories`, `/api/leaderboard/**` | GET | Public |
 | `/api/quizzes/{id}/start` | POST | Public **or** authenticated (guestSessionId required if anonymous) — 30/min |
 | `/api/attempts/*/submit` · `/result` | POST/GET | Ownership-checked: linked-user JWT **or** matching guestSessionId — 10/min submit |
@@ -309,13 +309,17 @@ Hardening choices and trade-offs that are **intentional** — listed so they rea
 
 **Guest sessions are ownership credentials, not identities.** A client-generated UUID correlates start/submit/result calls; the server normalises and stores it, and ownership checks compare against it. It is not proof of identity.
 
-**Anonymous rate limits are currently session-keyed (hardening planned).** Bucket keys today resolve to `u:{userId}` for registered users, `g:{guestSessionId}` when a guest supplies one, and client IP (`X-Forwarded-For` aware) otherwise — so a guest who rotates fresh session IDs can reset their per-guest quota. Re-anchoring anonymous limits to client IP regardless of session ID is tracked as the next hardening item; trade-off: many guests behind one NAT share a quota.
+**Anonymous rate limits are IP-anchored.** Bucket keys resolve to `u:{userId}` for registered users and client IP (`X-Forwarded-For` aware) for everyone else — rotating guest-session IDs cannot reset quotas. Trade-off: many guests behind one NAT share a quota. Guest-session IDs remain purely *ownership credentials* correlating start/submit/result.
+
+**Refresh tokens are one-time-use and revocable.** Every refresh token carries a `jti`; each successful refresh blacklists the old `jti` in Redis (TTL = remaining validity), making rotation strictly one-time-use, and `POST /api/auth/logout` revokes the presented refresh token immediately. Denylist checks fail-open if Redis is unavailable (availability over strictness, consistent with leaderboards). Tokens still live in browser storage (localStorage) for 7 days as an accepted MVP trade-off — httpOnly-cookie storage is tracked as future hardening. Access tokens are short-lived (15 min) by design and are not denylist-checked per request.
+
+**Abandoned attempts are swept.** An hourly scheduled job marks `IN_PROGRESS` attempts older than their maximum possible window as `EXPIRED` (capped at their own time limit), so closed tabs do not leave permanently-stuck rows.
 
 **Live rooms bind answers to joined players.** STOMP answer messages carry a `playerId` issued only via `POST /{code}/join`; unknown or mismatched IDs are silently dropped, and one answer per player per question is enforced server-side.
 
 **Live rooms are single-instance in-memory.** Room state never touches Postgres/Redis. Running more than one backend instance therefore requires sticky routing (same room → same instance) or a migration to Redis-backed room state + pub-sub — treat horizontal scaling of `/live` as a real migration item, not a config flip.
 
-**Refresh tokens rotate on use; revocation is planned hardening.** Each successful refresh issues a new token pair, and refresh tokens live in browser storage (localStorage) for 7 days — an accepted MVP trade-off. Token-revocation denylist and httpOnly-cookie storage are tracked as future hardening items.
+**Refresh tokens rotate on use and are revocable.** See the refresh-token bullet above — one-time-use `jti` rotation with a Redis denylist, plus a logout endpoint that revokes immediately. Tokens live in browser storage (localStorage) as an accepted MVP trade-off; httpOnly-cookie storage is tracked as future hardening.
 
 **AI content is never auto-published.** Every Gemini draft lands in `PENDING_REVIEW`; only an explicit admin approve makes it servable, and malformed drafts are counted and discarded rather than stored.
 

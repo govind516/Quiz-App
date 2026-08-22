@@ -32,7 +32,8 @@ import lombok.Setter;
 @Entity
 @Table(name = "quiz_attempts", indexes = {
 		@Index(name = "idx_attempt_user", columnList = "user_id"),
-		@Index(name = "idx_attempt_quiz", columnList = "quiz_id")
+		@Index(name = "idx_attempt_quiz", columnList = "quiz_id"),
+		@Index(name = "idx_attempt_guest_session", columnList = "guest_session_id")
 })
 public class QuizAttempt {
 

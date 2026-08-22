@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSyncExternalStore } from "react";
 import { useAuthStore } from "@/lib/auth-store";
+import { API_BASE_URL } from "@/lib/config";
 import { IconHexLogo } from "./icons";
 
 const emptySubscribe = () => () => {};
@@ -51,7 +52,17 @@ export function Navbar() {
 								</Link>
 								<button
 									className="btn btn-outline btn-sm"
-									onClick={() => {
+									onClick={async () => {
+										const refreshToken = useAuthStore.getState().refreshToken;
+										if (refreshToken) {
+											try {
+												await fetch(`${API_BASE_URL}/api/auth/logout`, {
+													method: "POST",
+													headers: { "Content-Type": "application/json" },
+													body: JSON.stringify({ refreshToken }),
+												});
+											} catch {}
+										}
 										logout();
 										router.push("/");
 									}}

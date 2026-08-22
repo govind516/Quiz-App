@@ -8,7 +8,6 @@ import { api } from "@/lib/api";
 import type {
 	AdminAnalyticsDto,
 	BulkUploadResult,
-	CategoryDto,
 	GenerateQuestionsPayload,
 	GeneratedQuestionsResult,
 	QuestionAdminDto,
@@ -64,10 +63,6 @@ export default function AdminPage() {
 		queryKey: ["admin", "pending"],
 		queryFn: () => api<QuestionAdminDto[]>("/api/admin/questions/pending"),
 		enabled: Boolean(user && user.role === "ADMIN"),
-	});
-	const categoriesQuery = useQuery({
-		queryKey: ["categories"],
-		queryFn: () => api<CategoryDto[]>("/api/categories", { auth: false }),
 	});
 	const analyticsQuery = useQuery({
 		queryKey: ["admin", "analytics"],
@@ -476,7 +471,7 @@ function QuestionsTab({ quizId }: { quizId: number }) {
 const CSV_TEMPLATE = `question_text,type,points,explanation,option_1,option_2,option_3,option_4,correct_options
 "What is SQL injection?, in short?",MCQ,1,Attacking databases via queries,DB backup,Firewall rule,CSS framework,Encryption mode,1
 Select valid NoSQL stores,MULTI_SELECT,2,,MongoDB,Cassandra,MySQL,Redis,1|2|4
-REST is stateless.,TRUE_FALSE,,,True,False,,2`;
+REST is stateless.,TRUE_FALSE,,,True,False,,,1`;
 
 function UploadTab({ quizId }: { quizId: number }) {
 	const queryClient = useQueryClient();

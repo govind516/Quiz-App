@@ -19,12 +19,9 @@ public final class ClientIdentifiers {
 		return request.getRemoteAddr();
 	}
 
-	public static String identity(Long userId, String guestSessionId, HttpServletRequest request) {
+	public static String identity(Long userId, HttpServletRequest request) {
 		if (userId != null) {
 			return "u:" + userId;
-		}
-		if (guestSessionId != null && !guestSessionId.isBlank()) {
-			return "g:" + guestSessionId;
 		}
 		return "ip:" + clientIp(request);
 	}

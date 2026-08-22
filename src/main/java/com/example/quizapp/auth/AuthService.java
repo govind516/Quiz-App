@@ -27,6 +27,7 @@ public class AuthService {
 	private final JwtService jwtService;
 	private final AuthenticationManager authenticationManager;
 	private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+	private final TokenDenylistService tokenDenylistService;
 
 	public AuthResponse register(RegisterRequest request) {
 		String email = request.email().trim();
@@ -53,9 +54,35 @@ public class AuthService {
 	public AuthResponse refresh(RefreshTokenRequest request) {
 		Claims claims = jwtService.parse(request.refreshToken());
 		jwtService.validateRefreshToken(claims);
+		String jti = claims.getId();
+		if (jti != null && tokenDenylistService.isRevoked(jti)) {
+			throw new io.jsonwebtoken.JwtException("Refresh token has been revoked");
+		}
 		User user = userRepository.findByEmailIgnoreCase(claims.getSubject())
 				.orElseThrow(() -> new ConflictException("Account no longer exists"));
-		return buildAuthResponse(user);
+		AuthResponse response = buildAuthResponse(user);
+		if (jti != null) {
+			long remainingMs = Math.max(1000, claims.getExpiration().getTime() - System.currentTimeMillis());
+			tokenDenylistService.revoke(jti, java.time.Duration.ofMillis(remainingMs));
+		}
+		return response;
+	}
+
+	public void logout(String rawRefreshToken) {
+		if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
+			return;
+		}
+		try {
+			Claims claims = jwtService.parse(rawRefreshToken);
+			jwtService.validateRefreshToken(claims);
+			String jti = claims.getId();
+			if (jti != null) {
+				long remainingMs = Math.max(1000, claims.getExpiration().getTime() - System.currentTimeMillis());
+				tokenDenylistService.revoke(jti, java.time.Duration.ofMillis(remainingMs));
+			}
+		} catch (io.jsonwebtoken.JwtException | IllegalArgumentException ignored) {
+			// unknown/expired token — nothing to revoke; logout stays idempotent
+		}
 	}
 
 	private AuthResponse buildAuthResponse(User user) {

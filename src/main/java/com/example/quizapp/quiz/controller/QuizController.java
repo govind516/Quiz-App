@@ -74,7 +74,6 @@ public class QuizController {
 			HttpServletRequest httpRequest) {
 		rateLimitService.checkStart(ClientIdentifiers.identity(
 				currentUserProvider.get().map(com.example.quizapp.user.User::getId).orElse(null),
-				request == null ? null : request.guestSessionId(),
 				httpRequest));
 		return ResponseEntity.status(HttpStatus.CREATED).body(attemptService.start(id, request));
 	}

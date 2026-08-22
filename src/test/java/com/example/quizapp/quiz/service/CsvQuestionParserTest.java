@@ -42,13 +42,13 @@ class CsvQuestionParserTest {
 	void supportsMultiSelectAndDefaults() {
 		List<CsvQuestionParser.RowResult> results = parse("""
 				question_text,type,points,explanation,option_1,option_2,option_3,option_4,correct_options
-				Pick primes,MULTI_SELECT,2,,2,3,4,5,1|3
-				HTTP is stateless.,TRUE_FALSE,,,True,False,,,2
+				Pick prime numbers,MULTI_SELECT,2,,2,3,4,5,1|2|4
+				HTTP is stateless.,TRUE_FALSE,,,True,False,,,1
 				""");
 
 		assertThat(results).allSatisfy(r -> assertThat(r.error()).isNull());
 		assertThat(results.get(0).question().options().stream()
-				.filter(o -> o.correct()).count()).isEqualTo(2);
+				.filter(o -> o.correct()).count()).isEqualTo(3);
 		CsvQuestionParser.ParsedQuestion tf = results.get(1).question();
 		assertThat(tf.type()).isEqualTo(QuestionType.TRUE_FALSE);
 		assertThat(tf.points()).isEqualTo(1);

@@ -1,11 +1,13 @@
 package com.example.quizapp.attempt.repository;
 
+import java.time.Instant;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.example.quizapp.attempt.AttemptStatus;
 import com.example.quizapp.attempt.QuizAttempt;
 import com.example.quizapp.attempt.repository.projection.CategoryCount;
 import com.example.quizapp.attempt.repository.projection.DayCount;
@@ -15,7 +17,9 @@ public interface QuizAttemptRepository extends JpaRepository<QuizAttempt, Long> 
 	List<QuizAttempt> findAllByUserIdOrderByStartedAtDesc(Long userId);
 
 	List<QuizAttempt> findAllByUserIdAndStatusOrderByCompletedAtDesc(Long userId,
-			com.example.quizapp.attempt.AttemptStatus status);
+			AttemptStatus status);
+
+	List<QuizAttempt> findAllByStatusAndStartedAtBefore(AttemptStatus status, Instant cutoff);
 
 	long countByUserId(Long userId);
 
