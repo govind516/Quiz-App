@@ -281,7 +281,7 @@ function DashboardSection({
 					<div className="stat-delta text-[12px] mutedc">approved & playable</div>
 				</div>
 				<div className="card stat-card">
-					<div className="stat-label">Completions today</div>
+					<div className="stat-label">Attempts finished today</div>
 					<div className="stat-num">
 						<CountUp value={analytics?.today ?? 0} />
 					</div>
