@@ -1,0 +1,42 @@
+services:
+  - type: web
+    name: quiz-app-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    rootDir: .
+    plan: free
+    region: singapore
+    healthCheckPath: /actuator/health
+    autoDeploy: true
+    envVars:
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        generateValue: true
+      - key: SEED_DEMO_DATA
+        value: "true"
+
+  - type: web
+    name: quiz-app-frontend
+    runtime: node
+    rootDir: frontend
+    plan: free
+    region: singapore
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
