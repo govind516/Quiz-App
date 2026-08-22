@@ -262,12 +262,23 @@ public class AttemptService {
 				throw new AccessDeniedException("You do not have access to this attempt");
 			}
 		} else {
-			if (guestSessionId == null || guestSessionId.isBlank()
-					|| !guestSessionId.equals(attempt.getGuestSessionId())) {
+			String provided = canonicalGuestSessionId(guestSessionId);
+			if (!provided.equals(attempt.getGuestSessionId())) {
 				throw new AccessDeniedException("Invalid guest session for this attempt");
 			}
 		}
 		return attempt;
+	}
+
+	private String canonicalGuestSessionId(String raw) {
+		if (raw == null || raw.isBlank()) {
+			return "";
+		}
+		try {
+			return java.util.UUID.fromString(raw.trim()).toString();
+		} catch (IllegalArgumentException e) {
+			return "";
+		}
 	}
 
 	private AttemptResultDto buildResult(QuizAttempt attempt) {

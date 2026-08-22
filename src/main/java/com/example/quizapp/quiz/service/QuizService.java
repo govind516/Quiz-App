@@ -88,7 +88,7 @@ public class QuizService {
 				.build();
 		resolveTags(request.tags()).forEach(tag -> quiz.getTags().add(tag));
 		for (var qr : safeList(request.questions())) {
-			quiz.getQuestions().add(buildQuestion(qr));
+			quiz.getQuestions().add(buildQuestion(qr, quiz));
 		}
 		return toDto(quizRepository.save(quiz));
 	}
@@ -130,8 +130,7 @@ public class QuizService {
 			com.example.quizapp.quiz.dto.QuestionUpsertRequest request) {
 		Quiz quiz = quizRepository.findById(quizId)
 				.orElseThrow(() -> new ResourceNotFoundException("Quiz", quizId));
-		var question = buildQuestion(toQuestionRequest(request));
-		question.setQuiz(quiz);
+		var question = buildQuestion(toQuestionRequest(request), quiz);
 		quiz.getQuestions().add(question);
 		quizRepository.save(quiz);
 		return toAdminDto(question);
@@ -143,9 +142,11 @@ public class QuizService {
 				r.questionText(), r.type(), r.points(), r.explanation(), r.options());
 	}
 
-	private com.example.quizapp.quiz.Question buildQuestion(com.example.quizapp.quiz.dto.QuestionRequest qr) {
+	private com.example.quizapp.quiz.Question buildQuestion(
+			com.example.quizapp.quiz.dto.QuestionRequest qr, Quiz quiz) {
 		validateOptions(qr.type(), qr.options());
 		var question = com.example.quizapp.quiz.Question.builder()
+				.quiz(quiz)
 				.questionText(qr.questionText())
 				.type(qr.type())
 				.points(qr.points() == null || qr.points() < 1 ? 1 : qr.points())
