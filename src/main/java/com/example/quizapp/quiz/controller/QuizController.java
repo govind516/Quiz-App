@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.quizapp.attempt.dto.StartAttemptRequest;
 import com.example.quizapp.attempt.dto.StartAttemptResponse;
 import com.example.quizapp.attempt.service.AttemptService;
+import com.example.quizapp.auth.CurrentUserProvider;
+import com.example.quizapp.common.ratelimit.ClientIdentifiers;
+import com.example.quizapp.common.ratelimit.RateLimitService;
 import com.example.quizapp.quiz.Difficulty;
 import com.example.quizapp.quiz.dto.QuizCreateRequest;
 import com.example.quizapp.quiz.dto.QuizDto;
@@ -24,6 +27,7 @@ import com.example.quizapp.quiz.dto.QuizUpdateRequest;
 import com.example.quizapp.quiz.service.QuizService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -35,6 +39,8 @@ public class QuizController {
 
 	private final QuizService quizService;
 	private final AttemptService attemptService;
+	private final CurrentUserProvider currentUserProvider;
+	private final RateLimitService rateLimitService;
 
 	@GetMapping
 	public ResponseEntity<List<QuizDto>> browse(
@@ -64,7 +70,12 @@ public class QuizController {
 	@PostMapping("/{id}/start")
 	public ResponseEntity<StartAttemptResponse> start(
 			@PathVariable Long id,
-			@RequestBody(required = false) StartAttemptRequest request) {
+			@RequestBody(required = false) StartAttemptRequest request,
+			HttpServletRequest httpRequest) {
+		rateLimitService.checkStart(ClientIdentifiers.identity(
+				currentUserProvider.get().map(com.example.quizapp.user.User::getId).orElse(null),
+				request == null ? null : request.guestSessionId(),
+				httpRequest));
 		return ResponseEntity.status(HttpStatus.CREATED).body(attemptService.start(id, request));
 	}
 }

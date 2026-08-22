@@ -57,6 +57,7 @@ public class AttemptService {
 	private final QuestionRepository questionRepository;
 	private final CurrentUserProvider currentUserProvider;
 	private final ObjectMapper objectMapper;
+	private final com.example.quizapp.leaderboard.LeaderboardService leaderboardService;
 
 	@Transactional
 	public StartAttemptResponse start(Long quizId, StartAttemptRequest request) {
@@ -185,6 +186,19 @@ public class AttemptService {
 			attempt.setCompletedAt(Instant.now());
 		}
 		attemptRepository.saveAndFlush(attempt);
+
+		if (attempt.getUser() != null && attempt.getStatus() == AttemptStatus.SUBMITTED) {
+			long totalPoints = quizQuestions.values().stream()
+					.mapToLong(Question::getPoints)
+					.sum();
+			double percentage = totalPoints > 0 ? (earnedPoints * 100.0 / totalPoints) : 0.0;
+			leaderboardService.recordSubmission(
+					attempt.getUser().getId(),
+					quiz.getId(),
+					quiz.getCategory().getId(),
+					earnedPoints,
+					percentage);
+		}
 		return buildResult(attempt);
 	}
 

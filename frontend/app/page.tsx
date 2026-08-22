@@ -11,6 +11,7 @@ const DIFFICULTIES: Difficulty[] = ["BEGINNER", "INTERMEDIATE", "ADVANCED"];
 export default function BrowsePage() {
 	const [category, setCategory] = useState("");
 	const [difficulty, setDifficulty] = useState("");
+	const [tag, setTag] = useState("");
 
 	const categoriesQuery = useQuery({
 		queryKey: ["categories"],
@@ -18,11 +19,12 @@ export default function BrowsePage() {
 	});
 
 	const quizzesQuery = useQuery({
-		queryKey: ["quizzes", category, difficulty],
+		queryKey: ["quizzes", category, difficulty, tag],
 		queryFn: () => {
 			const params = new URLSearchParams();
 			if (category) params.set("category", category);
 			if (difficulty) params.set("difficulty", difficulty);
+			if (tag) params.set("tag", tag.trim().toLowerCase().replaceAll(/\s+/g, "-"));
 			const qs = params.toString();
 			return api<QuizDto[]>(`/api/quizzes${qs ? `?${qs}` : ""}`, { auth: false });
 		},
@@ -64,6 +66,24 @@ export default function BrowsePage() {
 						</option>
 					))}
 				</select>
+				<input
+					value={tag}
+					onChange={(e) => setTag(e.target.value)}
+					placeholder="Filter by tag…"
+					className="w-44 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-indigo-500 focus:outline-none"
+				/>
+				{(category || difficulty || tag) && (
+					<button
+						onClick={() => {
+							setCategory("");
+							setDifficulty("");
+							setTag("");
+						}}
+						className="text-xs font-medium text-slate-400 underline hover:text-slate-600"
+					>
+						Clear filters
+					</button>
+				)}
 			</div>
 
 			{quizzesQuery.isPending ? (

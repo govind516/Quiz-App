@@ -44,6 +44,8 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/api/auth/**").permitAll()
 						.requestMatchers(HttpMethod.GET, "/api/quizzes/**", "/api/categories/**").permitAll()
+						.requestMatchers(HttpMethod.GET, "/api/leaderboard/**").permitAll()
+						.requestMatchers("/api/bookmarks/**").authenticated()
 						.requestMatchers(HttpMethod.POST, "/api/quizzes/*/start").permitAll()
 						.requestMatchers(HttpMethod.POST, "/api/attempts/*/submit").permitAll()
 						.requestMatchers(HttpMethod.GET, "/api/attempts/*/result").permitAll()

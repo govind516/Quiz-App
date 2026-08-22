@@ -140,3 +140,10 @@ export interface GeneratedQuestionsResult {
 	discarded: number;
 	questions: QuestionAdminDto[];
 }
+
+export interface LeaderboardEntryDto {
+	rank: number;
+	userId: number;
+	name: string;
+	score: number;
+}

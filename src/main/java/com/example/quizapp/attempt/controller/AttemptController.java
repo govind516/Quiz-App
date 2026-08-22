@@ -12,8 +12,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.quizapp.attempt.dto.AttemptResultDto;
 import com.example.quizapp.attempt.dto.SubmitAttemptRequest;
 import com.example.quizapp.attempt.service.AttemptService;
+import com.example.quizapp.auth.CurrentUserProvider;
+import com.example.quizapp.common.ratelimit.ClientIdentifiers;
+import com.example.quizapp.common.ratelimit.RateLimitService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -23,11 +27,18 @@ import lombok.RequiredArgsConstructor;
 public class AttemptController {
 
 	private final AttemptService attemptService;
+	private final CurrentUserProvider currentUserProvider;
+	private final RateLimitService rateLimitService;
 
 	@PostMapping("/api/attempts/{id}/submit")
 	public ResponseEntity<AttemptResultDto> submit(
 			@PathVariable Long id,
-			@Valid @RequestBody SubmitAttemptRequest request) {
+			@Valid @RequestBody SubmitAttemptRequest request,
+			HttpServletRequest httpRequest) {
+		rateLimitService.checkSubmit(ClientIdentifiers.identity(
+				currentUserProvider.get().map(com.example.quizapp.user.User::getId).orElse(null),
+				request.guestSessionId(),
+				httpRequest));
 		return ResponseEntity.ok(attemptService.submit(id, request));
 	}
 

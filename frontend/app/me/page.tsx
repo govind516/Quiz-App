@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import type { AttemptResultDto, UserStatsDto } from "@/lib/types";
+import type { AttemptResultDto, QuizDto, UserStatsDto } from "@/lib/types";
 import { useAuthStore } from "@/lib/auth-store";
 
 export default function MyProgressPage() {
@@ -32,6 +32,12 @@ export default function MyProgressPage() {
 		enabled: Boolean(user),
 	});
 
+	const bookmarksQuery = useQuery({
+		queryKey: ["bookmarks"],
+		queryFn: () => api<QuizDto[]>("/api/bookmarks"),
+		enabled: Boolean(user),
+	});
+
 	if (!user || statsQuery.isPending || historyQuery.isPending) {
 		return <div className="h-64 animate-pulse rounded-xl bg-slate-100" />;
 	}
@@ -53,6 +59,31 @@ export default function MyProgressPage() {
 					<StatCard label="Average score" value={`${stats.averagePercentage}%`} />
 					<StatCard label="Best score" value={`${stats.bestPercentage}%`} />
 				</div>
+			)}
+
+			<h2 className="mb-4 mt-10 text-lg font-bold text-slate-900">
+				Saved quizzes
+			</h2>
+			{(bookmarksQuery.data?.length ?? 0) === 0 ? (
+				<div className="rounded-xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
+					No saved quizzes yet — tap the ♡ on any quiz to bookmark it.
+				</div>
+			) : (
+				<ul className="space-y-2">
+					{(bookmarksQuery.data ?? []).map((quiz) => (
+						<li key={quiz.id}>
+							<Link
+								href={`/quiz/${quiz.id}`}
+								className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-indigo-300"
+							>
+								<span className="font-medium text-slate-800">{quiz.title}</span>
+								<span className="text-xs text-slate-400">
+									{quiz.categoryName} · {Math.round(quiz.timeLimitSec / 60)} min
+								</span>
+							</Link>
+						</li>
+					))}
+				</ul>
 			)}
 
 			<h2 className="mb-4 mt-10 text-lg font-bold text-slate-900">

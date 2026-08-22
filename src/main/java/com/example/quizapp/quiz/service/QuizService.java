@@ -188,7 +188,7 @@ public class QuizService {
 		return tags;
 	}
 
-	private QuizDto toDto(Quiz quiz) {
+	public QuizDto toDto(Quiz quiz) {
 		return new QuizDto(
 				quiz.getId(),
 				quiz.getTitle(),

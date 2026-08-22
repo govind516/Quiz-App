@@ -264,9 +264,9 @@ POST /api/admin/questions/:id/approve    -> publish an AI-generated or pending q
 - [x] Swagger/OpenAPI docs
 
 ### Phase 3
-- [ ] Upstash Redis leaderboard
-- [ ] Bookmarks, tags/filtering
-- [ ] Rate limiting, attempt time validation hardening (extra important with guest access — rate-limit by IP/guest session too)
+- [x] Upstash Redis leaderboard (global / per-category / per-quiz sorted sets; graceful no-op when REDIS_URI unset; `/leaderboard` page)
+- [x] Bookmarks, tags/filtering (bookmark toggle + saved list, tag filter on browse)
+- [x] Rate limiting (Bucket4j: submit/start/auth endpoints, keyed by user/guest-session/IP; attempt time validation already hardened via server-side buffer + optimistic locking)
 
 ### Phase 4
 - [ ] Custom quiz builder, badges/streaks

@@ -7,6 +7,7 @@ import type { QuizDto, StartAttemptResponse } from "@/lib/types";
 import { useAuthStore } from "@/lib/auth-store";
 import { getGuestSessionId, saveStartPayload } from "@/lib/guest-session";
 import { DifficultyBadge } from "@/components/difficulty-badge";
+import { BookmarkButton } from "@/components/bookmark-button";
 
 export default function QuizDetailPage() {
 	const { id } = useParams<{ id: string }>();
@@ -58,6 +59,9 @@ export default function QuizDetailPage() {
 					<span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-xs font-medium text-indigo-600">
 						{quiz.categoryName}
 					</span>
+					<div className="ml-auto">
+						<BookmarkButton quizId={quiz.id} />
+					</div>
 				</div>
 				<h1 className="text-3xl font-bold tracking-tight text-slate-900">
 					{quiz.title}

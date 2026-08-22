@@ -26,6 +26,12 @@ export function Navbar() {
 					<Link href="/" className="rounded-md px-2 py-1 font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900">
 						Browse
 					</Link>
+					<Link
+						href="/leaderboard"
+						className="rounded-md px-2 py-1 font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+					>
+						Leaderboards
+					</Link>
 					{mounted && user ? (
 						<>
 							{user.role === "ADMIN" && (
