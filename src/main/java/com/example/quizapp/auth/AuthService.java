@@ -28,8 +28,12 @@ public class AuthService {
 	private final AuthenticationManager authenticationManager;
 	private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 	private final TokenDenylistService tokenDenylistService;
+	private final com.example.quizapp.settings.SettingsService settingsService;
 
 	public AuthResponse register(RegisterRequest request) {
+		if (!settingsService.isRegistrationEnabled()) {
+			throw new ConflictException("Registration is currently disabled");
+		}
 		String email = request.email().trim();
 		if (userRepository.existsByEmailIgnoreCase(email)) {
 			throw new ConflictException("Email is already registered");
@@ -48,6 +52,9 @@ public class AuthService {
 		Authentication authentication = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(request.email(), request.password()));
 		AppUserPrincipal principal = (AppUserPrincipal) authentication.getPrincipal();
+		if (principal.getUser().isBanned()) {
+			throw new org.springframework.security.authentication.LockedException("Account suspended");
+		}
 		return buildAuthResponse(principal.getUser());
 	}
 
@@ -60,6 +67,9 @@ public class AuthService {
 		}
 		User user = userRepository.findByEmailIgnoreCase(claims.getSubject())
 				.orElseThrow(() -> new ConflictException("Account no longer exists"));
+		if (user.isBanned()) {
+			throw new org.springframework.security.access.AccessDeniedException("Account suspended");
+		}
 		AuthResponse response = buildAuthResponse(user);
 		if (jti != null) {
 			long remainingMs = Math.max(1000, claims.getExpiration().getTime() - System.currentTimeMillis());

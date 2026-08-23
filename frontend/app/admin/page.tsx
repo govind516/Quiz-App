@@ -8,14 +8,25 @@ import { api } from "@/lib/api";
 import type {
 	AdminAnalyticsDto,
 	BulkUploadResult,
+	DropoffStats,
 	GenerateQuestionsPayload,
 	GeneratedQuestionsResult,
+	OverviewStats,
 	QuestionAdminDto,
 	QuestionType,
 	QuizDto,
+	ScoreTrendPoint,
 } from "@/lib/types";
 import { useAuthStore } from "@/lib/auth-store";
 import { Button, CountUp, Eyebrow, initials } from "@/components/ui";
+import {
+	AttemptsChart,
+	CategoriesPanel,
+	QuestionFormModal,
+	SettingsPanel,
+	UsersPanel as UsersPanelView,
+	AnalyticsPanel as AnalyticsPanelView,
+} from "./panels";
 import {
 	IconCheck,
 	IconGrid,
@@ -23,17 +34,56 @@ import {
 	IconTag,
 	IconTrash,
 	IconX,
+	IconBell,
+	IconChartLine,
+	IconSettings,
+	IconUpload,
+	IconUsers,
 } from "@/components/icons";
 
-const SECTIONS = [
-	{ id: "dashboard", label: "Dashboard", icon: IconGrid },
-	{ id: "questions", label: "Question bank", icon: IconQuestion },
-	{ id: "generate", label: "AI generate", icon: IconTag },
-	{ id: "upload", label: "Bulk import", icon: IconTag },
-	{ id: "review", label: "Review queue", icon: IconCheck },
-] as const;
+type SectionId =
+	| "dashboard"
+	| "questions"
+	| "categories"
+	| "ai"
+	| "upload"
+	| "review"
+	| "users"
+	| "analytics"
+	| "settings";
 
-type SectionId = (typeof SECTIONS)[number]["id"];
+interface SectionDef {
+	id: SectionId;
+	label: string;
+	icon: React.ComponentType<{ size?: number }>;
+}
+
+const NAV_GROUPS: Array<{ label: string; items: SectionDef[] }> = [
+	{
+		label: "Overview",
+		items: [{ id: "dashboard", label: "Dashboard", icon: IconGrid }],
+	},
+	{
+		label: "Content",
+		items: [
+			{ id: "questions", label: "Question bank", icon: IconQuestion },
+			{ id: "categories", label: "Categories", icon: IconTag },
+			{ id: "ai", label: "AI generate", icon: IconAnalytics },
+			{ id: "upload", label: "Bulk import", icon: IconUpload },
+			{ id: "review", label: "Review queue", icon: IconBell },
+		],
+	},
+	{
+		label: "Platform",
+		items: [
+			{ id: "users", label: "Users", icon: IconUsers },
+			{ id: "analytics", label: "Analytics", icon: IconChartLine },
+			{ id: "settings", label: "Settings", icon: IconSettings },
+		],
+	},
+];
+
+const ALL_SECTIONS: SectionDef[] = NAV_GROUPS.flatMap((g) => g.items);
 
 const STATUS_STYLES: Record<string, string> = {
 	PENDING_REVIEW: "badge-amber",
@@ -92,18 +142,25 @@ export default function AdminPage() {
 						HexQuiz
 					</Link>
 					<nav className="admin-nav">
-						{SECTIONS.map(({ id, label, icon: Icon }) => (
-							<button
-								key={id}
-								className={`admin-nav-item ${section === id ? "active" : ""}`}
-								onClick={() => setSection(id)}
-							>
-								<Icon size={14} />
-								{label}
-								{id === "review" && pendingCount > 0 && (
-									<span className="badge badge-amber ml-auto">{pendingCount}</span>
-								)}
-							</button>
+						{NAV_GROUPS.map((group) => (
+							<div key={group.label}>
+								<div className="mono text-[10px] uppercase tracking-[0.12em] text-faintc px-3.5 pt-3 pb-1.5">
+									{group.label}
+								</div>
+								{group.items.map(({ id, label, icon: Icon }) => (
+									<button
+										key={id}
+										className={`admin-nav-item ${section === id ? "active" : ""}`}
+										onClick={() => setSection(id)}
+									>
+										<Icon size={14} />
+										{label}
+										{id === "review" && pendingCount > 0 && (
+											<span className="badge badge-amber ml-auto">{pendingCount}</span>
+										)}
+									</button>
+								))}
+							</div>
 						))}
 					</nav>
 					<div className="admin-profile">
@@ -119,7 +176,7 @@ export default function AdminPage() {
 
 				<main className="min-w-0 flex-1 w-full">
 					<div className="admin-nav-mobile lg:hidden">
-						{SECTIONS.map(({ id, label, icon: Icon }) => (
+						{ALL_SECTIONS.map(({ id, label, icon: Icon }) => (
 							<button
 								key={id}
 								className={`admin-nav-item shrink-0 whitespace-nowrap border border-line bg-surface ${
@@ -182,6 +239,12 @@ export default function AdminPage() {
 							<UploadTab quizId={activeQuizId} />
 						))}
 					{section === "review" && <ReviewTab quizzes={quizzes} />}
+					{section === "categories" && (
+						<CategoriesPanel />
+					)}
+					{section === "users" && <UsersPanelView />}
+					{section === "analytics" && <AnalyticsPanelView />}
+					{section === "settings" && <SettingsPanel />}
 				</main>
 			</div>
 		</div>
@@ -203,144 +266,228 @@ function SectionHead({ title }: { title: string }) {
 	);
 }
 
-function AttemptsChart({ daily }: { daily: AdminAnalyticsDto["daily"] }) {
-	const [drawn, setDrawn] = useState(false);
+function DashboardSection({
+	quizzes,
+	totalQuestions,
+	pendingCount,
+	onGoReview,
+}: {
+	quizzes: QuizDto[];
+	totalQuestions: number;
+	pendingCount: number;
+	onGoReview: () => void;
+}) {
+	const overviewQuery = useQuery({
+		queryKey: ["admin", "analytics", "overview"],
+		queryFn: () => api<OverviewStats>("/api/admin/analytics/overview"),
+	});
+	const attemptsQuery = useQuery({
+		queryKey: ["admin", "analytics"],
+		queryFn: () => api<AdminAnalyticsDto>("/api/admin/analytics/attempts?days=7"),
+	});
+	const scoresQuery = useQuery({
+		queryKey: ["admin", "analytics", "scores"],
+		queryFn: () => api<ScoreTrendPoint[]>("/api/admin/analytics/scores?days=30"),
+	});
+	const dropoffQuery = useQuery({
+		queryKey: ["admin", "analytics", "dropoff"],
+		queryFn: () => api<DropoffStats>("/api/admin/analytics/dropoff"),
+	});
 
-	useEffect(() => {
-		const timer = setTimeout(() => setDrawn(true), 80);
-		return () => clearTimeout(timer);
-	}, [daily]);
-
-	const W = 560;
-	const H = 210;
-	const PAD_L = 34;
-	const PAD_R = 16;
-	const PAD_T = 18;
-	const PAD_B = 30;
-
-	const max = Math.max(1, ...daily.map((d) => d.count));
-	const stepX =
-		daily.length > 1 ? (W - PAD_L - PAD_R) / (daily.length - 1) : (W - PAD_L - PAD_R) / 2;
-
-	const pts = daily.map((d, i) => ({
-		x: PAD_L + i * stepX,
-		y: H - PAD_B - (d.count / max) * (H - PAD_T - PAD_B),
-	}));
-
-	const linePoints = pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
-	const baselineY = H - PAD_B;
-	const areaPoints =
-		pts.length > 1
-			? `${linePoints} ${pts[pts.length - 1].x.toFixed(1)},${baselineY} ${PAD_L},${baselineY}`
-			: "";
-
-	const dayLabel = (dateStr: string) =>
-		new Date(`${dateStr}T00:00:00`)
-			.toLocaleDateString("en-US", { weekday: "short" })
-			.toUpperCase();
-
-	if (!daily.length) return null;
+	const ov = overviewQuery.data;
 
 	return (
 		<div>
-			<div className="relative">
-				<svg
-					viewBox={`0 0 ${W} ${H}`}
-					preserveAspectRatio="none"
-					className="w-full h-[190px]"
-				>
-					<defs>
-						<linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-							<stop offset="0%" stopColor="#7B5CFF" stopOpacity="0.32" />
-							<stop offset="100%" stopColor="#7B5CFF" stopOpacity="0" />
-						</linearGradient>
-					</defs>
+			<SectionHead title="Dashboard" />
 
-					<line
-						x1={PAD_L}
-						y1={baselineY}
-						x2={W - PAD_R}
-						y2={baselineY}
-						stroke="rgba(255,255,255,.16)"
-						strokeWidth="1"
-					/>
-
-					{areaPoints && (
-						<polygon
-							points={areaPoints}
-							fill="url(#chartGrad)"
-							style={{
-								opacity: drawn ? 1 : 0,
-								transition: "opacity .7s ease .5s",
-							}}
-						/>
-					)}
-
-					{pts.length > 1 && (
-						<polyline
-							points={linePoints}
-							fill="none"
-							stroke="#7B5CFF"
-							strokeWidth="2.5"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							pathLength={100}
-							strokeDasharray={100}
-							strokeDashoffset={drawn ? 0 : 100}
-							style={{ transition: "stroke-dashoffset 1.4s cubic-bezier(.22,.68,0,1)" }}
-						/>
-					)}
-
-					{pts.map((p, i) => (
-						<circle
-							key={`dot-${i}`}
-							cx={p.x}
-							cy={p.y}
-							r={3.5}
-							fill="#0D0A1D"
-							stroke="#7B5CFF"
-							strokeWidth="2"
-							style={{
-								opacity: drawn ? 1 : 0,
-								transition: `opacity .4s ease ${0.4 + i * 0.08}s`,
-							}}
-						/>
-					))}
-
-					<text
-						x={PAD_L - 8}
-						y={PAD_T + 2}
-						textAnchor="end"
-						fontSize="10"
-						fill="#655F82"
-					>
-						{max}
-					</text>
-					<text
-						x={PAD_L - 8}
-						y={baselineY + 4}
-						textAnchor="end"
-						fontSize="10"
-						fill="#655F82"
-					>
-						0
-					</text>
-				</svg>
-				{pts.length > 1 && (
-					<div className="relative h-6 mt-1">
-						{daily.map((d, i) => (
-							<span
-								key={`lbl-${i}`}
-								className="absolute mono text-[10px] text-faintc -translate-x-1/2 whitespace-nowrap"
-								style={{ left: `${((PAD_L + i * stepX) / W) * 100}%` }}
-							>
-								{dayLabel(d.date)}
-							</span>
-						))}
+			<div className="stat-grid">
+				<div className="card stat-card">
+					<div className="stat-label">Total learners</div>
+					<div className="stat-num">
+						<CountUp value={ov?.totalUsers ?? 0} />
 					</div>
-				)}
+					<div
+						className="stat-delta text-[12px]"
+						style={{
+							color:
+								(ov?.newUsersThisWeek ?? 0) > 0 ? "#35E8B4" : undefined,
+						}}
+					>
+						{(ov?.newUsersThisWeek ?? 0) > 0
+							? `+${ov!.newUsersThisWeek} this week`
+							: "no sign-ups this week"}
+					</div>
+				</div>
+
+				<div className="card stat-card">
+					<div className="stat-label">Attempts finished today</div>
+					<div className="stat-num">
+						<CountUp value={ov?.attemptsToday ?? 0} />
+					</div>
+					<div className="stat-delta text-[12px] mutedc">
+						across {ov?.categoryCount ?? 0} categories
+					</div>
+				</div>
+
+				<div className="card stat-card">
+					<div className="stat-label">Avg score</div>
+					<div className="stat-num">
+						<CountUp value={Math.round(ov?.avgScorePct30d ?? 0)} suffix="%" />
+					</div>
+					<div className="stat-delta text-[12px] mutedc">last 30 days</div>
+				</div>
+
+				<div className="card stat-card">
+					<div className="stat-label">Pending AI questions</div>
+					<div
+						className="stat-num"
+						style={{ color: pendingCount > 0 ? "#FFB84D" : undefined }}
+					>
+						<CountUp value={pendingCount} />
+					</div>
+					<button
+						className="stat-delta text-[12px] text-left"
+						style={{ color: "#FFB84D" }}
+						onClick={onGoReview}
+					>
+						review queue →
+					</button>
+				</div>
+			</div>
+
+			{attemptsQuery.data && (
+				<div className="card mb-4">
+					<h3 className="text-[15px] mb-5">Attempts — last 7 days</h3>
+					<AttemptsChart daily={attemptsQuery.data.daily} />
+				</div>
+			)}
+
+			{scoresQuery.data && scoresQuery.data.length > 0 && (
+				<div className="admin-row2 mb-4">
+					<div className="card">
+						<h3 className="text-[15px] mb-5">Average score trend — last 30 days (%)</h3>
+						<AttemptsChart
+							daily={scoresQuery.data.map((s) => ({
+								date: s.date,
+								count: Math.round(s.avgPct * 10) / 10,
+							}))}
+						/>
+					</div>
+
+					{dropoffQuery.data && (
+						<div className="card">
+							<h3 className="text-[15px] mb-5">Quiz completion</h3>
+							<div className="space-y-3 text-sm">
+								<div className="flex justify-between">
+									<span className="mutedc">Started</span>
+									<span className="mono">{dropoffQuery.data.started}</span>
+								</div>
+								<div className="flex justify-between">
+									<span className="mutedc">Finished</span>
+									<span className="mono">{dropoffQuery.data.completed}</span>
+								</div>
+								<div className="flex justify-between">
+									<span className="text-dangerc">Abandoned mid-quiz</span>
+									<span className="mono text-dangerc">
+										{dropoffQuery.data.abandoned}
+									</span>
+								</div>
+							</div>
+							<div className="mv-bar-track mt-4 !max-w-none">
+								<div
+									className="mv-bar-fill"
+									style={{
+										width: `${Math.min(
+											100,
+											Math.max(
+												0,
+												dropoffQuery.data.started === 0
+													? 100
+													: (dropoffQuery.data.completed /
+															dropoffQuery.data.started) *
+														100
+											)
+										)}%`,
+									}}
+								/>
+							</div>
+							<p className="mt-2 mono text-[11px] text-faintc">
+								{Math.round(dropoffQuery.data.dropOffPct)}% of quizzes are abandoned
+								before submission
+							</p>
+						</div>
+					)}
+				</div>
+			)}
+
+			{(analyticsQuery.data) && (
+				<div className="card mb-4">
+					<h3 className="text-[15px] mb-5">Top categories this week</h3>
+					{(analyticsQuery.data.topCategories ?? []).length === 0 ? (
+						<p className="text-sm text-mutedc">No completed quizzes yet.</p>
+					) : (
+						<div className="flex flex-col gap-3.5 text-[13px]">
+							{(analyticsQuery.data.topCategories ?? []).map((cat, i) => (
+								<div key={cat.name} className="flex items-center justify-between">
+									<span className="mutedc flex items-center gap-2.5">
+										<span className="mono text-faintc">{i + 1}</span>
+										{cat.name}
+									</span>
+									<span className="mono">{cat.count}</span>
+								</div>
+							))}
+						</div>
+					)}
+				</div>
+			)}
+
+			<div className="card">
+				<h3 className="text-[15px] mb-4">All quizzes</h3>
+				<div className="overflow-x-auto"><table className="review-table">
+					<thead>
+						<tr>
+							<th>Title</th>
+							<th>Category</th>
+							<th>Status</th>
+							<th className="!text-right">Questions</th>
+						</tr>
+					</thead>
+					<tbody>
+						{quizzes.map((q) => (
+							<tr key={q.id}>
+								<td className="font-medium text-ink">
+									<Link href={`/quiz/${q.id}`} className="hover:text-violet">
+										{q.title}
+									</Link>
+								</td>
+								<td className="mutedc">{q.categoryName}</td>
+								<td>
+									<span className={`badge ${q.isPublished ? "badge-mint" : ""}`}>
+										{q.isPublished ? "live" : "draft"}
+									</span>
+								</td>
+								<td className="mono text-right">{q.questionCount}</td>
+							</tr>
+						))}
+					</tbody>
+				</table></div>
 			</div>
 		</div>
+	);
+}
+
+function EmptyCard({ text }: { text: string }) {
+	return (
+		<div className="card p-10 text-center text-sm text-mutedc">{text}</div>
+	);
+}
+
+function SectionHead({ title }: { title: string }) {
+	return (
+		<>
+			<Eyebrow>Admin</Eyebrow>
+			<h1 className="text-[28px] mt-2 mb-6">{title}</h1>
+		</>
 	);
 }
 

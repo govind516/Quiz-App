@@ -23,6 +23,8 @@ public interface QuizAttemptRepository extends JpaRepository<QuizAttempt, Long> 
 
 	long countByUserId(Long userId);
 
+	long countByUserIdAndStatus(Long userId, com.example.quizapp.attempt.AttemptStatus status);
+
 	@Query(value = """
 			SELECT TO_CHAR(a.completed_at, 'YYYY-MM-DD') AS day, COUNT(*) AS cnt
 			FROM quiz_attempts a
@@ -45,4 +47,28 @@ public interface QuizAttemptRepository extends JpaRepository<QuizAttempt, Long> 
 			LIMIT 5
 			""", nativeQuery = true)
 	List<CategoryCount> topCategories(@Param("days") int days);
+
+	@org.springframework.data.jpa.repository.Modifying
+	@Query("DELETE FROM QuizAttempt a WHERE a.user.id = :userId")
+	int deleteByUserId(@Param("userId") Long userId);
+
+	@Query(value = """
+			SELECT TO_CHAR(a.completed_at, 'YYYY-MM-DD') AS day,
+			       AVG(a.score * 100.0 / NULLIF(t.tp, 0)) AS avg_pct,
+			       COUNT(*) AS cnt
+			FROM quiz_attempts a
+			JOIN (
+			    SELECT quiz_id, SUM(points) AS tp
+			    FROM questions
+			    WHERE status = 'APPROVED'
+			    GROUP BY quiz_id
+			) t ON t.quiz_id = a.quiz_id
+			WHERE a.status = 'SUBMITTED'
+			  AND a.completed_at >= CURRENT_DATE - CAST(:days AS integer)
+			GROUP BY 1
+			ORDER BY 1
+			""", nativeQuery = true)
+	List<com.example.quizapp.attempt.repository.projection.ScoreTrendRow> scoreTrend(@Param("days") int days);
+
+	long countByStatus(AttemptStatus status);
 }

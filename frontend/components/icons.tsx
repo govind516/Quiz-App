@@ -169,3 +169,22 @@ export function IconTrash(p: P = {}) {
 		</svg>
 	);
 }
+
+export function IconUpload(p: P = {}) {
+	return (
+		<svg {...svgProps({ strokeWidth: 1.8, ...p })}>
+			<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+			<polyline points="17 8 12 3 7 8" />
+			<line x1="12" y1="3" x2="12" y2="15" />
+		</svg>
+	);
+}
+
+export function IconChartLine(p: P = {}) {
+	return (
+		<svg {...svgProps({ strokeWidth: 1.8, ...p })}>
+			<path d="M3 3v18h18" />
+			<path d="M7 14l4-4 3 3 5-6" />
+		</svg>
+	);
+}

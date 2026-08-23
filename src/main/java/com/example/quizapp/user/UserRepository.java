@@ -1,9 +1,10 @@
 package com.example.quizapp.user;
 
-import java.util.Collection;
-import java.util.List;
+import java.time.Instant;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -12,5 +13,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	boolean existsByEmailIgnoreCase(String email);
 
-	List<User> findAllByIdIn(Collection<Long> ids);
+	long countByCreatedAtAfter(Instant cutoff);
+
+	boolean existsByBannedTrue();
+
+	java.util.List<User> findAllByIdIn(java.util.Collection<Long> ids);
+
+	Page<User> findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(
+			String name, String email, Pageable pageable);
 }

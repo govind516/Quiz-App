@@ -96,12 +96,14 @@ function AuthInner() {
 				<div className="auth-box">
 					<div className="auth-tabs">
 						<button
+							type="button"
 							className={`auth-tab ${mode === "login" ? "active" : ""}`}
 							onClick={() => setOverride("login")}
 						>
 							Log in
 						</button>
 						<button
+							type="button"
 							className={`auth-tab ${mode === "signup" ? "active" : ""}`}
 							onClick={() => setOverride("signup")}
 						>
@@ -112,8 +114,9 @@ function AuthInner() {
 					<form onSubmit={handleSubmit}>
 						{mode === "signup" && (
 							<div className="field">
-								<label>Name</label>
+								<label htmlFor="su-name">Name</label>
 								<input
+									id="su-name"
 									className="input"
 									required
 									minLength={2}
@@ -127,8 +130,9 @@ function AuthInner() {
 							</div>
 						)}
 						<div className="field">
-							<label>Email</label>
-							<input
+						<label htmlFor="auth-email">Email</label>
+						<input
+							id="auth-email"
 								className="input"
 								type="email"
 								required
@@ -141,10 +145,10 @@ function AuthInner() {
 							)}
 						</div>
 						<div className="field">
-							<label>Password</label>
-							<input
-								className="input"
-								type="password"
+						<label htmlFor="auth-password">Password</label>
+						<input
+							id="auth-password"
+							type="password"
 								required
 								minLength={8}
 								value={password}

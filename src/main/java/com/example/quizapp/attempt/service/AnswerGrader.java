@@ -3,7 +3,6 @@ package com.example.quizapp.attempt.service;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.example.quizapp.quiz.Option;
 import com.example.quizapp.quiz.Question;
 
 public final class AnswerGrader {

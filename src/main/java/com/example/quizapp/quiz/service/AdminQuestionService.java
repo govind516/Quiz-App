@@ -9,6 +9,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.example.quizapp.common.exception.BadRequestException;
+import com.example.quizapp.common.exception.ConflictException;
 import com.example.quizapp.common.exception.ResourceNotFoundException;
 import com.example.quizapp.quiz.Option;
 import com.example.quizapp.quiz.Question;
@@ -36,6 +37,7 @@ public class AdminQuestionService {
 	private final QuizService quizService;
 	private final CsvQuestionParser csvQuestionParser;
 	private final GeminiClient geminiClient;
+	private final com.example.quizapp.settings.SettingsService settingsService;
 
 	@Transactional(readOnly = true)
 	public List<QuestionAdminDto> listByQuiz(Long quizId) {
@@ -161,6 +163,9 @@ public class AdminQuestionService {
 
 	@Transactional
 	public GeneratedQuestionsDto generate(Long quizId, GenerateQuestionsRequest request) {
+		if (!settingsService.isAiGenerationEnabled()) {
+			throw new ConflictException("AI generation is disabled in admin settings");
+		}
 		Quiz quiz = quizRepository.findById(quizId)
 				.orElseThrow(() -> new ResourceNotFoundException("Quiz", quizId));
 

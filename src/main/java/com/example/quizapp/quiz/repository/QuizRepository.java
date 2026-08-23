@@ -27,4 +27,9 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
 	List<Quiz> searchPublished(@Param("categorySlug") String categorySlug,
 			@Param("difficulty") Difficulty difficulty,
 			@Param("tagSlug") String tagSlug);
+
+
+	boolean existsByCategoryId(Long categoryId);
+
+	long countByCategoryId(Long categoryId);
 }

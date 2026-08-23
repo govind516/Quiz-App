@@ -219,3 +219,62 @@ export interface AdminAnalyticsDto {
 	topCategories: TopCategory[];
 	today: number;
 }
+
+export interface OverviewStats {
+	totalUsers: number;
+	newUsersThisWeek: number;
+	attemptsToday: number;
+	avgScorePct30d: number;
+	categoryCount: number;
+}
+
+export interface ScoreTrendPoint {
+	date: string;
+	avgPct: number;
+	attempts: number;
+}
+
+export interface DropoffStats {
+	started: number;
+	completed: number;
+	abandoned: number;
+	dropOffPct: number;
+}
+
+export interface CategoryPerformanceItem {
+	name: string;
+	attempts: number;
+	completed: number;
+	avgScorePct: number;
+}
+
+export interface AdminCategory {
+	id: number;
+	name: string;
+	slug: string;
+	description: string | null;
+	quizzes: number;
+	questions: number;
+}
+
+export interface AdminUserItem {
+	id: number;
+	name: string;
+	email: string;
+	role: "USER" | "ADMIN";
+	createdAt: string;
+	attemptsCompleted: number;
+	banned: boolean;
+}
+
+export interface AdminUsersResponse {
+	items: AdminUserItem[];
+	total: number;
+	page: number;
+	size: number;
+}
+
+export interface PlatformSettings {
+	aiGenerationEnabled: boolean;
+	registrationEnabled: boolean;
+}
