@@ -23,6 +23,7 @@ import com.example.quizapp.quiz.dto.OptionAdminDto;
 import com.example.quizapp.quiz.dto.OptionRequest;
 import com.example.quizapp.quiz.dto.QuestionAdminDto;
 import com.example.quizapp.quiz.dto.QuestionUpsertRequest;
+import com.example.quizapp.quiz.repository.CategoryRepository;
 import com.example.quizapp.quiz.repository.QuestionRepository;
 import com.example.quizapp.quiz.repository.QuizRepository;
 
@@ -34,6 +35,7 @@ public class AdminQuestionService {
 
 	private final QuestionRepository questionRepository;
 	private final QuizRepository quizRepository;
+	private final CategoryRepository categoryRepository;
 	private final QuizService quizService;
 	private final CsvQuestionParser csvQuestionParser;
 	private final GeminiClient geminiClient;
@@ -166,8 +168,35 @@ public class AdminQuestionService {
 		if (!settingsService.isAiGenerationEnabled()) {
 			throw new ConflictException("AI generation is disabled in admin settings");
 		}
-		Quiz quiz = quizRepository.findById(quizId)
-				.orElseThrow(() -> new ResourceNotFoundException("Quiz", quizId));
+		Quiz quiz;
+		if (request.categoryId() != null) {
+			var category = categoryRepository.findById(request.categoryId())
+					.orElseThrow(() -> new ResourceNotFoundException("Category", request.categoryId()));
+			var existing = quizRepository.findFirstByCategoryIdOrderByIdAsc(category.getId());
+			if (existing.isPresent()) {
+				quiz = existing.get();
+			} else {
+				// Create one draft quiz for this category (not per topic)
+				var difficulty = request.difficulty() != null
+						? mapToQuizDifficulty(request.difficulty())
+						: com.example.quizapp.quiz.Difficulty.BEGINNER;
+				quiz = Quiz.builder()
+						.title(category.getName())
+						.description("Auto-created for " + category.getName() + " — AI generated questions")
+						.category(category)
+						.difficulty(difficulty)
+						.timeLimitSec(600)
+						.isPublished(false)
+						.build();
+				quiz = quizRepository.save(quiz);
+			}
+		} else {
+			if (quizId == null) {
+				throw new BadRequestException("categoryId is required for AI generation");
+			}
+			quiz = quizRepository.findById(quizId)
+					.orElseThrow(() -> new ResourceNotFoundException("Quiz", quizId));
+		}
 
 		String prompt = buildPrompt(request);
 		String raw = geminiClient.generateJson(prompt);
@@ -236,6 +265,10 @@ public class AdminQuestionService {
 				Return STRICT VALID JSON ONLY - a bare JSON array, no markdown fences, no commentary:
 				[{"questionText":"...","type":"MCQ","points":1,"explanation":"...","options":[{"text":"...","isCorrect":false}]}]
 				""".formatted(request.count(), difficulty, request.topic(), typeRule);
+	}
+
+	private com.example.quizapp.quiz.Difficulty mapToQuizDifficulty(com.example.quizapp.quiz.Difficulty d) {
+		return d;
 	}
 
 	private void validateOptions(QuestionType type, List<OptionRequest> options) {

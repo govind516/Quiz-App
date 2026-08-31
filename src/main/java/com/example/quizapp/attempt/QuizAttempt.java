@@ -62,6 +62,14 @@ public class QuizAttempt {
 	@Builder.Default
 	private int score = 0;
 
+	/**
+	 * Snapshot of the total points available across the attempt's approved questions,
+	 * captured at submit time so percentages stay stable if questions change later.
+	 * Nullable for legacy rows created before this column existed.
+	 */
+	@Column(name = "total_points")
+	private Integer totalPoints;
+
 	@Column(name = "started_at", nullable = false)
 	private Instant startedAt;
 

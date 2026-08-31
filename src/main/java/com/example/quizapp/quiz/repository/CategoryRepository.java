@@ -30,7 +30,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 			SELECT c.name AS name,
 			       COUNT(a.id) AS attempts,
 			       SUM(CASE WHEN a.status IN ('SUBMITTED', 'EXPIRED') THEN 1 ELSE 0 END) AS completed,
-			       AVG(CASE WHEN a.status = 'SUBMITTED' THEN a.score * 100.0 / NULLIF(t.tp, 0) END) AS avg_pct
+			       AVG(CASE WHEN a.status = 'SUBMITTED' THEN a.score * 100.0 / NULLIF(COALESCE(a.total_points, t.tp), 0) END) AS avgPct
 			FROM categories c
 			LEFT JOIN quizzes q ON q.category_id = c.id
 			LEFT JOIN quiz_attempts a ON a.quiz_id = q.id

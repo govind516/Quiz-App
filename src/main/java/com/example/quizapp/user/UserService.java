@@ -14,8 +14,8 @@ import com.example.quizapp.attempt.AttemptStatus;
 import com.example.quizapp.attempt.QuizAttempt;
 import com.example.quizapp.attempt.dto.AttemptResultDto;
 import com.example.quizapp.attempt.repository.QuizAttemptRepository;
+import com.example.quizapp.attempt.service.AttemptPointsResolver;
 import com.example.quizapp.common.exception.ResourceNotFoundException;
-import com.example.quizapp.quiz.repository.QuestionRepository;
 import com.example.quizapp.user.dto.BadgeDto;
 import com.example.quizapp.user.dto.UserStatsDto;
 
@@ -27,7 +27,7 @@ public class UserService {
 
 	private final UserRepository userRepository;
 	private final QuizAttemptRepository attemptRepository;
-	private final QuestionRepository questionRepository;
+	private final AttemptPointsResolver attemptPointsResolver;
 
 	@Transactional(readOnly = true)
 	public List<AttemptResultDto> history(Long userId) {
@@ -50,7 +50,7 @@ public class UserService {
 		int pointsEarned = 0;
 		Set<LocalDate> activeDays = new TreeSet<>();
 		for (QuizAttempt attempt : completed) {
-			long totalPoints = questionRepository.sumPointsByQuizId(attempt.getQuiz().getId());
+			long totalPoints = attemptPointsResolver.resolveTotalPoints(attempt);
 			double percentage = totalPoints > 0 ? Math.min(attempt.getScore() * 100.0 / totalPoints, 100.0) : 0;
 			sum += percentage;
 			best = Math.max(best, percentage);
@@ -117,14 +117,15 @@ public class UserService {
 	}
 
 	private AttemptResultDto toHistoryItem(QuizAttempt attempt) {
-		long totalPoints = questionRepository.sumPointsByQuizId(attempt.getQuiz().getId());
+		long totalPoints = attemptPointsResolver.resolveTotalPoints(attempt);
 		double percentage = totalPoints > 0
 				? Math.round(attempt.getScore() * 1000.0 / totalPoints) / 10.0
 				: 0.0;
+		Long quizId = attempt.getQuiz() == null ? null : attempt.getQuiz().getId();
 		return new AttemptResultDto(
 				attempt.getId(),
-				attempt.getQuiz().getId(),
-				attempt.getQuiz().getTitle(),
+				quizId,
+				attempt.getTitle(),
 				attempt.getStatus(),
 				attempt.getScore(),
 				totalPoints,

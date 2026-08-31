@@ -13,13 +13,13 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.quizapp.attempt.AttemptStatus;
 import com.example.quizapp.attempt.QuizAttempt;
 import com.example.quizapp.attempt.repository.QuizAttemptRepository;
+import com.example.quizapp.attempt.service.AttemptPointsResolver;
 import com.example.quizapp.certificate.dto.CertificateDto;
 import com.example.quizapp.certificate.dto.CategoryProgressDto;
 import com.example.quizapp.certificate.repository.CertificateRepository;
 import com.example.quizapp.common.exception.BadRequestException;
 import com.example.quizapp.common.exception.ResourceNotFoundException;
 import com.example.quizapp.quiz.Quiz;
-import com.example.quizapp.quiz.repository.QuestionRepository;
 import com.example.quizapp.quiz.repository.QuizRepository;
 import com.example.quizapp.user.UserRepository;
 
@@ -35,8 +35,8 @@ public class CertificateService {
 	private final CertificateRepository certificateRepository;
 	private final QuizRepository quizRepository;
 	private final QuizAttemptRepository attemptRepository;
-	private final QuestionRepository questionRepository;
 	private final UserRepository userRepository;
+	private final AttemptPointsResolver attemptPointsResolver;
 
 	@Transactional(readOnly = true)
 	public List<CategoryProgressDto> eligibility(Long userId) {
@@ -110,7 +110,10 @@ public class CertificateService {
 		Map<Long, Double> best = new HashMap<>();
 		for (QuizAttempt attempt : attemptRepository
 				.findAllByUserIdAndStatusOrderByCompletedAtDesc(userId, AttemptStatus.SUBMITTED)) {
-			long totalPoints = questionRepository.sumPointsByQuizId(attempt.getQuiz().getId());
+			if (attempt.getQuiz() == null) {
+				continue;
+			}
+			long totalPoints = attemptPointsResolver.resolveTotalPoints(attempt);
 			double pct = totalPoints > 0 ? Math.min(attempt.getScore() * 100.0 / totalPoints, 100.0) : 0;
 			best.merge(attempt.getQuiz().getId(), pct, (a, b) -> Math.max(a, b));
 		}

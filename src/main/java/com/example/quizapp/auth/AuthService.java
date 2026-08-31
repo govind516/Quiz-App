@@ -49,8 +49,9 @@ public class AuthService {
 	}
 
 	public AuthResponse login(LoginRequest request) {
+		String normalizedEmail = request.email() == null ? null : request.email().trim();
 		Authentication authentication = authenticationManager.authenticate(
-				new UsernamePasswordAuthenticationToken(request.email(), request.password()));
+				new UsernamePasswordAuthenticationToken(normalizedEmail, request.password()));
 		AppUserPrincipal principal = (AppUserPrincipal) authentication.getPrincipal();
 		if (principal.getUser().isBanned()) {
 			throw new org.springframework.security.authentication.LockedException("Account suspended");

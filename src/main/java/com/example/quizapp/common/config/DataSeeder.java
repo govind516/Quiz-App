@@ -43,14 +43,15 @@ public class DataSeeder implements ApplicationRunner {
 	@Override
 	@Transactional
 	public void run(ApplicationArguments args) {
-		if (userRepository.findByEmailIgnoreCase(adminEmail).isEmpty()) {
+		String normalizedAdminEmail = adminEmail == null ? null : adminEmail.trim().toLowerCase();
+		if (normalizedAdminEmail != null && userRepository.findByEmailIgnoreCase(normalizedAdminEmail).isEmpty()) {
 			userRepository.save(User.builder()
 					.name("Platform Admin")
-					.email(adminEmail)
+					.email(normalizedAdminEmail)
 					.passwordHash(passwordEncoder.encode(adminPassword))
 					.role(Role.ADMIN)
 					.build());
-			log.info("Seeded admin user {}", adminEmail);
+			log.info("Seeded admin user {}", normalizedAdminEmail);
 		}
 
 		if (categoryRepository.count() == 0) {

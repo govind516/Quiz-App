@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import com.example.quizapp.common.exception.ConflictException;
 import com.example.quizapp.common.exception.ResourceNotFoundException;
 import com.example.quizapp.live.dto.AnswerMessage;
+import com.example.quizapp.live.dto.CreateLiveRoomResponse;
 import com.example.quizapp.live.dto.FinalResultsPayload;
 import com.example.quizapp.live.dto.LiveQuestionPayload;
 import com.example.quizapp.live.dto.LiveRoomInfo;
@@ -31,6 +32,7 @@ import com.example.quizapp.quiz.repository.QuizRepository;
 import com.example.quizapp.user.User;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -85,9 +87,12 @@ public class LiveRoomService {
 		this.liveRoomScheduler = liveRoomScheduler;
 	}
 
-	public LiveRoomInfo create(User host, Long quizId) {
+	@Transactional
+	public CreateLiveRoomResponse create(User host, Long quizId, boolean joinAsPlayer) {
 		Quiz quiz = quizRepository.findByIdAndIsPublishedTrue(quizId)
 				.orElseThrow(() -> new ResourceNotFoundException("Published quiz", quizId));
+		// Initialize lazy collections within transaction so the in-memory Room can be used after detachment (open-in-view=false)
+		quiz.getQuestions().forEach(q -> q.getOptions().size());
 		List<Question> approved = quiz.getQuestions().stream()
 				.filter(q -> q.getStatus() == QuestionStatus.APPROVED)
 				.toList();
@@ -95,11 +100,18 @@ public class LiveRoomService {
 			throw new ConflictException("This quiz has no active questions");
 		}
 		Room room = new Room(generateCode(), quiz, host);
+		UUID creatorPlayerId = null;
+		if (joinAsPlayer) {
+			Player hostPlayer = new Player(host.getName().trim());
+			room.players.put(hostPlayer.id, hostPlayer);
+			creatorPlayerId = hostPlayer.id;
+		}
 		rooms.put(room.code, room);
 		broadcastLobby(room);
-		return toInfo(room);
+		return new CreateLiveRoomResponse(toInfo(room), creatorPlayerId == null ? null : creatorPlayerId.toString());
 	}
 
+	@Transactional(readOnly = true)
 	public LiveRoomInfo info(String code) {
 		return toInfo(room(code));
 	}
@@ -120,6 +132,7 @@ public class LiveRoomService {
 		return player.id;
 	}
 
+	@Transactional
 	public void start(Long userId, String code) {
 		Room room = room(code);
 		if (!room.host.getId().equals(userId)) {

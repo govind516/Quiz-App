@@ -213,7 +213,12 @@ public class AttemptService {
 				.mapToInt(row -> quizQuestions.get(row.getQuestion().getId()).getPoints())
 				.sum();
 
+		long totalPoints = quizQuestions.values().stream()
+				.mapToLong(Question::getPoints)
+				.sum();
+
 		attempt.setScore(earnedPoints);
+		attempt.setTotalPoints((int) totalPoints);
 		if (expired) {
 			attempt.setStatus(AttemptStatus.EXPIRED);
 			attempt.setCompletedAt(attempt.getStartedAt().plusSeconds(timeLimitSec));
@@ -225,9 +230,6 @@ public class AttemptService {
 
 		Quiz quiz = attempt.getQuiz();
 		if (attempt.getUser() != null && attempt.getStatus() == AttemptStatus.SUBMITTED && quiz != null) {
-			long totalPoints = quizQuestions.values().stream()
-					.mapToLong(q -> q.getPoints())
-					.sum();
 			double percentage = totalPoints > 0 ? (earnedPoints * 100.0 / totalPoints) : 0.0;
 			leaderboardService.recordSubmission(
 					attempt.getUser().getId(),

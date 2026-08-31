@@ -11,5 +11,6 @@ public record GenerateQuestionsRequest(
 		@NotBlank @Size(max = 200) String topic,
 		@NotNull @Min(1) @Max(20) Integer count,
 		@NotNull com.example.quizapp.quiz.QuestionType questionType,
-		com.example.quizapp.quiz.Difficulty difficulty) {
+		com.example.quizapp.quiz.Difficulty difficulty,
+		@NotNull Long categoryId) {
 }

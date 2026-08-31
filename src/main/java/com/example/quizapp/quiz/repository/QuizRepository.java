@@ -32,4 +32,8 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
 	boolean existsByCategoryId(Long categoryId);
 
 	long countByCategoryId(Long categoryId);
+
+	java.util.List<Quiz> findByCategoryIdOrderByIdAsc(Long categoryId);
+
+	java.util.Optional<Quiz> findFirstByCategoryIdOrderByIdAsc(Long categoryId);
 }

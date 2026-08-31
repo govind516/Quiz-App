@@ -43,7 +43,9 @@ public class AdminAnalyticsService {
 	@Transactional(readOnly = true)
 	public List<ScoreTrendPoint> scoreTrend(int days) {
 		return attemptRepository.scoreTrend(days).stream()
-				.map(row -> new ScoreTrendPoint(row.getDay(), round1(row.getAvgPct()), row.getCnt()))
+				.map(row -> new ScoreTrendPoint(row.getDay(),
+						row.getAvgPct() == null ? 0 : round1(row.getAvgPct()),
+						row.getCnt()))
 				.toList();
 	}
 
@@ -82,6 +84,9 @@ public class AdminAnalyticsService {
 		double weighted = 0;
 		long totalAttempts = 0;
 		for (var row : rows) {
+			if (row.getAvgPct() == null || row.getCnt() == null) {
+				continue;
+			}
 			weighted += row.getAvgPct() * row.getCnt();
 			totalAttempts += row.getCnt();
 		}

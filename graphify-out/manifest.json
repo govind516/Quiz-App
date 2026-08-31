@@ -1,0 +1,1142 @@
+{
+  "frontend/app/admin/page.tsx": {
+    "mtime": 1787501903.2466629,
+    "seen": 1787506091.803911,
+    "ast_hash": "d6cca28760dbd4532ba38b00575d66de",
+    "semantic_hash": "d6cca28760dbd4532ba38b00575d66de"
+  },
+  "frontend/app/admin/panels.tsx": {
+    "mtime": 1787501903.2471015,
+    "seen": 1787506091.803916,
+    "ast_hash": "ec32cc5658e25088ba68c71221e79d52",
+    "semantic_hash": "ec32cc5658e25088ba68c71221e79d52"
+  },
+  "frontend/app/auth/page.tsx": {
+    "mtime": 1787501903.247599,
+    "seen": 1787506091.8039181,
+    "ast_hash": "b8be2a6eec12bc477facb2fe50eb35e7",
+    "semantic_hash": "b8be2a6eec12bc477facb2fe50eb35e7"
+  },
+  "frontend/app/browse/page.tsx": {
+    "mtime": 1787457644.4315584,
+    "seen": 1787506091.803919,
+    "ast_hash": "0cc83a9e481539b4f0efc87c98c36807",
+    "semantic_hash": "0cc83a9e481539b4f0efc87c98c36807"
+  },
+  "frontend/app/certificate/[code]/page.tsx": {
+    "mtime": 1787457644.4319024,
+    "seen": 1787506091.8039198,
+    "ast_hash": "8f7c11f5d03fb2495663e7b7a1b0013c",
+    "semantic_hash": "8f7c11f5d03fb2495663e7b7a1b0013c"
+  },
+  "frontend/app/layout.tsx": {
+    "mtime": 1787457644.4330714,
+    "seen": 1787506091.803921,
+    "ast_hash": "c7e94d317eccc282ce69157e37997837",
+    "semantic_hash": "c7e94d317eccc282ce69157e37997837"
+  },
+  "frontend/app/leaderboard/page.tsx": {
+    "mtime": 1787457644.433439,
+    "seen": 1787506091.803922,
+    "ast_hash": "8b944c01a3b419d6c094fd37ec194747",
+    "semantic_hash": "8b944c01a3b419d6c094fd37ec194747"
+  },
+  "frontend/app/live/create/page.tsx": {
+    "mtime": 1787501903.2484698,
+    "seen": 1787506091.803923,
+    "ast_hash": "75aa421f4071b79c15ba9b8151174a63",
+    "semantic_hash": "75aa421f4071b79c15ba9b8151174a63"
+  },
+  "frontend/app/live/join/page.tsx": {
+    "mtime": 1787457644.4341373,
+    "seen": 1787506091.803924,
+    "ast_hash": "4e4a45d522012b79368116583e6174ee",
+    "semantic_hash": "4e4a45d522012b79368116583e6174ee"
+  },
+  "frontend/app/live/room/[code]/page.tsx": {
+    "mtime": 1787457644.4346004,
+    "seen": 1787506091.803925,
+    "ast_hash": "d7bf9dfe1ca6cc6e24cdf0162eeb0ca3",
+    "semantic_hash": "d7bf9dfe1ca6cc6e24cdf0162eeb0ca3"
+  },
+  "frontend/app/login/page.tsx": {
+    "mtime": 1787457644.4349046,
+    "seen": 1787506091.803925,
+    "ast_hash": "d7a93dc02b252cb3a5a5ffb05d98840b",
+    "semantic_hash": "d7a93dc02b252cb3a5a5ffb05d98840b"
+  },
+  "frontend/app/me/page.tsx": {
+    "mtime": 1787501903.2489636,
+    "seen": 1787506091.803927,
+    "ast_hash": "23e705276a2528af7f4c20f48376f88a",
+    "semantic_hash": "23e705276a2528af7f4c20f48376f88a"
+  },
+  "frontend/app/page.tsx": {
+    "mtime": 1787457644.4356267,
+    "seen": 1787506091.803927,
+    "ast_hash": "0c01912f300764f88173a3519f369104",
+    "semantic_hash": "0c01912f300764f88173a3519f369104"
+  },
+  "frontend/app/quiz/[id]/page.tsx": {
+    "mtime": 1787457644.435998,
+    "seen": 1787506091.8039281,
+    "ast_hash": "b93e2db7829669b15821b386ba0c739d",
+    "semantic_hash": "b93e2db7829669b15821b386ba0c739d"
+  },
+  "frontend/app/register/page.tsx": {
+    "mtime": 1787457644.4364114,
+    "seen": 1787506091.803929,
+    "ast_hash": "d20d852f2f829832ce1eb10374aa9b0c",
+    "semantic_hash": "d20d852f2f829832ce1eb10374aa9b0c"
+  },
+  "frontend/app/result/[attemptId]/page.tsx": {
+    "mtime": 1787457644.4367926,
+    "seen": 1787506091.80393,
+    "ast_hash": "6e438abde3ba40b8a08ac87a6a8ff8fc",
+    "semantic_hash": "6e438abde3ba40b8a08ac87a6a8ff8fc"
+  },
+  "frontend/app/take/[attemptId]/page.tsx": {
+    "mtime": 1787457644.437184,
+    "seen": 1787506091.80393,
+    "ast_hash": "e8a45729f8907bdadb189ed68412ba9c",
+    "semantic_hash": "e8a45729f8907bdadb189ed68412ba9c"
+  },
+  "frontend/app/template.tsx": {
+    "mtime": 1787457644.4375646,
+    "seen": 1787506091.803931,
+    "ast_hash": "ff66c6bf4af7f0114177947f1539bb05",
+    "semantic_hash": "ff66c6bf4af7f0114177947f1539bb05"
+  },
+  "frontend/components/bookmark-button.tsx": {
+    "mtime": 1787457644.4379086,
+    "seen": 1787506091.803932,
+    "ast_hash": "6915c8e0e3f18b722b1aac1db6cf8ea9",
+    "semantic_hash": "6915c8e0e3f18b722b1aac1db6cf8ea9"
+  },
+  "frontend/components/difficulty-badge.tsx": {
+    "mtime": 1787457644.438217,
+    "seen": 1787506091.803933,
+    "ast_hash": "ecd075e282e477e54b91871f369d8dea",
+    "semantic_hash": "ecd075e282e477e54b91871f369d8dea"
+  },
+  "frontend/components/icons.tsx": {
+    "mtime": 1787457644.4385896,
+    "seen": 1787506091.803933,
+    "ast_hash": "3e8b5727aa14e664ba1d7884092d2997",
+    "semantic_hash": "3e8b5727aa14e664ba1d7884092d2997"
+  },
+  "frontend/components/navbar.tsx": {
+    "mtime": 1787457644.438926,
+    "seen": 1787506091.8039339,
+    "ast_hash": "e7d521caa467dfc92ddd881da69b7444",
+    "semantic_hash": "e7d521caa467dfc92ddd881da69b7444"
+  },
+  "frontend/components/providers.tsx": {
+    "mtime": 1787457644.4393516,
+    "seen": 1787506091.803935,
+    "ast_hash": "aa8776a4fd60999282306af94e2fb249",
+    "semantic_hash": "aa8776a4fd60999282306af94e2fb249"
+  },
+  "frontend/components/quiz-card.tsx": {
+    "mtime": 1787457644.439723,
+    "seen": 1787506091.803936,
+    "ast_hash": "9945b053a1d5f9fffad71668e299e227",
+    "semantic_hash": "9945b053a1d5f9fffad71668e299e227"
+  },
+  "frontend/components/ui.tsx": {
+    "mtime": 1787457644.4400597,
+    "seen": 1787506091.803937,
+    "ast_hash": "951a9f68f6fc68f9c935b4050bb05e20",
+    "semantic_hash": "951a9f68f6fc68f9c935b4050bb05e20"
+  },
+  "frontend/eslint.config.mjs": {
+    "mtime": 1787457644.4403846,
+    "seen": 1787506091.8039382,
+    "ast_hash": "dfa1f5f6a7037bf39dc510f30b180002",
+    "semantic_hash": "dfa1f5f6a7037bf39dc510f30b180002"
+  },
+  "frontend/lib/api.ts": {
+    "mtime": 1787457644.4407167,
+    "seen": 1787506091.8039382,
+    "ast_hash": "12254f80edbca3625f83a549725f9bf3",
+    "semantic_hash": "12254f80edbca3625f83a549725f9bf3"
+  },
+  "frontend/lib/auth-store.ts": {
+    "mtime": 1787457644.4411466,
+    "seen": 1787506091.803939,
+    "ast_hash": "8aad1ee734a2ea2a14ef0fef2f8efd29",
+    "semantic_hash": "8aad1ee734a2ea2a14ef0fef2f8efd29"
+  },
+  "frontend/lib/config.ts": {
+    "mtime": 1787457644.441474,
+    "seen": 1787506091.80394,
+    "ast_hash": "0f8c11f5e3dcf6692948f09f96382531",
+    "semantic_hash": "0f8c11f5e3dcf6692948f09f96382531"
+  },
+  "frontend/lib/guest-session.ts": {
+    "mtime": 1787457644.4418116,
+    "seen": 1787506091.803941,
+    "ast_hash": "4fe855c5286f044d3ea2a658de7046f9",
+    "semantic_hash": "4fe855c5286f044d3ea2a658de7046f9"
+  },
+  "frontend/lib/live.ts": {
+    "mtime": 1787457644.4421682,
+    "seen": 1787506091.803942,
+    "ast_hash": "88b66ecfe903b44362721f0bfbb8ea2f",
+    "semantic_hash": "88b66ecfe903b44362721f0bfbb8ea2f"
+  },
+  "frontend/lib/types.ts": {
+    "mtime": 1787501903.249446,
+    "seen": 1787506091.803942,
+    "ast_hash": "31b83df4e50451317b9effd4929a344b",
+    "semantic_hash": "31b83df4e50451317b9effd4929a344b"
+  },
+  "frontend/next.config.ts": {
+    "mtime": 1787457644.4428456,
+    "seen": 1787506091.803943,
+    "ast_hash": "9b77af189a21a7a64e4bd7a426f64176",
+    "semantic_hash": "9b77af189a21a7a64e4bd7a426f64176"
+  },
+  "frontend/package.json": {
+    "mtime": 1787457644.444075,
+    "seen": 1787506091.8039439,
+    "ast_hash": "689c0aed8275538d608786bbf36d1c7c",
+    "semantic_hash": "689c0aed8275538d608786bbf36d1c7c"
+  },
+  "frontend/postcss.config.mjs": {
+    "mtime": 1787457644.4444149,
+    "seen": 1787506091.803945,
+    "ast_hash": "239f3ebf717465dc636818a1a619398d",
+    "semantic_hash": "239f3ebf717465dc636818a1a619398d"
+  },
+  "frontend/refactor_step1.py": {
+    "mtime": 1787457644.4466448,
+    "seen": 1787506091.803945,
+    "ast_hash": "4e150d76cb7619d56c9df0cf82d2c32e",
+    "semantic_hash": "4e150d76cb7619d56c9df0cf82d2c32e"
+  },
+  "frontend/tsconfig.json": {
+    "mtime": 1787457644.446979,
+    "seen": 1787506091.803946,
+    "ast_hash": "02fc19ad21338c2ab820a70136310db4",
+    "semantic_hash": "02fc19ad21338c2ab820a70136310db4"
+  },
+  "mvnw": {
+    "mtime": 1787457644.447646,
+    "seen": 1787506091.803947,
+    "ast_hash": "6dae69a928d8a969a700887b3433aac8",
+    "semantic_hash": "6dae69a928d8a969a700887b3433aac8"
+  },
+  "pom.xml": {
+    "mtime": 1787501903.250114,
+    "seen": 1787506091.803948,
+    "ast_hash": "2305f192e368cce9004b4b358282096f",
+    "semantic_hash": "2305f192e368cce9004b4b358282096f"
+  },
+  "src/main/java/com/example/quizapp/QuizAppApplication.java": {
+    "mtime": 1787457644.4491432,
+    "seen": 1787506091.803948,
+    "ast_hash": "e2a403280fcd8b524f7dd7dcdf7abe0e",
+    "semantic_hash": "e2a403280fcd8b524f7dd7dcdf7abe0e"
+  },
+  "src/main/java/com/example/quizapp/attempt/AttemptAnswer.java": {
+    "mtime": 1787457644.4494846,
+    "seen": 1787506091.803949,
+    "ast_hash": "a034c8d0b09dcc86111a4eaffa838afa",
+    "semantic_hash": "a034c8d0b09dcc86111a4eaffa838afa"
+  },
+  "src/main/java/com/example/quizapp/attempt/AttemptStatus.java": {
+    "mtime": 1787457644.449774,
+    "seen": 1787506091.80395,
+    "ast_hash": "cbcddb4cb9137cef3014d169c9a12d9b",
+    "semantic_hash": "cbcddb4cb9137cef3014d169c9a12d9b"
+  },
+  "src/main/java/com/example/quizapp/attempt/QuizAttempt.java": {
+    "mtime": 1787501903.2508225,
+    "seen": 1787506091.803951,
+    "ast_hash": "1424731f95b69d44d7eac223d190a0f2",
+    "semantic_hash": "1424731f95b69d44d7eac223d190a0f2"
+  },
+  "src/main/java/com/example/quizapp/attempt/controller/AttemptController.java": {
+    "mtime": 1787457644.4505022,
+    "seen": 1787506091.8039522,
+    "ast_hash": "97a1a87816a0647ecb78ecc030760996",
+    "semantic_hash": "97a1a87816a0647ecb78ecc030760996"
+  },
+  "src/main/java/com/example/quizapp/attempt/controller/CustomQuizController.java": {
+    "mtime": 1787457644.4508374,
+    "seen": 1787506091.803953,
+    "ast_hash": "521653c7ad0a5efb169eb96fa177ba63",
+    "semantic_hash": "521653c7ad0a5efb169eb96fa177ba63"
+  },
+  "src/main/java/com/example/quizapp/attempt/dto/AttemptResultDto.java": {
+    "mtime": 1787457644.4513237,
+    "seen": 1787506091.803953,
+    "ast_hash": "8797260c78793af563d855b79bb9bb05",
+    "semantic_hash": "8797260c78793af563d855b79bb9bb05"
+  },
+  "src/main/java/com/example/quizapp/attempt/dto/CustomQuizRequest.java": {
+    "mtime": 1787457644.451671,
+    "seen": 1787506091.803954,
+    "ast_hash": "6c53e3cd946abed3cbcecc401d610fdb",
+    "semantic_hash": "6c53e3cd946abed3cbcecc401d610fdb"
+  },
+  "src/main/java/com/example/quizapp/attempt/dto/QuestionResultDto.java": {
+    "mtime": 1787457644.4519818,
+    "seen": 1787506091.8039548,
+    "ast_hash": "c5f2a7fc241bb42f3b8af2f761ce6512",
+    "semantic_hash": "c5f2a7fc241bb42f3b8af2f761ce6512"
+  },
+  "src/main/java/com/example/quizapp/attempt/dto/StartAttemptRequest.java": {
+    "mtime": 1787457644.4524524,
+    "seen": 1787506091.803956,
+    "ast_hash": "9aaad782d59574604df2014d477228b1",
+    "semantic_hash": "9aaad782d59574604df2014d477228b1"
+  },
+  "src/main/java/com/example/quizapp/attempt/dto/StartAttemptResponse.java": {
+    "mtime": 1787457644.4527225,
+    "seen": 1787506091.803956,
+    "ast_hash": "755cc7453599236a86a1cbc2d06d522c",
+    "semantic_hash": "755cc7453599236a86a1cbc2d06d522c"
+  },
+  "src/main/java/com/example/quizapp/attempt/dto/SubmitAnswerDto.java": {
+    "mtime": 1787457644.453067,
+    "seen": 1787506091.803957,
+    "ast_hash": "354b0a7182000d649a6fcd5c5a86221d",
+    "semantic_hash": "354b0a7182000d649a6fcd5c5a86221d"
+  },
+  "src/main/java/com/example/quizapp/attempt/dto/SubmitAttemptRequest.java": {
+    "mtime": 1787457644.4533973,
+    "seen": 1787506091.803958,
+    "ast_hash": "6672ba7014e95e711cc93141276b85f1",
+    "semantic_hash": "6672ba7014e95e711cc93141276b85f1"
+  },
+  "src/main/java/com/example/quizapp/attempt/repository/AttemptAnswerRepository.java": {
+    "mtime": 1787457644.4537425,
+    "seen": 1787506091.8039591,
+    "ast_hash": "7e076b0bda3561d556db55005aacfaac",
+    "semantic_hash": "7e076b0bda3561d556db55005aacfaac"
+  },
+  "src/main/java/com/example/quizapp/attempt/repository/QuizAttemptRepository.java": {
+    "mtime": 1787501903.251408,
+    "seen": 1787506091.80396,
+    "ast_hash": "e28bbd469f0ad866a6f2c8a1bd89e599",
+    "semantic_hash": "e28bbd469f0ad866a6f2c8a1bd89e599"
+  },
+  "src/main/java/com/example/quizapp/attempt/repository/projection/CategoryCount.java": {
+    "mtime": 1787457644.4543984,
+    "seen": 1787506091.80396,
+    "ast_hash": "fb583af856d140978afc8da427c19aa7",
+    "semantic_hash": "fb583af856d140978afc8da427c19aa7"
+  },
+  "src/main/java/com/example/quizapp/attempt/repository/projection/CategoryPerfRow.java": {
+    "mtime": 1787457644.4547603,
+    "seen": 1787506091.803961,
+    "ast_hash": "ed6979d3a1f7846445c0cc28381ac8a6",
+    "semantic_hash": "ed6979d3a1f7846445c0cc28381ac8a6"
+  },
+  "src/main/java/com/example/quizapp/attempt/repository/projection/DayCount.java": {
+    "mtime": 1787457644.4551766,
+    "seen": 1787506091.8039622,
+    "ast_hash": "52d7849bfcc1be6322318b5a91879860",
+    "semantic_hash": "52d7849bfcc1be6322318b5a91879860"
+  },
+  "src/main/java/com/example/quizapp/attempt/repository/projection/ScoreTrendRow.java": {
+    "mtime": 1787457644.455551,
+    "seen": 1787506091.803963,
+    "ast_hash": "4d8c7a0e36ce40a7c5895a86747e1cf1",
+    "semantic_hash": "4d8c7a0e36ce40a7c5895a86747e1cf1"
+  },
+  "src/main/java/com/example/quizapp/attempt/service/AnswerGrader.java": {
+    "mtime": 1787457644.4558854,
+    "seen": 1787506091.803963,
+    "ast_hash": "d269119015096c7238530ebf7c11a4ea",
+    "semantic_hash": "d269119015096c7238530ebf7c11a4ea"
+  },
+  "src/main/java/com/example/quizapp/attempt/service/AttemptPointsResolver.java": {
+    "mtime": 1787461225.586845,
+    "seen": 1787506091.803964,
+    "ast_hash": "b8ad7dd596dbfe1ff4038166b32f26dd",
+    "semantic_hash": "b8ad7dd596dbfe1ff4038166b32f26dd"
+  },
+  "src/main/java/com/example/quizapp/attempt/service/AttemptService.java": {
+    "mtime": 1787501903.251936,
+    "seen": 1787506091.8039649,
+    "ast_hash": "279ea74f5dbeb46f14a7450f05144e8a",
+    "semantic_hash": "279ea74f5dbeb46f14a7450f05144e8a"
+  },
+  "src/main/java/com/example/quizapp/attempt/service/StaleAttemptSweeper.java": {
+    "mtime": 1787457644.4565947,
+    "seen": 1787506091.8039649,
+    "ast_hash": "b53376eacbedae10db3facbdc2307edc",
+    "semantic_hash": "b53376eacbedae10db3facbdc2307edc"
+  },
+  "src/main/java/com/example/quizapp/auth/AppUserDetailsService.java": {
+    "mtime": 1787457644.456953,
+    "seen": 1787506091.803966,
+    "ast_hash": "53101a0329aa03cfa885838b0b33a9c5",
+    "semantic_hash": "53101a0329aa03cfa885838b0b33a9c5"
+  },
+  "src/main/java/com/example/quizapp/auth/AuthController.java": {
+    "mtime": 1787457644.457316,
+    "seen": 1787506091.803967,
+    "ast_hash": "284ba7d180393e5f5f9e9cefc324cf7a",
+    "semantic_hash": "284ba7d180393e5f5f9e9cefc324cf7a"
+  },
+  "src/main/java/com/example/quizapp/auth/AuthService.java": {
+    "mtime": 1787501903.2523465,
+    "seen": 1787506091.803968,
+    "ast_hash": "1093d37b371b3d21186cc555cfdacf86",
+    "semantic_hash": "1093d37b371b3d21186cc555cfdacf86"
+  },
+  "src/main/java/com/example/quizapp/auth/CurrentUserProvider.java": {
+    "mtime": 1787457644.4580314,
+    "seen": 1787506091.803968,
+    "ast_hash": "1aaf440f10a7ec5b1a550c2f061022ba",
+    "semantic_hash": "1aaf440f10a7ec5b1a550c2f061022ba"
+  },
+  "src/main/java/com/example/quizapp/auth/JwtAuthenticationFilter.java": {
+    "mtime": 1787457644.458389,
+    "seen": 1787506091.803969,
+    "ast_hash": "17ccb93c6239a41d191444f621355435",
+    "semantic_hash": "17ccb93c6239a41d191444f621355435"
+  },
+  "src/main/java/com/example/quizapp/auth/JwtService.java": {
+    "mtime": 1787457644.4587343,
+    "seen": 1787506091.80397,
+    "ast_hash": "8dcfe568dd0a98aba243f9dcd7143bbb",
+    "semantic_hash": "8dcfe568dd0a98aba243f9dcd7143bbb"
+  },
+  "src/main/java/com/example/quizapp/auth/TokenDenylistService.java": {
+    "mtime": 1787457644.4590724,
+    "seen": 1787506091.80397,
+    "ast_hash": "1544ddc2e2672ecd27e3a887bcfa4357",
+    "semantic_hash": "1544ddc2e2672ecd27e3a887bcfa4357"
+  },
+  "src/main/java/com/example/quizapp/auth/dto/AuthResponse.java": {
+    "mtime": 1787457644.4594166,
+    "seen": 1787506091.803971,
+    "ast_hash": "2732ad1bf0662ccbe5df5048621b4cf2",
+    "semantic_hash": "2732ad1bf0662ccbe5df5048621b4cf2"
+  },
+  "src/main/java/com/example/quizapp/auth/dto/LoginRequest.java": {
+    "mtime": 1787457644.4597056,
+    "seen": 1787506091.803972,
+    "ast_hash": "3e74d1e6c43621351b91127368191eb1",
+    "semantic_hash": "3e74d1e6c43621351b91127368191eb1"
+  },
+  "src/main/java/com/example/quizapp/auth/dto/RefreshTokenRequest.java": {
+    "mtime": 1787457644.46002,
+    "seen": 1787506091.8039732,
+    "ast_hash": "b128d09ce3cf7959d052e1156c4b40e6",
+    "semantic_hash": "b128d09ce3cf7959d052e1156c4b40e6"
+  },
+  "src/main/java/com/example/quizapp/auth/dto/RegisterRequest.java": {
+    "mtime": 1787457644.4603205,
+    "seen": 1787506091.803974,
+    "ast_hash": "ef22b3546c56a6a3fee31cc74c75a4a2",
+    "semantic_hash": "ef22b3546c56a6a3fee31cc74c75a4a2"
+  },
+  "src/main/java/com/example/quizapp/auth/dto/UserResponse.java": {
+    "mtime": 1787457644.4606385,
+    "seen": 1787506091.803974,
+    "ast_hash": "e48576b5907f6738a8a57794733d758a",
+    "semantic_hash": "e48576b5907f6738a8a57794733d758a"
+  },
+  "src/main/java/com/example/quizapp/certificate/Certificate.java": {
+    "mtime": 1787457644.4609752,
+    "seen": 1787506091.8039749,
+    "ast_hash": "5c7381da4a9a6c095f21cc9de5f44754",
+    "semantic_hash": "5c7381da4a9a6c095f21cc9de5f44754"
+  },
+  "src/main/java/com/example/quizapp/certificate/CertificateService.java": {
+    "mtime": 1787501903.2527666,
+    "seen": 1787506091.8039758,
+    "ast_hash": "b328fb56ae388bd87c4332bc61e78ad3",
+    "semantic_hash": "b328fb56ae388bd87c4332bc61e78ad3"
+  },
+  "src/main/java/com/example/quizapp/certificate/controller/CertificateController.java": {
+    "mtime": 1787457644.46172,
+    "seen": 1787506091.803977,
+    "ast_hash": "8f01cf8afe6a58e2aca56303ff164d0e",
+    "semantic_hash": "8f01cf8afe6a58e2aca56303ff164d0e"
+  },
+  "src/main/java/com/example/quizapp/certificate/dto/CategoryProgressDto.java": {
+    "mtime": 1787457644.4620724,
+    "seen": 1787506091.803977,
+    "ast_hash": "259168d5148f4da6ff772ad4707504f3",
+    "semantic_hash": "259168d5148f4da6ff772ad4707504f3"
+  },
+  "src/main/java/com/example/quizapp/certificate/dto/CertificateDto.java": {
+    "mtime": 1787457644.4623966,
+    "seen": 1787506091.803978,
+    "ast_hash": "5815e371058a4a2a14d10c35f07e8a2d",
+    "semantic_hash": "5815e371058a4a2a14d10c35f07e8a2d"
+  },
+  "src/main/java/com/example/quizapp/certificate/repository/CertificateRepository.java": {
+    "mtime": 1787457644.4627533,
+    "seen": 1787506091.803979,
+    "ast_hash": "e6fc644d959c84b701f8b5461f998547",
+    "semantic_hash": "e6fc644d959c84b701f8b5461f998547"
+  },
+  "src/main/java/com/example/quizapp/common/config/AiQuestionRepairRunner.java": {
+    "mtime": 1787471382.2563114,
+    "seen": 1787506091.80398,
+    "ast_hash": "6c2f38daf5fd38d923c9e8ed92559137",
+    "semantic_hash": "6c2f38daf5fd38d923c9e8ed92559137"
+  },
+  "src/main/java/com/example/quizapp/common/config/AttemptTotalPointsBackfill.java": {
+    "mtime": 1787461375.1091325,
+    "seen": 1787506091.80398,
+    "ast_hash": "c0b4761c1e313dc23fd9eef7873880d3",
+    "semantic_hash": "c0b4761c1e313dc23fd9eef7873880d3"
+  },
+  "src/main/java/com/example/quizapp/common/config/DataSeeder.java": {
+    "mtime": 1787501903.253158,
+    "seen": 1787506091.803981,
+    "ast_hash": "36c4ed28653968076e1fe735b47eb961",
+    "semantic_hash": "36c4ed28653968076e1fe735b47eb961"
+  },
+  "src/main/java/com/example/quizapp/common/config/OpenApiConfig.java": {
+    "mtime": 1787457644.4635,
+    "seen": 1787506091.803982,
+    "ast_hash": "2671ec0898bc50d0c3fd38ae6cabc00b",
+    "semantic_hash": "2671ec0898bc50d0c3fd38ae6cabc00b"
+  },
+  "src/main/java/com/example/quizapp/common/config/SchedulingConfig.java": {
+    "mtime": 1787457644.4638367,
+    "seen": 1787506091.8039832,
+    "ast_hash": "257f1e90db5a321d519e6760e2e37834",
+    "semantic_hash": "257f1e90db5a321d519e6760e2e37834"
+  },
+  "src/main/java/com/example/quizapp/common/config/SecurityConfig.java": {
+    "mtime": 1787501903.2535942,
+    "seen": 1787506091.8039832,
+    "ast_hash": "2b43dedf6f87a4c817ab334c7a1fd5b2",
+    "semantic_hash": "2b43dedf6f87a4c817ab334c7a1fd5b2"
+  },
+  "src/main/java/com/example/quizapp/common/config/WebSocketConfig.java": {
+    "mtime": 1787457644.4645596,
+    "seen": 1787506091.8039849,
+    "ast_hash": "febc94f21c3627a72877436153575714",
+    "semantic_hash": "febc94f21c3627a72877436153575714"
+  },
+  "src/main/java/com/example/quizapp/common/exception/BadRequestException.java": {
+    "mtime": 1787457644.4648974,
+    "seen": 1787506091.8039858,
+    "ast_hash": "63fa3a8907445155f68a047a1a632488",
+    "semantic_hash": "63fa3a8907445155f68a047a1a632488"
+  },
+  "src/main/java/com/example/quizapp/common/exception/ConflictException.java": {
+    "mtime": 1787457644.4651978,
+    "seen": 1787506091.8039858,
+    "ast_hash": "9cba25294d117caab0eccc808fb3326d",
+    "semantic_hash": "9cba25294d117caab0eccc808fb3326d"
+  },
+  "src/main/java/com/example/quizapp/common/exception/ErrorResponse.java": {
+    "mtime": 1787457644.4654732,
+    "seen": 1787506091.803987,
+    "ast_hash": "e8a0ef49d07fb0ae826989b677bf6a7e",
+    "semantic_hash": "e8a0ef49d07fb0ae826989b677bf6a7e"
+  },
+  "src/main/java/com/example/quizapp/common/exception/GlobalExceptionHandler.java": {
+    "mtime": 1787501903.2539778,
+    "seen": 1787506091.803988,
+    "ast_hash": "010d56d32dcb915b83a127dc4b993709",
+    "semantic_hash": "010d56d32dcb915b83a127dc4b993709"
+  },
+  "src/main/java/com/example/quizapp/common/exception/ResourceNotFoundException.java": {
+    "mtime": 1787457644.4665427,
+    "seen": 1787506091.803989,
+    "ast_hash": "b0c0328f565e34a21668571c3f8d3d87",
+    "semantic_hash": "b0c0328f565e34a21668571c3f8d3d87"
+  },
+  "src/main/java/com/example/quizapp/common/ratelimit/ClientIdentifiers.java": {
+    "mtime": 1787457644.4669447,
+    "seen": 1787506091.803989,
+    "ast_hash": "16c486544987cce2fbdcdf4823a6cfe7",
+    "semantic_hash": "16c486544987cce2fbdcdf4823a6cfe7"
+  },
+  "src/main/java/com/example/quizapp/common/ratelimit/RateLimitConfig.java": {
+    "mtime": 1787457644.4672883,
+    "seen": 1787506091.8039901,
+    "ast_hash": "8d8822fd24bdbf24009cecf0b735db69",
+    "semantic_hash": "8d8822fd24bdbf24009cecf0b735db69"
+  },
+  "src/main/java/com/example/quizapp/common/ratelimit/RateLimitService.java": {
+    "mtime": 1787457644.467637,
+    "seen": 1787506091.803991,
+    "ast_hash": "54adfb05bb7f4c5f3635e18db43dd646",
+    "semantic_hash": "54adfb05bb7f4c5f3635e18db43dd646"
+  },
+  "src/main/java/com/example/quizapp/common/ratelimit/TooManyRequestsException.java": {
+    "mtime": 1787457644.4679897,
+    "seen": 1787506091.803991,
+    "ast_hash": "97da79358103abdb34c62434d69c1f10",
+    "semantic_hash": "97da79358103abdb34c62434d69c1f10"
+  },
+  "src/main/java/com/example/quizapp/leaderboard/LeaderboardEntryDto.java": {
+    "mtime": 1787457644.4685228,
+    "seen": 1787506091.803992,
+    "ast_hash": "e2ebce11d21badca3ba6534e90f9846e",
+    "semantic_hash": "e2ebce11d21badca3ba6534e90f9846e"
+  },
+  "src/main/java/com/example/quizapp/leaderboard/LeaderboardService.java": {
+    "mtime": 1787457644.4689322,
+    "seen": 1787506091.803993,
+    "ast_hash": "4c4063d557cededffd3ef2d773efee50",
+    "semantic_hash": "4c4063d557cededffd3ef2d773efee50"
+  },
+  "src/main/java/com/example/quizapp/leaderboard/controller/LeaderboardController.java": {
+    "mtime": 1787457644.4694295,
+    "seen": 1787506091.8039942,
+    "ast_hash": "1aafe1759ae0e652a09ee918a914a380",
+    "semantic_hash": "1aafe1759ae0e652a09ee918a914a380"
+  },
+  "src/main/java/com/example/quizapp/live/LiveRoomService.java": {
+    "mtime": 1787501903.254334,
+    "seen": 1787506091.8039942,
+    "ast_hash": "07e40fecfb3961746b4b42a4f633968b",
+    "semantic_hash": "07e40fecfb3961746b4b42a4f633968b"
+  },
+  "src/main/java/com/example/quizapp/live/controller/LiveRoomController.java": {
+    "mtime": 1787501903.2546453,
+    "seen": 1787506091.803995,
+    "ast_hash": "42322824a75ba8e236543f1a3f09e199",
+    "semantic_hash": "42322824a75ba8e236543f1a3f09e199"
+  },
+  "src/main/java/com/example/quizapp/live/controller/WsController.java": {
+    "mtime": 1787457644.4707072,
+    "seen": 1787506091.8039958,
+    "ast_hash": "c92e6f748c9f3807908717a986e61955",
+    "semantic_hash": "c92e6f748c9f3807908717a986e61955"
+  },
+  "src/main/java/com/example/quizapp/live/dto/AnswerMessage.java": {
+    "mtime": 1787457644.4710953,
+    "seen": 1787506091.803997,
+    "ast_hash": "95f9ed7dccd8d7debf15944647957933",
+    "semantic_hash": "95f9ed7dccd8d7debf15944647957933"
+  },
+  "src/main/java/com/example/quizapp/live/dto/CreateLiveRoomRequest.java": {
+    "mtime": 1787501903.2549822,
+    "seen": 1787506091.803997,
+    "ast_hash": "570ba5ee1e6ab16841e06c555329d204",
+    "semantic_hash": "570ba5ee1e6ab16841e06c555329d204"
+  },
+  "src/main/java/com/example/quizapp/live/dto/CreateLiveRoomResponse.java": {
+    "mtime": 1787501654.305094,
+    "seen": 1787506091.803998,
+    "ast_hash": "3c493a366a76ccd40d6f28aa09ea63ad",
+    "semantic_hash": "3c493a366a76ccd40d6f28aa09ea63ad"
+  },
+  "src/main/java/com/example/quizapp/live/dto/FinalResultsPayload.java": {
+    "mtime": 1787457644.4718814,
+    "seen": 1787506091.803999,
+    "ast_hash": "e00128132e6ea52ffd251bdf4040de21",
+    "semantic_hash": "e00128132e6ea52ffd251bdf4040de21"
+  },
+  "src/main/java/com/example/quizapp/live/dto/JoinLiveRoomRequest.java": {
+    "mtime": 1787457644.4722838,
+    "seen": 1787506091.804,
+    "ast_hash": "fc5c2e3f63c083c54597ce3752cbe6bc",
+    "semantic_hash": "fc5c2e3f63c083c54597ce3752cbe6bc"
+  },
+  "src/main/java/com/example/quizapp/live/dto/LiveQuestionPayload.java": {
+    "mtime": 1787457644.4726517,
+    "seen": 1787506091.804,
+    "ast_hash": "7906e5a1a160276c8f4fbb0a23268cda",
+    "semantic_hash": "7906e5a1a160276c8f4fbb0a23268cda"
+  },
+  "src/main/java/com/example/quizapp/live/dto/LiveRoomInfo.java": {
+    "mtime": 1787457644.4730804,
+    "seen": 1787506091.804001,
+    "ast_hash": "67b655a8b7e2a677e73450dd5a0b007d",
+    "semantic_hash": "67b655a8b7e2a677e73450dd5a0b007d"
+  },
+  "src/main/java/com/example/quizapp/live/dto/PlayerInfo.java": {
+    "mtime": 1787457644.473521,
+    "seen": 1787506091.804002,
+    "ast_hash": "cd4c3149d5a2f0696c3a7ab31f0f0c62",
+    "semantic_hash": "cd4c3149d5a2f0696c3a7ab31f0f0c62"
+  },
+  "src/main/java/com/example/quizapp/quiz/Category.java": {
+    "mtime": 1787457644.4738948,
+    "seen": 1787506091.804003,
+    "ast_hash": "6c71127f26b9d69f7e54ff3989ed7d9a",
+    "semantic_hash": "6c71127f26b9d69f7e54ff3989ed7d9a"
+  },
+  "src/main/java/com/example/quizapp/quiz/Difficulty.java": {
+    "mtime": 1787457644.4758,
+    "seen": 1787506091.804003,
+    "ast_hash": "0e3647d0a8b98026e24041c417160341",
+    "semantic_hash": "0e3647d0a8b98026e24041c417160341"
+  },
+  "src/main/java/com/example/quizapp/quiz/Option.java": {
+    "mtime": 1787457644.4761112,
+    "seen": 1787506091.8040042,
+    "ast_hash": "dcb4da4325297c6a6a51debc42854a28",
+    "semantic_hash": "dcb4da4325297c6a6a51debc42854a28"
+  },
+  "src/main/java/com/example/quizapp/quiz/Question.java": {
+    "mtime": 1787457644.476465,
+    "seen": 1787506091.8040051,
+    "ast_hash": "6df7b6a2dd2441d8641c1dbd332e7be2",
+    "semantic_hash": "6df7b6a2dd2441d8641c1dbd332e7be2"
+  },
+  "src/main/java/com/example/quizapp/quiz/QuestionStatus.java": {
+    "mtime": 1787457644.4768314,
+    "seen": 1787506091.8040059,
+    "ast_hash": "d648eae90ffc99f8b899dde069206942",
+    "semantic_hash": "d648eae90ffc99f8b899dde069206942"
+  },
+  "src/main/java/com/example/quizapp/quiz/QuestionType.java": {
+    "mtime": 1787457644.4771597,
+    "seen": 1787506091.8040059,
+    "ast_hash": "702a38e6b394ce52f58795cef8a916e2",
+    "semantic_hash": "702a38e6b394ce52f58795cef8a916e2"
+  },
+  "src/main/java/com/example/quizapp/quiz/Quiz.java": {
+    "mtime": 1787457644.4774957,
+    "seen": 1787506091.8040068,
+    "ast_hash": "d2872b998c7adfa3ae802f79943b3003",
+    "semantic_hash": "d2872b998c7adfa3ae802f79943b3003"
+  },
+  "src/main/java/com/example/quizapp/quiz/Tag.java": {
+    "mtime": 1787457644.4778404,
+    "seen": 1787506091.804008,
+    "ast_hash": "94f7e14d8ef22f56090ed4024a5922e7",
+    "semantic_hash": "94f7e14d8ef22f56090ed4024a5922e7"
+  },
+  "src/main/java/com/example/quizapp/quiz/controller/AdminCategoryController.java": {
+    "mtime": 1787457644.4783406,
+    "seen": 1787506091.804009,
+    "ast_hash": "f28a684eda2b899f18ef63162390badc",
+    "semantic_hash": "f28a684eda2b899f18ef63162390badc"
+  },
+  "src/main/java/com/example/quizapp/quiz/controller/AdminQuestionController.java": {
+    "mtime": 1787501903.2552993,
+    "seen": 1787506091.804009,
+    "ast_hash": "319efa99884b827c497fefb367410d25",
+    "semantic_hash": "319efa99884b827c497fefb367410d25"
+  },
+  "src/main/java/com/example/quizapp/quiz/controller/AdminQuizController.java": {
+    "mtime": 1787457644.4791484,
+    "seen": 1787506091.80401,
+    "ast_hash": "6b0c6a447b31f543c95c725de5d09378",
+    "semantic_hash": "6b0c6a447b31f543c95c725de5d09378"
+  },
+  "src/main/java/com/example/quizapp/quiz/controller/CategoryController.java": {
+    "mtime": 1787457644.4795258,
+    "seen": 1787506091.804011,
+    "ast_hash": "d03f5f853c87b8b5c3d759e6b59fac9c",
+    "semantic_hash": "d03f5f853c87b8b5c3d759e6b59fac9c"
+  },
+  "src/main/java/com/example/quizapp/quiz/controller/QuizController.java": {
+    "mtime": 1787457644.4799132,
+    "seen": 1787506091.804012,
+    "ast_hash": "67a5fb18a324fd99d04bedec00fa4dcb",
+    "semantic_hash": "67a5fb18a324fd99d04bedec00fa4dcb"
+  },
+  "src/main/java/com/example/quizapp/quiz/dto/AdminAnalyticsDto.java": {
+    "mtime": 1787457644.480304,
+    "seen": 1787506091.804012,
+    "ast_hash": "4e9965d2a64d3ddcb7d46090ca46ec0b",
+    "semantic_hash": "4e9965d2a64d3ddcb7d46090ca46ec0b"
+  },
+  "src/main/java/com/example/quizapp/quiz/dto/AdminOverviewDto.java": {
+    "mtime": 1787457644.4807205,
+    "seen": 1787506091.804013,
+    "ast_hash": "f0aed886064ecd262f17b0a29f271a53",
+    "semantic_hash": "f0aed886064ecd262f17b0a29f271a53"
+  },
+  "src/main/java/com/example/quizapp/quiz/dto/BulkUploadResultDto.java": {
+    "mtime": 1787457644.4811304,
+    "seen": 1787506091.804014,
+    "ast_hash": "6a55697af041e2e87a0fd7c25f85f8a1",
+    "semantic_hash": "6a55697af041e2e87a0fd7c25f85f8a1"
+  },
+  "src/main/java/com/example/quizapp/quiz/dto/CategoryAdminRow.java": {
+    "mtime": 1787457644.4814835,
+    "seen": 1787506091.804014,
+    "ast_hash": "15e308288c263fd0e75e38c1febc76e4",
+    "semantic_hash": "15e308288c263fd0e75e38c1febc76e4"
+  },
+  "src/main/java/com/example/quizapp/quiz/dto/CategoryDto.java": {
+    "mtime": 1787457644.4818313,
+    "seen": 1787506091.8040152,
+    "ast_hash": "9f8aedea373b816e80b3d46cc22a2892",
+    "semantic_hash": "9f8aedea373b816e80b3d46cc22a2892"
+  },
+  "src/main/java/com/example/quizapp/quiz/dto/CategoryPerformanceDto.java": {
+    "mtime": 1787457644.4821832,
+    "seen": 1787506091.804016,
+    "ast_hash": "022bc010b0c904c34f78c88b19e529eb",
+    "semantic_hash": "022bc010b0c904c34f78c88b19e529eb"
+  },
+  "src/main/java/com/example/quizapp/quiz/dto/CategoryRequest.java": {
+    "mtime": 1787457644.4826183,
+    "seen": 1787506091.8040168,
+    "ast_hash": "8909b1b664af438e7f0789344784b2a4",
+    "semantic_hash": "8909b1b664af438e7f0789344784b2a4"
+  },
+  "src/main/java/com/example/quizapp/quiz/dto/DropoffDto.java": {
+    "mtime": 1787457644.486124,
+    "seen": 1787506091.8040168,
+    "ast_hash": "2f0b8f672df655a64d0d3ef43dc56e03",
+    "semantic_hash": "2f0b8f672df655a64d0d3ef43dc56e03"
+  },
+  "src/main/java/com/example/quizapp/quiz/dto/GenerateQuestionsRequest.java": {
+    "mtime": 1787501903.2555964,
+    "seen": 1787506091.804018,
+    "ast_hash": "4c05d7082ab795538596b6cb76ee12f1",
+    "semantic_hash": "4c05d7082ab795538596b6cb76ee12f1"
+  },
+  "src/main/java/com/example/quizapp/quiz/dto/GeneratedQuestionsDto.java": {
+    "mtime": 1787457644.4869385,
+    "seen": 1787506091.804019,
+    "ast_hash": "b975a9c99894dfce898bc12a3677b139",
+    "semantic_hash": "b975a9c99894dfce898bc12a3677b139"
+  },
+  "src/main/java/com/example/quizapp/quiz/dto/OptionAdminDto.java": {
+    "mtime": 1787457644.4873497,
+    "seen": 1787506091.80402,
+    "ast_hash": "9b8bcde0139ac29f7414e4e45bd32eb3",
+    "semantic_hash": "9b8bcde0139ac29f7414e4e45bd32eb3"
+  },
+  "src/main/java/com/example/quizapp/quiz/dto/OptionPublicDto.java": {
+    "mtime": 1787457644.4975874,
+    "seen": 1787506091.80402,
+    "ast_hash": "354aaf849de9a155d24b7bcef4a48065",
+    "semantic_hash": "354aaf849de9a155d24b7bcef4a48065"
+  },
+  "src/main/java/com/example/quizapp/quiz/dto/OptionRequest.java": {
+    "mtime": 1787457644.4982038,
+    "seen": 1787506091.804021,
+    "ast_hash": "a81f09f01c8e47a9f8e7d3dbb7937a38",
+    "semantic_hash": "a81f09f01c8e47a9f8e7d3dbb7937a38"
+  },
+  "src/main/java/com/example/quizapp/quiz/dto/QuestionAdminDto.java": {
+    "mtime": 1787457644.4991937,
+    "seen": 1787506091.804022,
+    "ast_hash": "e675358923d22968633e72070773500f",
+    "semantic_hash": "e675358923d22968633e72070773500f"
+  },
+  "src/main/java/com/example/quizapp/quiz/dto/QuestionPublicDto.java": {
+    "mtime": 1787457644.4997795,
+    "seen": 1787506091.804023,
+    "ast_hash": "99f2dd69c56613311f88b4779bcebac0",
+    "semantic_hash": "99f2dd69c56613311f88b4779bcebac0"
+  },
+  "src/main/java/com/example/quizapp/quiz/dto/QuestionRequest.java": {
+    "mtime": 1787457644.5002782,
+    "seen": 1787506091.804023,
+    "ast_hash": "e5f34a8f18b23e817b856ec0d1707753",
+    "semantic_hash": "e5f34a8f18b23e817b856ec0d1707753"
+  },
+  "src/main/java/com/example/quizapp/quiz/dto/QuestionUpsertRequest.java": {
+    "mtime": 1787457644.5008042,
+    "seen": 1787506091.804024,
+    "ast_hash": "a8e6c1c58b59d25749feee9592f649f6",
+    "semantic_hash": "a8e6c1c58b59d25749feee9592f649f6"
+  },
+  "src/main/java/com/example/quizapp/quiz/dto/QuizCreateRequest.java": {
+    "mtime": 1787457644.5163035,
+    "seen": 1787506091.8040252,
+    "ast_hash": "9cbd255d645f2f9de1d1d9adf47c3fd8",
+    "semantic_hash": "9cbd255d645f2f9de1d1d9adf47c3fd8"
+  },
+  "src/main/java/com/example/quizapp/quiz/dto/QuizDto.java": {
+    "mtime": 1787457644.5208092,
+    "seen": 1787506091.8040261,
+    "ast_hash": "c3255d84438ff04c0d9ed61b3c88f6d6",
+    "semantic_hash": "c3255d84438ff04c0d9ed61b3c88f6d6"
+  },
+  "src/main/java/com/example/quizapp/quiz/dto/QuizUpdateRequest.java": {
+    "mtime": 1787457644.521784,
+    "seen": 1787506091.8040261,
+    "ast_hash": "6b0f05d82198bc1869b83a4380f2b08b",
+    "semantic_hash": "6b0f05d82198bc1869b83a4380f2b08b"
+  },
+  "src/main/java/com/example/quizapp/quiz/dto/ScoreTrendPoint.java": {
+    "mtime": 1787457644.5222592,
+    "seen": 1787506091.8040268,
+    "ast_hash": "a160f30c14fb6112fd99e045cbd99056",
+    "semantic_hash": "a160f30c14fb6112fd99e045cbd99056"
+  },
+  "src/main/java/com/example/quizapp/quiz/repository/CategoryRepository.java": {
+    "mtime": 1787501903.2559092,
+    "seen": 1787506091.8040278,
+    "ast_hash": "5fa3d8abc7756acdfb402fcf34b1906f",
+    "semantic_hash": "5fa3d8abc7756acdfb402fcf34b1906f"
+  },
+  "src/main/java/com/example/quizapp/quiz/repository/OptionRepository.java": {
+    "mtime": 1787457644.5237432,
+    "seen": 1787506091.804029,
+    "ast_hash": "7501591b012d6827b82f7018b6386a38",
+    "semantic_hash": "7501591b012d6827b82f7018b6386a38"
+  },
+  "src/main/java/com/example/quizapp/quiz/repository/QuestionRepository.java": {
+    "mtime": 1787457644.5242796,
+    "seen": 1787506091.80403,
+    "ast_hash": "689627f7b3ff1129dbec3d49c6097045",
+    "semantic_hash": "689627f7b3ff1129dbec3d49c6097045"
+  },
+  "src/main/java/com/example/quizapp/quiz/repository/QuizRepository.java": {
+    "mtime": 1787501903.2586007,
+    "seen": 1787506091.80403,
+    "ast_hash": "1ef1133499ab36d52502945682d801b1",
+    "semantic_hash": "1ef1133499ab36d52502945682d801b1"
+  },
+  "src/main/java/com/example/quizapp/quiz/repository/TagRepository.java": {
+    "mtime": 1787457644.5253057,
+    "seen": 1787506091.804031,
+    "ast_hash": "1065cd384b708a885d580aee1fc372d4",
+    "semantic_hash": "1065cd384b708a885d580aee1fc372d4"
+  },
+  "src/main/java/com/example/quizapp/quiz/service/AdminAnalyticsService.java": {
+    "mtime": 1787501903.2589846,
+    "seen": 1787506091.804032,
+    "ast_hash": "8b007df74f26a1d33b0363bc13a22a31",
+    "semantic_hash": "8b007df74f26a1d33b0363bc13a22a31"
+  },
+  "src/main/java/com/example/quizapp/quiz/service/AdminQuestionService.java": {
+    "mtime": 1787501903.2593663,
+    "seen": 1787506091.804033,
+    "ast_hash": "ae903a3eb5d75148ae87555827a50dc9",
+    "semantic_hash": "ae903a3eb5d75148ae87555827a50dc9"
+  },
+  "src/main/java/com/example/quizapp/quiz/service/AnalyticsService.java": {
+    "mtime": 1787457644.5299091,
+    "seen": 1787506091.804033,
+    "ast_hash": "96d2b08e0841812c356c127e6a1d8720",
+    "semantic_hash": "96d2b08e0841812c356c127e6a1d8720"
+  },
+  "src/main/java/com/example/quizapp/quiz/service/CategoryService.java": {
+    "mtime": 1787457644.5303452,
+    "seen": 1787506091.804034,
+    "ast_hash": "f5d4e41cdabe54ba9a90be1c3cf0f8fd",
+    "semantic_hash": "f5d4e41cdabe54ba9a90be1c3cf0f8fd"
+  },
+  "src/main/java/com/example/quizapp/quiz/service/CsvQuestionParser.java": {
+    "mtime": 1787457644.530834,
+    "seen": 1787506091.8040352,
+    "ast_hash": "95520ac2573bec8e5a1d248791b42df1",
+    "semantic_hash": "95520ac2573bec8e5a1d248791b42df1"
+  },
+  "src/main/java/com/example/quizapp/quiz/service/GeminiClient.java": {
+    "mtime": 1787457644.531254,
+    "seen": 1787506091.8040352,
+    "ast_hash": "a44adbc4f8d85a89f5578d4f1412912a",
+    "semantic_hash": "a44adbc4f8d85a89f5578d4f1412912a"
+  },
+  "src/main/java/com/example/quizapp/quiz/service/GeminiResponseParser.java": {
+    "mtime": 1787457644.5332048,
+    "seen": 1787506091.8040361,
+    "ast_hash": "54e1a5856045542d27c7c7814410d0d5",
+    "semantic_hash": "54e1a5856045542d27c7c7814410d0d5"
+  },
+  "src/main/java/com/example/quizapp/quiz/service/QuizService.java": {
+    "mtime": 1787457644.5389774,
+    "seen": 1787506091.804037,
+    "ast_hash": "1c1df9e40da4b7e2bdd033bd66caa37a",
+    "semantic_hash": "1c1df9e40da4b7e2bdd033bd66caa37a"
+  },
+  "src/main/java/com/example/quizapp/settings/PlatformSetting.java": {
+    "mtime": 1787457644.5394511,
+    "seen": 1787506091.8040378,
+    "ast_hash": "9f6630308696fd863edff31b0f8bd781",
+    "semantic_hash": "9f6630308696fd863edff31b0f8bd781"
+  },
+  "src/main/java/com/example/quizapp/settings/PlatformSettingRepository.java": {
+    "mtime": 1787457644.5399399,
+    "seen": 1787506091.8040378,
+    "ast_hash": "4809c857ca0d8c0ee95679d0d7bd998b",
+    "semantic_hash": "4809c857ca0d8c0ee95679d0d7bd998b"
+  },
+  "src/main/java/com/example/quizapp/settings/SettingsService.java": {
+    "mtime": 1787457644.540763,
+    "seen": 1787506091.804039,
+    "ast_hash": "4bc098663abe94d44eddc85419625f22",
+    "semantic_hash": "4bc098663abe94d44eddc85419625f22"
+  },
+  "src/main/java/com/example/quizapp/settings/controller/AdminSettingsController.java": {
+    "mtime": 1787457644.5412278,
+    "seen": 1787506091.80404,
+    "ast_hash": "25c7c4ec9a6a422b1aafc440938065f2",
+    "semantic_hash": "25c7c4ec9a6a422b1aafc440938065f2"
+  },
+  "src/main/java/com/example/quizapp/user/AdminUserService.java": {
+    "mtime": 1787457644.5421395,
+    "seen": 1787506091.804041,
+    "ast_hash": "f34345994bbad0d5406b4e4988d41c63",
+    "semantic_hash": "f34345994bbad0d5406b4e4988d41c63"
+  },
+  "src/main/java/com/example/quizapp/user/Bookmark.java": {
+    "mtime": 1787457644.5425675,
+    "seen": 1787506091.804041,
+    "ast_hash": "1ed2acc11603537f1e13e7a08b687ecf",
+    "semantic_hash": "1ed2acc11603537f1e13e7a08b687ecf"
+  },
+  "src/main/java/com/example/quizapp/user/BookmarkRepository.java": {
+    "mtime": 1787457644.5429866,
+    "seen": 1787506091.804042,
+    "ast_hash": "3bd4558e3772065fdb98bafc44a2d15f",
+    "semantic_hash": "3bd4558e3772065fdb98bafc44a2d15f"
+  },
+  "src/main/java/com/example/quizapp/user/BookmarkService.java": {
+    "mtime": 1787457644.5433977,
+    "seen": 1787506091.804043,
+    "ast_hash": "1d95cdbba3abb40ddadd69db117f41ed",
+    "semantic_hash": "1d95cdbba3abb40ddadd69db117f41ed"
+  },
+  "src/main/java/com/example/quizapp/user/Role.java": {
+    "mtime": 1787457644.5477948,
+    "seen": 1787506091.804044,
+    "ast_hash": "3421c94fe5e1314eeb4e32d4a355741f",
+    "semantic_hash": "3421c94fe5e1314eeb4e32d4a355741f"
+  },
+  "src/main/java/com/example/quizapp/user/User.java": {
+    "mtime": 1787501903.2597716,
+    "seen": 1787506091.804044,
+    "ast_hash": "2d49cb8fa7d04ebfcc2c1b2fd6dba6a4",
+    "semantic_hash": "2d49cb8fa7d04ebfcc2c1b2fd6dba6a4"
+  },
+  "src/main/java/com/example/quizapp/user/UserRepository.java": {
+    "mtime": 1787457644.548608,
+    "seen": 1787506091.804045,
+    "ast_hash": "9b2169db1efe47d9491333af94e51962",
+    "semantic_hash": "9b2169db1efe47d9491333af94e51962"
+  },
+  "src/main/java/com/example/quizapp/user/UserService.java": {
+    "mtime": 1787501903.2611592,
+    "seen": 1787506091.8040462,
+    "ast_hash": "4668de549f388762c241f33a32f4a9e1",
+    "semantic_hash": "4668de549f388762c241f33a32f4a9e1"
+  },
+  "src/main/java/com/example/quizapp/user/controller/AdminUserController.java": {
+    "mtime": 1787457644.5542588,
+    "seen": 1787506091.804047,
+    "ast_hash": "cd3297087271965fa9085e112448a3a2",
+    "semantic_hash": "cd3297087271965fa9085e112448a3a2"
+  },
+  "src/main/java/com/example/quizapp/user/controller/BookmarkController.java": {
+    "mtime": 1787457644.5575898,
+    "seen": 1787506091.8040478,
+    "ast_hash": "547670def764a5499f5928e56740a00a",
+    "semantic_hash": "547670def764a5499f5928e56740a00a"
+  },
+  "src/main/java/com/example/quizapp/user/controller/UserController.java": {
+    "mtime": 1787457644.5580282,
+    "seen": 1787506091.8040519,
+    "ast_hash": "2bfc886dd59abfab9ebfe8cec2d4a561",
+    "semantic_hash": "2bfc886dd59abfab9ebfe8cec2d4a561"
+  },
+  "src/main/java/com/example/quizapp/user/dto/AdminUserDto.java": {
+    "mtime": 1787457644.5591023,
+    "seen": 1787506091.804053,
+    "ast_hash": "e1c1651687724f8862569ae2cf5f2880",
+    "semantic_hash": "e1c1651687724f8862569ae2cf5f2880"
+  },
+  "src/main/java/com/example/quizapp/user/dto/AdminUsersResponse.java": {
+    "mtime": 1787457644.5595088,
+    "seen": 1787506091.804053,
+    "ast_hash": "6283f21623c48a2f609ec193cd84cd1b",
+    "semantic_hash": "6283f21623c48a2f609ec193cd84cd1b"
+  },
+  "src/main/java/com/example/quizapp/user/dto/BadgeDto.java": {
+    "mtime": 1787457644.5599017,
+    "seen": 1787506091.804054,
+    "ast_hash": "2f44a566ffa9467e16560d7c05f785f7",
+    "semantic_hash": "2f44a566ffa9467e16560d7c05f785f7"
+  },
+  "src/main/java/com/example/quizapp/user/dto/UserStatsDto.java": {
+    "mtime": 1787457644.560297,
+    "seen": 1787506091.804055,
+    "ast_hash": "0c4151a11dc7cea0e040f73e1a05668f",
+    "semantic_hash": "0c4151a11dc7cea0e040f73e1a05668f"
+  },
+  "src/test/java/com/example/quizapp/AnalyticsCategoryPerformanceTest.java": {
+    "mtime": 1787471522.3273282,
+    "seen": 1787506091.8040562,
+    "ast_hash": "415ccd1207f078a74070023ddc4a1eca",
+    "semantic_hash": "415ccd1207f078a74070023ddc4a1eca"
+  },
+  "src/test/java/com/example/quizapp/BookmarkIntegrationTest.java": {
+    "mtime": 1787457644.5671134,
+    "seen": 1787506091.8040562,
+    "ast_hash": "3d1fa4ed2a7ad50b7f363d1f1918dd62",
+    "semantic_hash": "3d1fa4ed2a7ad50b7f363d1f1918dd62"
+  },
+  "src/test/java/com/example/quizapp/QuizAppApplicationTests.java": {
+    "mtime": 1787457644.5696476,
+    "seen": 1787506091.8040571,
+    "ast_hash": "e05af8c70080421b6cafe359b83f979a",
+    "semantic_hash": "e05af8c70080421b6cafe359b83f979a"
+  },
+  "src/test/java/com/example/quizapp/QuizFlowIntegrationTest.java": {
+    "mtime": 1787457644.5701704,
+    "seen": 1787506091.804058,
+    "ast_hash": "a5f4bdc4e925fe09d648e5a869ee7bb0",
+    "semantic_hash": "a5f4bdc4e925fe09d648e5a869ee7bb0"
+  },
+  "src/test/java/com/example/quizapp/attempt/service/AnswerGraderTest.java": {
+    "mtime": 1787457644.5706751,
+    "seen": 1787506091.8040588,
+    "ast_hash": "a4680333bdcf4a0985bd5d5728c3d595",
+    "semantic_hash": "a4680333bdcf4a0985bd5d5728c3d595"
+  },
+  "src/test/java/com/example/quizapp/common/ratelimit/RateLimitServiceTest.java": {
+    "mtime": 1787457644.5711803,
+    "seen": 1787506091.8040588,
+    "ast_hash": "5d878871da481a91ecc131126ba4a201",
+    "semantic_hash": "5d878871da481a91ecc131126ba4a201"
+  },
+  "src/test/java/com/example/quizapp/leaderboard/LeaderboardServiceTest.java": {
+    "mtime": 1787502033.2141705,
+    "seen": 1787506091.80406,
+    "ast_hash": "5c0dd615037de2c3dd1a95942bd6469c",
+    "semantic_hash": "5c0dd615037de2c3dd1a95942bd6469c"
+  },
+  "src/test/java/com/example/quizapp/live/LiveRoomHostPlayerTest.java": {
+    "mtime": 1787501827.209852,
+    "seen": 1787506091.804061,
+    "ast_hash": "0d4be34476ed25ee32320ce86761b0a7",
+    "semantic_hash": "0d4be34476ed25ee32320ce86761b0a7"
+  },
+  "src/test/java/com/example/quizapp/live/LiveRoomPointsTest.java": {
+    "mtime": 1787457644.5720975,
+    "seen": 1787506091.804062,
+    "ast_hash": "c7e555900b157589e10698905b9bced9",
+    "semantic_hash": "c7e555900b157589e10698905b9bced9"
+  },
+  "src/test/java/com/example/quizapp/quiz/service/CsvQuestionParserTest.java": {
+    "mtime": 1787457644.5727618,
+    "seen": 1787506091.804062,
+    "ast_hash": "a8b98630b6f8dbd5a7993a6ae36bed0c",
+    "semantic_hash": "a8b98630b6f8dbd5a7993a6ae36bed0c"
+  },
+  "src/test/java/com/example/quizapp/quiz/service/GeminiResponseParserTest.java": {
+    "mtime": 1787457644.5731947,
+    "seen": 1787506091.804063,
+    "ast_hash": "86356608e0c7176cac0106b7532f12cb",
+    "semantic_hash": "86356608e0c7176cac0106b7532f12cb"
+  },
+  "ARCHITECTURE.md": {
+    "mtime": 1787457644.4273305,
+    "seen": 1787506091.804064,
+    "ast_hash": "e6cd7ea793e4258821b133687c8aa27d",
+    "semantic_hash": "e6cd7ea793e4258821b133687c8aa27d"
+  },
+  "Plan.md": {
+    "mtime": 1787457644.428094,
+    "seen": 1787506091.804064,
+    "ast_hash": "ad1345e0c73b443919dca06d5b645319",
+    "semantic_hash": "ad1345e0c73b443919dca06d5b645319"
+  },
+  "render.yaml": {
+    "mtime": 1787457644.4487443,
+    "seen": 1787506091.804065,
+    "ast_hash": "91b55560ca913727ab227962e6058cb8",
+    "semantic_hash": "91b55560ca913727ab227962e6058cb8"
+  }
+}

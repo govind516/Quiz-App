@@ -16,6 +16,7 @@ import com.example.quizapp.common.ratelimit.ClientIdentifiers;
 import com.example.quizapp.common.ratelimit.RateLimitService;
 import com.example.quizapp.live.LiveRoomService;
 import com.example.quizapp.live.dto.CreateLiveRoomRequest;
+import com.example.quizapp.live.dto.CreateLiveRoomResponse;
 import com.example.quizapp.live.dto.JoinLiveRoomRequest;
 import com.example.quizapp.live.dto.LiveRoomInfo;
 
@@ -38,9 +39,10 @@ public class LiveRoomController {
 	}
 
 	@PostMapping
-	public ResponseEntity<LiveRoomInfo> create(@Valid @RequestBody CreateLiveRoomRequest request) {
+	public ResponseEntity<CreateLiveRoomResponse> create(@Valid @RequestBody CreateLiveRoomRequest request) {
+		boolean joinAsPlayer = Boolean.TRUE.equals(request.joinAsPlayer());
 		return ResponseEntity.status(HttpStatus.CREATED)
-				.body(liveRoomService.create(currentUserProvider.requireCurrentUser(), request.quizId()));
+				.body(liveRoomService.create(currentUserProvider.requireCurrentUser(), request.quizId(), joinAsPlayer));
 	}
 
 	@GetMapping("/{code}")

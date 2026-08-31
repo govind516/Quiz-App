@@ -17,10 +17,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.example.quizapp.common.ratelimit.TooManyRequestsException;
 
 import io.jsonwebtoken.JwtException;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -61,6 +64,12 @@ public class GlobalExceptionHandler {
 				.body(ErrorResponse.of(400, "Invalid value for parameter: " + ex.getName()));
 	}
 
+	@ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+	public ResponseEntity<ErrorResponse> handleUnreadableBody(org.springframework.http.converter.HttpMessageNotReadableException ex) {
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+				.body(ErrorResponse.of(400, "Malformed request body"));
+	}
+
 	@ExceptionHandler({ JwtException.class, io.jsonwebtoken.security.SecurityException.class })
 	public ResponseEntity<ErrorResponse> handleJwt(JwtException ex) {
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ErrorResponse.of(401, "Invalid or expired token"));
@@ -99,6 +108,7 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
+		log.error("Unhandled exception", ex);
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 				.body(ErrorResponse.of(500, "An unexpected error occurred"));
 	}

@@ -81,7 +81,7 @@ public class AdminQuestionController {
 
 	@PostMapping("/questions/generate")
 	public ResponseEntity<GeneratedQuestionsDto> generate(
-			@RequestParam("quizId") Long quizId,
+			@RequestParam(value = "quizId", required = false) Long quizId,
 			@Valid @RequestBody GenerateQuestionsRequest request) {
 		return ResponseEntity.status(HttpStatus.CREATED)
 				.body(adminQuestionService.generate(quizId, request));

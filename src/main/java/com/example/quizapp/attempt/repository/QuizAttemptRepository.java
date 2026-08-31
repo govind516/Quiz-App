@@ -21,6 +21,8 @@ public interface QuizAttemptRepository extends JpaRepository<QuizAttempt, Long> 
 
 	List<QuizAttempt> findAllByStatusAndStartedAtBefore(AttemptStatus status, Instant cutoff);
 
+	List<QuizAttempt> findAllByStatusAndTotalPointsIsNull(AttemptStatus status);
+
 	long countByUserId(Long userId);
 
 	long countByUserIdAndStatus(Long userId, com.example.quizapp.attempt.AttemptStatus status);
@@ -54,10 +56,10 @@ public interface QuizAttemptRepository extends JpaRepository<QuizAttempt, Long> 
 
 	@Query(value = """
 			SELECT TO_CHAR(a.completed_at, 'YYYY-MM-DD') AS day,
-			       AVG(a.score * 100.0 / NULLIF(t.tp, 0)) AS avg_pct,
+			       AVG(a.score * 100.0 / NULLIF(COALESCE(a.total_points, t.tp), 0)) AS avgPct,
 			       COUNT(*) AS cnt
 			FROM quiz_attempts a
-			JOIN (
+			LEFT JOIN (
 			    SELECT quiz_id, SUM(points) AS tp
 			    FROM questions
 			    WHERE status = 'APPROVED'
