@@ -113,11 +113,11 @@ export function CategoriesPanel() {
 			)}
 
 			{categoriesQuery.isPending ? (
-				<AdminSkeletonRows rows={4} />
+				<div style={{ transition: "opacity var(--dur-base) var(--ease-apple)" }}><AdminSkeletonRows rows={4} /></div>
 			) : (categoriesQuery.data ?? []).length === 0 ? (
 				<AdminEmptyState text="No categories yet — create one above." />
 			) : (
-				<div className="card !p-0 overflow-hidden">
+				<div className="card !p-0 overflow-hidden fade-up" style={{ transition: "opacity var(--dur-base) var(--ease-apple)" }}>
 					<div className="overflow-x-auto">
 						<table className="review-table">
 							<thead>

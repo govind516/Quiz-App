@@ -179,7 +179,7 @@ export default function MyProgressPage() {
 	const todayIdx = 6;
 
 	return (
-		<div className="py-10">
+		<div className="py-10 max-w-6xl mx-auto px-8 max-[1280px]:px-6 max-[640px]:px-4">
 			<Eyebrow>Your progress</Eyebrow>
 			<h1 className="text-[34px] mt-2">Hey, {user.name.split(" ")[0]}.</h1>
 

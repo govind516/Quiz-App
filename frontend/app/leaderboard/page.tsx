@@ -109,15 +109,17 @@ export default function LeaderboardPage() {
 	const youSlot = user
 		? ranked.find((r) => r.entry.userId === user.id)
 		: undefined;
-	const rest = ranked.filter(
+	const restRaw = ranked.filter(
 		(r) => !podiumSlots.some((s) => s?.entry.userId === r.entry.userId)
 	);
+	// Fix BUG 2: rest ranks must be sequential starting at #4, not repeating podium #3 on ties
+	const rest = restRaw.map((r, i) => ({ ...r, displayRank: 4 + i }));
 	const youInPodium = podiumSlots.some(
 		(s) => s?.entry.userId === user?.id
 	);
 
 	return (
-		<div className="py-10 max-w-3xl mx-auto">
+		<div className="py-10 max-w-6xl mx-auto px-8 max-[1280px]:px-6 max-[640px]:px-4">
 			<Eyebrow>Rankings</Eyebrow>
 			<h1 className="text-[30px] mt-2 mb-6" style={{ fontFamily: "var(--font-space), sans-serif", fontWeight: 700, letterSpacing: "-0.02em" }}>Leaderboard</h1>
 
@@ -176,9 +178,9 @@ export default function LeaderboardPage() {
 			) : (
 				<>
 					<div className="podium">
-						<PodCard slot={podiumSlots[0]} />
-						<PodCard slot={podiumSlots[1]} />
-						<PodCard slot={podiumSlots[2]} />
+						<div className="fade-up" style={{ animationDelay: "0ms" }}><PodCard slot={podiumSlots[0]} /></div>
+						<div className="fade-up" style={{ animationDelay: "50ms" }}><PodCard slot={podiumSlots[1]} /></div>
+						<div className="fade-up" style={{ animationDelay: "100ms" }}><PodCard slot={podiumSlots[2]} /></div>
 					</div>
 
 					{rest.length > 0 && (

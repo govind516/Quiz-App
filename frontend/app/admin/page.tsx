@@ -132,7 +132,7 @@ export default function AdminPage() {
 	}
 
 	return (
-		<div className="py-8">
+		<div className="py-8 max-w-6xl mx-auto px-8 max-[1280px]:px-6 max-[640px]:px-4">
 			<div className="flex flex-col lg:grid lg:grid-cols-[240px_minmax(0,1fr)] gap-5 items-start">
 				<aside className="admin-sidebar hidden lg:flex sticky top-[84px] max-h-[calc(100vh-110px)] overflow-y-auto w-full lg:w-auto box-border">
 					<Link href="/" className="brand !text-base">
@@ -195,7 +195,7 @@ export default function AdminPage() {
 					</div>
 
 					{(section === "questions" || section === "upload") && quizzes.length > 0 && (
-						<div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
+						<div className="mb-6 flex items-center justify-between gap-4 flex-wrap" style={{ scrollMarginTop: 84, paddingTop: 8 }}>
 							<span className="mono text-xs text-faintc">Working on</span>
 							<select
 								value={activeQuizId ?? ""}
@@ -281,10 +281,10 @@ function AdminSkeletonRows({ rows = 3 }: { rows?: number }) {
 
 function SectionHead({ title }: { title: string }) {
 	return (
-		<>
+		<div style={{ scrollMarginTop: 84, paddingTop: 4 }}>
 			<Eyebrow>Admin</Eyebrow>
 			<h1 className="text-[28px] mt-2 mb-6">{title}</h1>
-		</>
+		</div>
 	);
 }
 
@@ -533,14 +533,14 @@ function QuestionsTab({ quizId }: { quizId: number }) {
 	const questions = questionsQuery.data ?? [];
 
 	return (
-		<div>
+		<div className="fade-up" style={{ transition: "opacity var(--dur-base) var(--ease-apple)" }}>
 			<SectionHead title="Question bank" />
 			<p className="text-sm text-mutedc -mt-3 mb-5">{questions.length} question(s)</p>
 
 			{questions.length === 0 ? (
 				<EmptyCard text="No questions yet — import a CSV or generate with AI." />
 			) : (
-				<div className="card !p-0 overflow-hidden">
+				<div className="card !p-0 overflow-hidden fade-up">
 					<div className="overflow-x-auto"><table className="review-table">
 						<tbody>
 							{questions.map((question) => (
@@ -886,7 +886,7 @@ function ReviewTab({ quizzes }: { quizzes: QuizDto[] }) {
 	const pending = pendingQuery.data ?? [];
 
 	return (
-		<div>
+		<div className="fade-up" style={{ transition: "opacity var(--dur-base) var(--ease-apple)" }}>
 			<SectionHead title="Review queue" />
 			{pending.length === 0 ? (
 				<EmptyCard text="Nothing awaiting review. AI-generated drafts will appear here." />

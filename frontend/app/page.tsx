@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import type { CategoryDto, QuizDto } from "@/lib/types";
+import type { CategoryDto, QuizDto, UserStatsDto } from "@/lib/types";
+import { useAuthStore } from "@/lib/auth-store";
 import { IconArrowRight, IconHexLogo, IconQuestion, IconTag } from "@/components/icons";
 
 function CountUp({ value, suffix = "" }: { value: number; suffix?: string }) {
@@ -93,50 +94,95 @@ export default function LandingPage() {
 	const quizzes = quizzesQuery.data ?? [];
 	const totalQuestions = quizzes.reduce((sum, q) => sum + q.questionCount, 0);
 
+	const emptySubscribe = () => () => {};
+	const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+	const user = useAuthStore((s) => s.user);
+	const statsQuery = useQuery({
+		queryKey: ["me", "stats"],
+		queryFn: () => api<UserStatsDto>("/api/users/me/stats"),
+		enabled: Boolean(user),
+	});
+
 	function trackCount(slug: string): string {
 		const n = quizzes.filter((q) => q.categorySlug === slug).length;
 		return `${n} quiz${n === 1 ? "" : "zes"}`;
 	}
 
+	const firstName = user?.name.split(" ")[0] ?? "";
+	const stats = statsQuery.data;
+	const recommended = quizzes[0];
+
 	return (
 		<div>
 			<div className="hero">
 				<div>
-					<span className="eyebrow">
-						<IconHexLogo size={14} />
-						IT TOPICS · NO SIGNUP REQUIRED
-					</span>
-					<h1>
-						Prove your
-						<br />
-						<span className="accent">stack.</span>
-					</h1>
-					<p className="lead">
-						Sharpen JavaScript, Python, networking, SQL and system design with
-						quizzes built for interview prep — not trivia night.
-					</p>
-					<div className="hero-ctas">
-						<Link href="/browse" className="btn btn-primary btn-cta" style={{ borderRadius: 999 }}>
-							Start a quiz — guest mode <IconArrowRight size={14} />
-						</Link>
-						<Link href="/leaderboard" className="btn btn-ghost" style={{ height: 44, borderRadius: 999 }}>
-							See the leaderboard
-						</Link>
-					</div>
-					<div className="hero-stats">
-						<div className="hero-stat">
-							<CountUp value={categories.length} />
-							<div className="lbl" style={{ fontFamily: "var(--font-apple), sans-serif" }}>categories</div>
-						</div>
-						<div className="hero-stat">
-							<CountUp value={totalQuestions} />
-							<div className="lbl" style={{ fontFamily: "var(--font-apple), sans-serif" }}>questions</div>
-						</div>
-						<div className="hero-stat">
-							<CountUp value={quizzes.length} />
-							<div className="lbl" style={{ fontFamily: "var(--font-apple), sans-serif" }}>live quizzes</div>
-						</div>
-					</div>
+					{mounted && user ? (
+						<>
+							<span className="eyebrow">Welcome back</span>
+							<h1>Welcome back, <br /><span className="accent">{firstName}.</span></h1>
+							<p className="lead">You&apos;re on a {stats?.currentStreak ?? 0}-day streak — keep shipping.</p>
+							<div className="hero-ctas">
+								<Link href={recommended ? `/quiz/${recommended.id}` : "/browse"} className="btn btn-primary btn-cta" style={{ borderRadius: 999 }}>
+									{recommended ? `Start: ${recommended.title.slice(0, 28)}` : "Start a quiz"} <IconArrowRight size={14} />
+								</Link>
+								<Link href="/leaderboard" className="btn btn-ghost" style={{ height: 44, borderRadius: 999 }}>
+									See the leaderboard
+								</Link>
+							</div>
+							<div className="hero-stats">
+								<div className="hero-stat">
+									<div className="num" style={{ fontFamily: "var(--font-mono), monospace" }}>{stats ? `${stats.currentStreak}d` : "—"}</div>
+									<div className="lbl" style={{ fontFamily: "var(--font-apple), sans-serif" }}>streak</div>
+								</div>
+								<div className="hero-stat">
+									<div className="num" style={{ fontFamily: "var(--font-mono), monospace" }}>{stats ? stats.completedAttempts : "—"}</div>
+									<div className="lbl" style={{ fontFamily: "var(--font-apple), sans-serif" }}>completed</div>
+								</div>
+								<div className="hero-stat">
+									<div className="num" style={{ fontFamily: "var(--font-mono), monospace" }}>{stats ? `${Math.round(stats.averagePercentage)}%` : "—"}</div>
+									<div className="lbl" style={{ fontFamily: "var(--font-apple), sans-serif" }}>average</div>
+								</div>
+							</div>
+						</>
+					) : (
+						<>
+							<span className="eyebrow">
+								<IconHexLogo size={14} />
+								IT TOPICS · NO SIGNUP REQUIRED
+							</span>
+							<h1>
+								Prove your
+								<br />
+								<span className="accent">stack.</span>
+							</h1>
+							<p className="lead">
+								Sharpen JavaScript, Python, networking, SQL and system design with
+								quizzes built for interview prep — not trivia night.
+							</p>
+							<div className="hero-ctas">
+								<Link href="/browse" className="btn btn-primary btn-cta" style={{ borderRadius: 999 }}>
+									Start a quiz — guest mode <IconArrowRight size={14} />
+								</Link>
+								<Link href="/leaderboard" className="btn btn-ghost" style={{ height: 44, borderRadius: 999 }}>
+									See the leaderboard
+								</Link>
+							</div>
+							<div className="hero-stats">
+								<div className="hero-stat">
+									<CountUp value={categories.length} />
+									<div className="lbl" style={{ fontFamily: "var(--font-apple), sans-serif" }}>categories</div>
+								</div>
+								<div className="hero-stat">
+									<CountUp value={totalQuestions} />
+									<div className="lbl" style={{ fontFamily: "var(--font-apple), sans-serif" }}>questions</div>
+								</div>
+								<div className="hero-stat">
+									<CountUp value={quizzes.length} />
+									<div className="lbl" style={{ fontFamily: "var(--font-apple), sans-serif" }}>live quizzes</div>
+								</div>
+							</div>
+						</>
+					)}
 				</div>
 				<Constellation />
 			</div>
@@ -152,8 +198,8 @@ export default function LandingPage() {
 					? Array.from({ length: 8 }).map((_, i) => (
 							<div key={i} className="h-[76px] rounded-xl bg-surface2 animate-pulse" />
 						))
-					: categories.map((c) => (
-							<Link key={c.id} href={`/browse?category=${c.slug}`} className="chip">
+					: categories.map((c, i) => (
+							<Link key={c.id} href={`/browse?category=${c.slug}`} className="chip fade-up" style={{ animationDelay: `${Math.min(i * 50, 300)}ms` }}>
 								<div className="hex">
 									<IconTag size={18} />
 								</div>

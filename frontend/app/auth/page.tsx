@@ -93,7 +93,7 @@ function AuthInner() {
 			</div>
 
 			<div className="auth-form-col">
-				<div className="auth-box">
+				<div className="auth-box card" style={{ padding: 32 }}>
 					<div className="auth-tabs">
 						<button
 							type="button"
@@ -150,6 +150,7 @@ function AuthInner() {
 						<label htmlFor="auth-password" style={{ fontFamily: "var(--font-apple), sans-serif", fontSize: 13, fontWeight: 500, color: "var(--color-mutedc)" }}>Password</label>
 						<input
 							id="auth-password"
+							className="input"
 							type="password"
 								required
 								minLength={8}

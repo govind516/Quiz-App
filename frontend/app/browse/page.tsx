@@ -49,7 +49,7 @@ function BrowseInner() {
   });
 
   return (
-    <div className="py-10 max-w-5xl mx-auto">
+    <div className="py-10 max-w-6xl mx-auto px-8 max-[1280px]:px-6 max-[640px]:px-4">
       <div className="mb-8">
         <span className="eyebrow">Practice</span>
         <h1
@@ -129,8 +129,10 @@ function BrowseInner() {
         </div>
       ) : (
         <div className="grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {quizzesQuery.data!.map((quiz) => (
-            <QuizCard key={quiz.id} quiz={quiz} />
+          {quizzesQuery.data!.map((quiz, i) => (
+            <div key={quiz.id} className="fade-up" style={{ animationDelay: `${Math.min(i * 50, 300)}ms` }}>
+              <QuizCard quiz={quiz} />
+            </div>
           ))}
         </div>
       )}

@@ -1361,8 +1361,10 @@ select.input option {
   gap: 8px;
 }
 .icon-btn {
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1372,6 +1374,13 @@ select.input option {
   transition: all var(--dur-fast) var(--ease-apple);
   background: transparent;
   color: var(--color-mutedc);
+}
+.icon-btn:hover {
+  background: var(--color-surface2);
+}
+.icon-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-glow);
 }
 .icon-btn.approve:hover {
   background: var(--color-mintdim);
