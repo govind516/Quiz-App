@@ -306,16 +306,16 @@ export default function MyProgressPage() {
 						<div>
 							<p className="font-medium text-ink text-sm">{progress.categoryName}</p>
 							<div className="mv-bar-track mt-2 !max-w-none w-44">
-								<div
-									className="mv-bar-fill"
-									style={{
-										width: `${
-											progress.totalQuizzes
-												? (progress.completedQuizzes / progress.totalQuizzes) * 100
-												: 0
-										}%`,
-									}}
-								/>
+								{(() => {
+									const pct = progress.totalQuizzes ? (progress.completedQuizzes / progress.totalQuizzes) * 100 : 0;
+									const bg = pct >= 70 ? "var(--color-mint)" : pct >= 50 ? "var(--color-amberc)" : "var(--color-dangerc)";
+									return (
+										<div
+											className="mv-bar-fill"
+											style={{ width: `${pct}%`, background: bg }}
+										/>
+									);
+								})()}
 							</div>
 							<p className="mt-1.5 mono text-[11px] text-faintc">
 								{progress.completedQuizzes}/{progress.totalQuizzes} quizzes at 60%+

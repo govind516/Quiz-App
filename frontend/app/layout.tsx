@@ -33,6 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${spaceGrotesk.variable} ${jakarta.variable} ${jetbrains.variable} h-full antialiased`}
+      style={{ ["--font-apple" as string]: '-apple-system, "SF Pro Display", "SF Pro Text", BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif' } as React.CSSProperties}
     >
       <body className="min-h-full flex flex-col">
         <Providers>

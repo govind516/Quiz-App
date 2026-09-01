@@ -28,6 +28,7 @@ import {
 	AnalyticsPanel as AnalyticsPanelView,
 } from "./panels";
 import {
+	IconAnalytics,
 	IconCheck,
 	IconGrid,
 	IconQuestion,
@@ -45,7 +46,7 @@ type SectionId =
 	| "dashboard"
 	| "questions"
 	| "categories"
-	| "ai"
+	| "generate"
 	| "upload"
 	| "review"
 	| "users"
@@ -68,7 +69,7 @@ const NAV_GROUPS: Array<{ label: string; items: SectionDef[] }> = [
 		items: [
 			{ id: "questions", label: "Question bank", icon: IconQuestion },
 			{ id: "categories", label: "Categories", icon: IconTag },
-			{ id: "ai", label: "AI generate", icon: IconAnalytics },
+			{ id: "generate", label: "AI generate", icon: IconAnalytics },
 			{ id: "upload", label: "Bulk import", icon: IconUpload },
 			{ id: "review", label: "Review queue", icon: IconBell },
 		],
@@ -270,11 +271,13 @@ function DashboardSection({
 	quizzes,
 	totalQuestions,
 	pendingCount,
+	analytics,
 	onGoReview,
 }: {
 	quizzes: QuizDto[];
 	totalQuestions: number;
 	pendingCount: number;
+	analytics?: AdminAnalyticsDto;
 	onGoReview: () => void;
 }) {
 	const overviewQuery = useQuery({
@@ -420,14 +423,14 @@ function DashboardSection({
 				</div>
 			)}
 
-			{(analyticsQuery.data) && (
+			{(attemptsQuery.data) && (
 				<div className="card mb-4">
 					<h3 className="text-[15px] mb-5">Top categories this week</h3>
-					{(analyticsQuery.data.topCategories ?? []).length === 0 ? (
+					{(attemptsQuery.data.topCategories ?? []).length === 0 ? (
 						<p className="text-sm text-mutedc">No completed quizzes yet.</p>
 					) : (
 						<div className="flex flex-col gap-3.5 text-[13px]">
-							{(analyticsQuery.data.topCategories ?? []).map((cat, i) => (
+							{(attemptsQuery.data.topCategories ?? []).map((cat: { name: string; count: number }, i: number) => (
 								<div key={cat.name} className="flex items-center justify-between">
 									<span className="mutedc flex items-center gap-2.5">
 										<span className="mono text-faintc">{i + 1}</span>
@@ -450,139 +453,6 @@ function DashboardSection({
 							<th>Category</th>
 							<th>Status</th>
 							<th className="!text-right">Questions</th>
-						</tr>
-					</thead>
-					<tbody>
-						{quizzes.map((q) => (
-							<tr key={q.id}>
-								<td className="font-medium text-ink">
-									<Link href={`/quiz/${q.id}`} className="hover:text-violet">
-										{q.title}
-									</Link>
-								</td>
-								<td className="mutedc">{q.categoryName}</td>
-								<td>
-									<span className={`badge ${q.isPublished ? "badge-mint" : ""}`}>
-										{q.isPublished ? "live" : "draft"}
-									</span>
-								</td>
-								<td className="mono text-right">{q.questionCount}</td>
-							</tr>
-						))}
-					</tbody>
-				</table></div>
-			</div>
-		</div>
-	);
-}
-
-function EmptyCard({ text }: { text: string }) {
-	return (
-		<div className="card p-10 text-center text-sm text-mutedc">{text}</div>
-	);
-}
-
-function SectionHead({ title }: { title: string }) {
-	return (
-		<>
-			<Eyebrow>Admin</Eyebrow>
-			<h1 className="text-[28px] mt-2 mb-6">{title}</h1>
-		</>
-	);
-}
-
-function DashboardSection({
-	quizzes,
-	totalQuestions,
-	pendingCount,
-	analytics,
-	onGoReview,
-}: {
-	quizzes: QuizDto[];
-	totalQuestions: number;
-	pendingCount: number;
-	analytics?: AdminAnalyticsDto;
-	onGoReview: () => void;
-}) {
-	return (
-		<div>
-			<SectionHead title="Dashboard" />
-			<div className="stat-grid">
-				<div className="card stat-card">
-					<div className="stat-label">Quizzes</div>
-					<div className="stat-num">
-						<CountUp value={quizzes.length} />
-					</div>
-					<div className="stat-delta text-[12px] mutedc">across all categories</div>
-				</div>
-				<div className="card stat-card">
-					<div className="stat-label">Active questions</div>
-					<div className="stat-num">
-						<CountUp value={totalQuestions} />
-					</div>
-					<div className="stat-delta text-[12px] mutedc">approved & playable</div>
-				</div>
-				<div className="card stat-card">
-					<div className="stat-label">Attempts finished today</div>
-					<div className="stat-num">
-						<CountUp value={analytics?.today ?? 0} />
-					</div>
-					<div className="stat-delta text-[12px] mutedc">last 24 hours</div>
-				</div>
-				<div className="card stat-card">
-					<div className="stat-label">Pending AI questions</div>
-					<div
-						className="stat-num"
-						style={{ color: pendingCount > 0 ? "#FFB84D" : undefined }}
-					>
-						<CountUp value={pendingCount} />
-					</div>
-					<button
-						className="stat-delta text-[12px] text-left"
-						style={{ color: "#FFB84D" }}
-						onClick={onGoReview}
-					>
-						review queue →
-					</button>
-				</div>
-			</div>
-
-			{analytics && (
-				<div className="admin-row2 mb-4">
-					<div className="card">
-						<h3 className="text-[15px] mb-5">Attempts — last 7 days</h3>
-						<AttemptsChart daily={analytics.daily} />
-					</div>
-					<div className="card">
-						<h3 className="text-[15px] mb-5">Top categories this week</h3>
-						{analytics.topCategories.length === 0 ? (
-							<p className="text-sm text-mutedc">No completed quizzes yet.</p>
-						) : (
-							<div className="flex flex-col gap-3.5 text-[13px]">
-								{analytics.topCategories.map((cat, i) => (
-									<div key={cat.name} className="flex items-center justify-between">
-										<span className="mutedc flex items-center gap-2.5">
-											<span className="mono text-faintc">{i + 1}</span>
-											{cat.name}
-										</span>
-										<span className="mono">{cat.count}</span>
-									</div>
-								))}
-							</div>
-						)}
-					</div>
-				</div>
-			)}
-
-			<div className="card">
-				<h3 className="text-[15px] mb-4">All quizzes</h3>
-				<div className="overflow-x-auto"><table className="review-table">
-					<thead>
-						<tr>
-							<th>Title</th>
-							<th>Category</th>
-							<th>Status</th>
-							<th className="text-right">Questions</th>
 						</tr>
 					</thead>
 					<tbody>

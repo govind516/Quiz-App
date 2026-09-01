@@ -114,7 +114,7 @@ function AuthInner() {
 					<form onSubmit={handleSubmit}>
 						{mode === "signup" && (
 							<div className="field">
-								<label htmlFor="su-name">Name</label>
+								<label htmlFor="su-name" style={{ fontFamily: "var(--font-apple), sans-serif", fontSize: 13, fontWeight: 500, color: "var(--color-mutedc)" }}>Name</label>
 								<input
 									id="su-name"
 									className="input"
@@ -123,14 +123,15 @@ function AuthInner() {
 									value={name}
 									onChange={(e) => setName(e.target.value)}
 									placeholder="Ada Lovelace"
+									style={{ height: 44, fontFamily: "var(--font-apple), sans-serif" }}
 								/>
 								{fieldError("name") && (
-									<span className="text-xs text-dangerc">{fieldError("name")}</span>
+									<span style={{ fontFamily: "var(--font-apple), sans-serif", fontSize: 13, color: "var(--color-dangerc)" }}>{fieldError("name")}</span>
 								)}
 							</div>
 						)}
 						<div className="field">
-						<label htmlFor="auth-email">Email</label>
+						<label htmlFor="auth-email" style={{ fontFamily: "var(--font-apple), sans-serif", fontSize: 13, fontWeight: 500, color: "var(--color-mutedc)" }}>Email</label>
 						<input
 							id="auth-email"
 								className="input"
@@ -139,13 +140,14 @@ function AuthInner() {
 								value={email}
 								onChange={(e) => setEmail(e.target.value)}
 								placeholder="you@company.com"
+								style={{ height: 44, fontFamily: "var(--font-apple), sans-serif" }}
 							/>
 							{fieldError("email") && (
-								<span className="text-xs text-dangerc">{fieldError("email")}</span>
+								<span style={{ fontFamily: "var(--font-apple), sans-serif", fontSize: 13, color: "var(--color-dangerc)" }}>{fieldError("email")}</span>
 							)}
 						</div>
 						<div className="field">
-						<label htmlFor="auth-password">Password</label>
+						<label htmlFor="auth-password" style={{ fontFamily: "var(--font-apple), sans-serif", fontSize: 13, fontWeight: 500, color: "var(--color-mutedc)" }}>Password</label>
 						<input
 							id="auth-password"
 							type="password"
@@ -154,23 +156,24 @@ function AuthInner() {
 								value={password}
 								onChange={(e) => setPassword(e.target.value)}
 								placeholder="••••••••••"
+								style={{ height: 44, fontFamily: "var(--font-apple), sans-serif" }}
 							/>
 							{fieldError("password") ? (
-								<span className="text-xs text-dangerc">{fieldError("password")}</span>
+								<span style={{ fontFamily: "var(--font-apple), sans-serif", fontSize: 13, color: "var(--color-dangerc)" }}>{fieldError("password")}</span>
 							) : (
 								mode === "signup" && (
-									<span className="text-xs text-faintc">At least 8 characters.</span>
+									<span className="text-xs" style={{ fontFamily: "var(--font-apple), sans-serif", color: "var(--color-faintc)" }}>At least 8 characters.</span>
 								)
 							)}
 						</div>
 
 						{error && (
-							<div className="rounded-lg border border-dangerc/40 bg-dangerdim px-3 py-2 text-sm text-dangerc mb-4">
+							<div className="rounded-lg border px-3 py-2 text-sm mb-4" style={{ borderColor: "rgba(248,113,113,0.4)", background: "var(--color-dangerdim)", color: "var(--color-dangerc)", fontFamily: "var(--font-apple), sans-serif", fontSize: 13 }}>
 								{error}
 							</div>
 						)}
 
-						<Button block disabled={pending}>
+						<Button block disabled={pending} loading={pending} style={{ height: 44, borderRadius: 999, fontFamily: "var(--font-apple), sans-serif" }}>
 							{pending
 								? mode === "login"
 									? "Logging in…"
@@ -181,8 +184,8 @@ function AuthInner() {
 						</Button>
 					</form>
 
-					<div className="divider">or</div>
-					<Link href="/browse" className="btn btn-ghost btn-block">
+					<div className="divider" style={{ fontFamily: "var(--font-apple), sans-serif" }}>or</div>
+					<Link href="/browse" className="btn btn-ghost btn-block" style={{ fontFamily: "var(--font-apple), sans-serif" }}>
 						Continue as guest <IconArrowRight size={14} />
 					</Link>
 					<div className="auth-terms">

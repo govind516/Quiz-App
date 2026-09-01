@@ -32,10 +32,10 @@ function withSharedRanks(entries: LeaderboardEntryDto[]): RankedEntry[] {
 function PodCard({ slot }: { slot: RankedEntry | null }) {
 	if (!slot) {
 		return (
-			<div className="pod-card !border-dashed !border-linestrong flex flex-col items-center justify-center min-h-[170px]">
-				<div className="pod-avatar !bg-transparent text-faintc">?</div>
-				<div className="pod-handle text-faintc font-normal">Your name here</div>
-				<div className="pod-score">— pts</div>
+			<div className="pod-card !border-dashed flex flex-col items-center justify-center min-h-[170px]" style={{ borderColor: "var(--color-line)" }}>
+				<div className="pod-avatar !bg-transparent" style={{ color: "var(--color-faintc)", fontFamily: "var(--font-apple), sans-serif" }}>?</div>
+				<div className="pod-handle" style={{ color: "var(--color-faintc)", fontFamily: "var(--font-apple), sans-serif" }}>Your name here</div>
+				<div className="pod-score" style={{ color: "var(--color-faintc)" }}>— pts</div>
 			</div>
 		);
 	}
@@ -43,17 +43,17 @@ function PodCard({ slot }: { slot: RankedEntry | null }) {
 	return (
 		<div className={`pod-card ${isFirst ? "rank1" : ""}`}>
 			{isFirst && (
-				<div className="text-amberc mb-1.5 flex justify-center">
+				<div className="mb-1.5 flex justify-center" style={{ color: "var(--color-amberc)" }}>
 					<IconTrophy size={20} />
 				</div>
 			)}
-			<div className="pod-rank-badge">
+			<div className="pod-rank-badge" style={{ fontFamily: "var(--font-mono), monospace" }}>
 				#{slot.displayRank}
 				{slot.shared ? " (tie)" : ""}
 			</div>
-			<div className="pod-avatar">{initials(slot.entry.name)}</div>
-			<div className="pod-handle">{slot.entry.name}</div>
-			<div className="pod-score">{slot.entry.score.toLocaleString()} pts</div>
+			<div className="pod-avatar" style={{ fontFamily: "var(--font-apple), sans-serif" }}>{initials(slot.entry.name)}</div>
+			<div className="pod-handle" style={{ fontFamily: "var(--font-apple), sans-serif" }}>{slot.entry.name}</div>
+			<div className="pod-score" style={{ fontFamily: "var(--font-mono), monospace", color: "var(--color-violet)" }}>{slot.entry.score.toLocaleString()} pts</div>
 		</div>
 	);
 }
@@ -107,7 +107,7 @@ export default function LeaderboardPage() {
 	return (
 		<div className="py-10 max-w-3xl mx-auto">
 			<Eyebrow>Rankings</Eyebrow>
-			<h1 className="text-[30px] mt-2 mb-6">Leaderboard</h1>
+			<h1 className="text-[30px] mt-2 mb-6" style={{ fontFamily: "var(--font-space), sans-serif", fontWeight: 700, letterSpacing: "-0.02em" }}>Leaderboard</h1>
 
 			<div className="lb-tabs">
 				<button
@@ -174,22 +174,20 @@ export default function LeaderboardPage() {
 							{rest.map(({ entry, displayRank }, i) => (
 								<div
 									key={entry.userId}
-									className={`lb-row row-animate ${
-										entry.userId === user?.id ? "!bg-violetdim" : ""
-									}`}
+									className={`lb-row row-animate ${entry.userId === user?.id ? "you" : ""}`}
 									style={{ animationDelay: `${0.05 * (i + 1)}s` }}
 								>
-									<div className="lb-rank">#{displayRank}</div>
-									<div className="row-avatar">{initials(entry.name)}</div>
+									<div className="lb-rank" style={{ fontFamily: "var(--font-mono), monospace" }}>#{displayRank}</div>
+									<div className="row-avatar" style={{ fontFamily: "var(--font-apple), sans-serif" }}>{initials(entry.name)}</div>
 									<div className="row-name">
-										<div className="handle flex items-center gap-2">
+										<div className="handle flex items-center gap-2" style={{ fontFamily: "var(--font-apple), sans-serif" }}>
 											{entry.name}
 											{entry.userId === user?.id && (
-												<span className="badge badge-violet">you</span>
+												<span className="badge badge-violet" style={{ fontFamily: "var(--font-apple), sans-serif" }}>you</span>
 											)}
 										</div>
 									</div>
-									<div className="row-score text-right mono text-mint">
+									<div className="row-score text-right" style={{ fontFamily: "var(--font-mono), monospace", color: "var(--color-violet)" }}>
 										{entry.score.toLocaleString()}
 									</div>
 								</div>

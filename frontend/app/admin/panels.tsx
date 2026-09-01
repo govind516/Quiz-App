@@ -5,11 +5,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type {
 	AdminCategory,
-	AdminQuestionDto,
 	AdminUserItem,
 	AdminUsersResponse,
+	CategoryDto,
 	DropoffStats,
 	PlatformSettings,
+	QuestionAdminDto,
 	QuestionType,
 	ScoreTrendPoint,
 } from "@/lib/types";
@@ -170,7 +171,7 @@ export function UsersPanel() {
 			api<AdminUsersResponse>(
 				`/api/admin/users?page=${page}&size=20${appliedSearch ? `&query=${encodeURIComponent(appliedSearch)}` : ""}`
 			),
-		placeholderData: (prev: unknown) => prev,
+		placeholderData: (prev) => prev as AdminUsersResponse,
 	});
 
 	const banMutation = useMutation({
@@ -532,7 +533,7 @@ export function QuestionFormModal({
 	const [explanation, setExplanation] = useState(initial?.explanation ?? "");
 	const [options, setOptions] = useState<OptionRow[]>(
 		initial
-			? initial.options.map((o) => ({ optionText: o.optionText, isCorrect: o.isCorrect }))
+			? initial.options.map((o: any) => ({ optionText: o.optionText, isCorrect: o.isCorrect }))
 			: [
 					{ optionText: "", isCorrect: true },
 					{ optionText: "", isCorrect: false },
@@ -549,7 +550,7 @@ export function QuestionFormModal({
 				type,
 				points,
 				explanation: explanation.trim(),
-				options: options.map((o) => ({
+				options: options.map((o: any) => ({
 					optionText: o.optionText.trim(),
 					isCorrect: o.isCorrect,
 				})),
@@ -578,7 +579,7 @@ export function QuestionFormModal({
 		} else if (newType === "MCQ") {
 			let seen = false;
 			setOptions((prev) =>
-				prev.map((o) => {
+				prev.map((o: any) => {
 					if (o.isCorrect && !seen) {
 						seen = true;
 						return o;
@@ -904,4 +905,4 @@ export function AttemptsChart({
 	);
 }
 
-void title;
+

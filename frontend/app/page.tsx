@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { CategoryDto, QuizDto } from "@/lib/types";
@@ -35,39 +35,48 @@ function CountUp({ value, suffix = "" }: { value: number; suffix?: string }) {
 }
 
 function Constellation() {
-	return (
-		<div className="relative hidden lg:block h-[420px]">
-			<svg className="constellation w-full h-full" viewBox="0 0 480 420">
-				<line x1="60" y1="80" x2="220" y2="150" stroke="rgba(123,92,255,.25)" strokeWidth="1.5" />
-				<line x1="220" y1="150" x2="380" y2="90" stroke="rgba(123,92,255,.25)" strokeWidth="1.5" />
-				<line x1="220" y1="150" x2="160" y2="300" stroke="rgba(53,232,180,.2)" strokeWidth="1.5" />
-				<line x1="160" y1="300" x2="340" y2="330" stroke="rgba(123,92,255,.2)" strokeWidth="1.5" />
-				<line x1="380" y1="90" x2="340" y2="330" stroke="rgba(123,92,255,.15)" strokeWidth="1.5" />
-				<circle className="node" cx="60" cy="80" r="4" fill="#7B5CFF" />
-				<circle className="node" cx="220" cy="150" r="4" fill="#35E8B4" />
-				<circle className="node" cx="380" cy="90" r="4" fill="#7B5CFF" />
-				<circle className="node" cx="160" cy="300" r="4" fill="#FFB84D" />
-				<circle className="node" cx="340" cy="330" r="4" fill="#7B5CFF" />
-				<polygon
-					points="220,120 245,135 245,165 220,180 195,165 195,135"
-					fill="none"
-					stroke="#7B5CFF"
-					strokeWidth="1.5"
-					opacity=".5"
-				/>
-			</svg>
-			<div className="float-card">
-				<div className="flex items-center justify-between mb-2">
-					<span className="badge badge-violet">JavaScript</span>
-					<span className="text-faintc"><IconQuestion size={14} /></span>
-				</div>
-				<div className="text-[13px] font-semibold text-ink mb-1">
-					typeof NaN === ?
-				</div>
-				<div className="code-line">→ &apos;number&apos;</div>
-			</div>
-		</div>
-	);
+  const demos = [
+    { cat: "JavaScript", q: "typeof NaN === ?", a: "→ 'number'" },
+    { cat: "Python", q: "len([1,2,3]) == ?", a: "→ 3" },
+    { cat: "SQL", q: "SELECT * WHERE id = ?", a: "→ indexed lookup" },
+  ];
+  const idx = useRef(0);
+  const [demo, setDemo] = useState(demos[0]);
+  useEffect(() => {
+    const id = setInterval(() => {
+      idx.current = (idx.current + 1) % demos.length;
+      setDemo(demos[idx.current]);
+    }, 3200);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <div className="relative hidden lg:block h-[420px]">
+      <svg className="constellation w-full h-full" viewBox="0 0 480 420">
+        <line x1="60" y1="80" x2="220" y2="150" stroke="rgba(110,95,245,.2)" strokeWidth="1.5" />
+        <line x1="220" y1="150" x2="380" y2="90" stroke="rgba(110,95,245,.2)" strokeWidth="1.5" />
+        <line x1="220" y1="150" x2="160" y2="300" stroke="rgba(52,211,153,.18)" strokeWidth="1.5" />
+        <line x1="160" y1="300" x2="340" y2="330" stroke="rgba(110,95,245,.15)" strokeWidth="1.5" />
+        <line x1="380" y1="90" x2="340" y2="330" stroke="rgba(110,95,245,.12)" strokeWidth="1.5" />
+        <circle className="node" cx="60" cy="80" r="4" fill="#6E5FF5" />
+        <circle className="node" cx="220" cy="150" r="4" fill="#34D399" />
+        <circle className="node" cx="380" cy="90" r="4" fill="#6E5FF5" />
+        <circle className="node" cx="160" cy="300" r="4" fill="#F59E0B" />
+        <circle className="node" cx="340" cy="330" r="4" fill="#6E5FF5" />
+        <polygon points="220,120 245,135 245,165 220,180 195,165 195,135" fill="none" stroke="#6E5FF5" strokeWidth="1.5" opacity=".45" />
+      </svg>
+      <div className="float-card">
+        <div className="flex items-center justify-between mb-2">
+          <span className="badge badge-violet" style={{ fontFamily: "var(--font-apple), sans-serif" }}>{demo.cat}</span>
+          <span className="text-faintc"><IconQuestion size={14} /></span>
+        </div>
+        <div className="text-[13px] font-semibold text-ink mb-1" style={{ fontFamily: "var(--font-space), sans-serif" }}>{demo.q}</div>
+        <div className="code-line">{demo.a}</div>
+        <div className="mt-3 flex gap-1.5 border-t border-line pt-3">
+          <span className="mono text-[10px] text-faintc">[A] [B] [C] [D]</span>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function LandingPage() {
@@ -107,25 +116,25 @@ export default function LandingPage() {
 						quizzes built for interview prep — not trivia night.
 					</p>
 					<div className="hero-ctas">
-						<Link href="/browse" className="btn btn-primary">
+						<Link href="/browse" className="btn btn-primary btn-cta" style={{ borderRadius: 999 }}>
 							Start a quiz — guest mode <IconArrowRight size={14} />
 						</Link>
-						<Link href="/leaderboard" className="btn btn-ghost">
+						<Link href="/leaderboard" className="btn btn-ghost" style={{ height: 44, borderRadius: 999 }}>
 							See the leaderboard
 						</Link>
 					</div>
 					<div className="hero-stats">
 						<div className="hero-stat">
 							<CountUp value={categories.length} />
-							<div className="lbl">categories</div>
+							<div className="lbl" style={{ fontFamily: "var(--font-apple), sans-serif" }}>categories</div>
 						</div>
 						<div className="hero-stat">
 							<CountUp value={totalQuestions} />
-							<div className="lbl">questions</div>
+							<div className="lbl" style={{ fontFamily: "var(--font-apple), sans-serif" }}>questions</div>
 						</div>
 						<div className="hero-stat">
 							<CountUp value={quizzes.length} />
-							<div className="lbl">live quizzes</div>
+							<div className="lbl" style={{ fontFamily: "var(--font-apple), sans-serif" }}>live quizzes</div>
 						</div>
 					</div>
 				</div>
