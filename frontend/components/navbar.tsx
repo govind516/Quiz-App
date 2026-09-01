@@ -62,6 +62,59 @@ export function Navbar() {
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
+function avatarInitials(name: string): string {
+  return name.split(/\s+/).map((p) => p[0]).join("").slice(0, 2).toUpperCase();
+}
+
+function AvatarDropdown({ user, logout, router }: { user: { name: string }; logout: () => void; router: ReturnType<typeof useRouter> }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+  async function handleLogout() {
+    const refreshToken = useAuthStore.getState().refreshToken;
+    if (refreshToken) {
+      try {
+        await fetch(`${API_BASE_URL}/api/auth/logout`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken }),
+        });
+      } catch {}
+    }
+    logout();
+    setOpen(false);
+    router.push("/");
+  }
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex h-8 w-8 items-center justify-center rounded-full border text-xs font-semibold transition hover:brightness-110"
+        style={{ background: "var(--color-surface2)", borderColor: "var(--color-line)", color: "var(--color-ink)", fontFamily: "var(--font-apple), sans-serif" }}
+        aria-label="User menu"
+      >
+        {avatarInitials(user.name)}
+      </button>
+      {open && (
+        <div className="card !p-1.5 pop absolute right-0 top-[44px] z-50 min-w-[160px]" style={{ boxShadow: "var(--shadow-raised)" }}>
+          <Link href="/me" onClick={() => setOpen(false)} className="flex w-full items-center rounded-lg px-3 py-2 text-sm hover:bg-surface2 transition" style={{ fontFamily: "var(--font-apple), sans-serif", color: "var(--color-ink)" }}>
+            Progress
+          </Link>
+          <button onClick={handleLogout} className="flex w-full items-center rounded-lg px-3 py-2 text-sm hover:bg-surface2 transition text-left" style={{ fontFamily: "var(--font-apple), sans-serif", color: "var(--color-mutedc)" }}>
+            Log out
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
   const navLinks = [
     { href: "/browse", label: "Practice" },
     { href: "/leaderboard", label: "Leaderboard" },
@@ -120,7 +173,7 @@ export function Navbar() {
               }}
             />
           </div>
-          <nav className="flex items-center gap-2" style={{ fontFamily: "var(--font-apple), sans-serif" }}>
+          <nav className="flex items-center gap-2 relative" style={{ fontFamily: "var(--font-apple), sans-serif" }}>
             {mounted && user ? (
               <>
                 {user.role === "ADMIN" && (
@@ -132,29 +185,7 @@ export function Navbar() {
                     Admin
                   </Link>
                 )}
-                <Link href="/me" className="btn btn-ghost btn-sm" style={{ fontFamily: "var(--font-apple), sans-serif" }}>
-                  {user.name.split(" ")[0]} · Progress
-                </Link>
-                <button
-                  className="btn btn-outline btn-sm"
-                  style={{ fontFamily: "var(--font-apple), sans-serif" }}
-                  onClick={async () => {
-                    const refreshToken = useAuthStore.getState().refreshToken;
-                    if (refreshToken) {
-                      try {
-                        await fetch(`${API_BASE_URL}/api/auth/logout`, {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ refreshToken }),
-                        });
-                      } catch {}
-                    }
-                    logout();
-                    router.push("/");
-                  }}
-                >
-                  Log out
-                </button>
+                <AvatarDropdown user={user} logout={logout} router={router} />
               </>
             ) : mounted ? (
               <>

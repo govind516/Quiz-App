@@ -186,7 +186,12 @@ export default function MyProgressPage() {
 			{stats && (
 				<>
 					<div className="flex items-center gap-6 mt-8 mb-10">
-						<div className="streak-flame">🔥</div>
+						<div className="hex" style={{ background: "var(--color-amberdim)", color: "var(--color-amberc)", width: 52, height: 46 }}>
+							<svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+								<path d="M12 3c-1.5 2.5-4 4.2-4 7.5a4 4 0 008 0C16 7.2 13.5 5.5 12 3z" />
+								<path d="M9.5 13.5c0 1.4 1.1 2.5 2.5 2.5s2.5-1.1 2.5-2.5" />
+							</svg>
+						</div>
 						<div>
 							<div className="streak-num">
 								<CountUp value={stats.currentStreak} />-day streak

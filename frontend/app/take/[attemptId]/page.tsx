@@ -9,6 +9,7 @@ import type { AttemptResultDto, QuizDto, StartAttemptResponse } from "@/lib/type
 import { useAuthStore } from "@/lib/auth-store";
 import { getGuestSessionId, readStartPayloadCached } from "@/lib/guest-session";
 import { DifficultyBadge } from "@/components/difficulty-badge";
+import { Button } from "@/components/ui";
 
 type AnswerMap = Record<number, number[]>;
 
@@ -272,14 +273,9 @@ export default function TakeQuizPage() {
               Next →
             </button>
           ) : null}
-          <button
-            disabled={submitting}
-            onClick={() => void submit()}
-            className="btn btn-primary"
-            style={{ borderRadius: 999, fontFamily: "var(--font-apple), sans-serif" }}
-          >
+          <Button loading={submitting} onClick={() => void submit()} pill style={{ fontFamily: "var(--font-apple), sans-serif" }}>
             {submitting ? "Submitting…" : "Finish & submit"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

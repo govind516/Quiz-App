@@ -19,6 +19,33 @@ import { IconCheck, IconTrash } from "@/components/icons";
 
 const input = "input";
 
+function AdminSkeletonRows({ rows = 3 }: { rows?: number }) {
+	return (
+		<div className="card !p-0 overflow-hidden">
+			<div className="p-4 space-y-3">
+				{Array.from({ length: rows }).map((_, i) => (
+					<div key={i} className="flex gap-3">
+						<div className="skeleton h-4 flex-1 rounded" />
+						<div className="skeleton h-4 w-20 rounded" />
+						<div className="skeleton h-8 w-16 rounded" />
+					</div>
+				))}
+			</div>
+		</div>
+	);
+}
+
+function AdminEmptyState({ text }: { text: string }) {
+	return (
+		<div className="card p-10 text-center">
+			<div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl border" style={{ borderColor: "var(--color-line)", background: "var(--color-surface2)", color: "var(--color-faintc)" }}>
+				<svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}><circle cx={12} cy={12} r={9} /><path d="M9.5 9a2.5 2.5 0 114 2c-.8.6-1.5 1.1-1.5 2.2" /><circle cx={12} cy={16.6} r={0.6} fill="currentColor" stroke="none" /></svg>
+			</div>
+			<p className="text-sm" style={{ color: "var(--color-mutedc)", fontFamily: "var(--font-apple), sans-serif" }}>{text}</p>
+		</div>
+	);
+}
+
 /* ---------------- Categories ---------------- */
 
 export function CategoriesPanel() {
@@ -86,7 +113,9 @@ export function CategoriesPanel() {
 			)}
 
 			{categoriesQuery.isPending ? (
-				<div className="card h-40 animate-pulse" />
+				<AdminSkeletonRows rows={4} />
+			) : (categoriesQuery.data ?? []).length === 0 ? (
+				<AdminEmptyState text="No categories yet — create one above." />
 			) : (
 				<div className="card !p-0 overflow-hidden">
 					<div className="overflow-x-auto">
@@ -205,7 +234,9 @@ export function UsersPanel() {
 			/>
 
 			{usersQuery.isPending ? (
-				<div className="card h-40 animate-pulse" />
+				<AdminSkeletonRows rows={5} />
+			) : (data?.items ?? []).length === 0 ? (
+				<AdminEmptyState text="No users found — try a different search." />
 			) : (
 				<>
 					<div className="card !p-0 overflow-hidden">
@@ -374,7 +405,10 @@ export function AnalyticsPanel() {
 			<div className="card mb-6">
 				<h3 className="text-[15px] mb-5">Average score — last 30 days (%)</h3>
 				{scoresQuery.isPending ? (
-					<div className="h-[190px] animate-pulse bg-surface2 rounded-lg" />
+					<div className="space-y-3">
+						<div className="skeleton h-4 w-32 rounded" />
+						<div className="skeleton h-[140px] rounded-lg" />
+					</div>
 				) : trendDaily.length === 0 ? (
 					<p className="text-sm text-mutedc">No completed quizzes yet.</p>
 				) : (
@@ -385,7 +419,7 @@ export function AnalyticsPanel() {
 			<div className="card">
 				<h3 className="text-[15px] mb-5">Category performance</h3>
 				{perfQuery.isPending ? (
-					<div className="h-40 animate-pulse bg-surface2 rounded-lg" />
+					<AdminSkeletonRows rows={3} />
 				) : (perfQuery.data ?? []).length === 0 ? (
 					<p className="text-sm text-mutedc">No attempt data yet.</p>
 				) : (

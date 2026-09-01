@@ -40,8 +40,20 @@ function PodCard({ slot }: { slot: RankedEntry | null }) {
 		);
 	}
 	const isFirst = slot.displayRank === 1;
+	const isSecond = slot.displayRank === 2;
+	const isThird = slot.displayRank === 3;
+	const tierStyle: React.CSSProperties = isSecond
+		? { borderColor: "rgba(255,255,255,0.35)" }
+		: isThird
+		? { borderColor: "rgba(176,141,87,0.35)" }
+		: {};
+	const avatarTierStyle: React.CSSProperties = isSecond
+		? { borderColor: "rgba(255,255,255,0.35)" }
+		: isThird
+		? { borderColor: "rgba(176,141,87,0.5)" }
+		: {};
 	return (
-		<div className={`pod-card ${isFirst ? "rank1" : ""}`}>
+		<div className={`pod-card ${isFirst ? "rank1" : ""}`} style={tierStyle}>
 			{isFirst && (
 				<div className="mb-1.5 flex justify-center" style={{ color: "var(--color-amberc)" }}>
 					<IconTrophy size={20} />
@@ -51,7 +63,7 @@ function PodCard({ slot }: { slot: RankedEntry | null }) {
 				#{slot.displayRank}
 				{slot.shared ? " (tie)" : ""}
 			</div>
-			<div className="pod-avatar" style={{ fontFamily: "var(--font-apple), sans-serif" }}>{initials(slot.entry.name)}</div>
+			<div className="pod-avatar" style={{ fontFamily: "var(--font-apple), sans-serif", ...avatarTierStyle }}>{initials(slot.entry.name)}</div>
 			<div className="pod-handle" style={{ fontFamily: "var(--font-apple), sans-serif" }}>{slot.entry.name}</div>
 			<div className="pod-score" style={{ fontFamily: "var(--font-mono), monospace", color: "var(--color-violet)" }}>{slot.entry.score.toLocaleString()} pts</div>
 		</div>

@@ -49,7 +49,7 @@ function BrowseInner() {
   });
 
   return (
-    <div className="py-10">
+    <div className="py-10 max-w-5xl mx-auto">
       <div className="mb-8">
         <span className="eyebrow">Practice</span>
         <h1

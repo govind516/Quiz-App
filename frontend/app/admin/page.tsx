@@ -254,7 +254,28 @@ export default function AdminPage() {
 
 function EmptyCard({ text }: { text: string }) {
 	return (
-		<div className="card p-10 text-center text-sm text-mutedc">{text}</div>
+		<div className="card p-10 text-center">
+			<div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl border" style={{ borderColor: "var(--color-line)", background: "var(--color-surface2)", color: "var(--color-faintc)" }}>
+				<IconQuestion size={18} />
+			</div>
+			<p className="text-sm" style={{ color: "var(--color-mutedc)", fontFamily: "var(--font-apple), sans-serif" }}>{text}</p>
+		</div>
+	);
+}
+
+function AdminSkeletonRows({ rows = 3 }: { rows?: number }) {
+	return (
+		<div className="card !p-0 overflow-hidden">
+			<div className="p-4 space-y-3">
+				{Array.from({ length: rows }).map((_, i) => (
+					<div key={i} className="flex gap-3">
+						<div className="skeleton h-4 flex-1 rounded" />
+						<div className="skeleton h-4 w-20 rounded" />
+						<div className="skeleton h-8 w-16 rounded" />
+					</div>
+				))}
+			</div>
+		</div>
 	);
 }
 
@@ -507,7 +528,7 @@ function QuestionsTab({ quizId }: { quizId: number }) {
 	});
 
 	if (questionsQuery.isPending) {
-		return <div className="card h-40 animate-pulse" />;
+		return <AdminSkeletonRows rows={4} />;
 	}
 	const questions = questionsQuery.data ?? [];
 
@@ -860,7 +881,7 @@ function ReviewTab({ quizzes }: { quizzes: QuizDto[] }) {
 		quizzes.find((q) => q.id === quizId)?.title ?? `Quiz #${quizId}`;
 
 	if (pendingQuery.isPending) {
-		return <div className="card h-40 animate-pulse" />;
+		return <AdminSkeletonRows rows={3} />;
 	}
 	const pending = pendingQuery.data ?? [];
 

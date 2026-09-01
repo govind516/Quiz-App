@@ -153,10 +153,6 @@ export default function ResultPage() {
           </div>
         </div>
 
-        <p className="mono text-sm mb-8" style={{ color: "var(--color-mutedc)" }}>
-          {correctCount}/{result.questions.length} correct · {Math.floor(result.durationSeconds / 60)}m {result.durationSeconds % 60}s · {Math.round(result.percentage)}%
-        </p>
-
         <div className="flex gap-3 justify-center flex-wrap">
           <Link href="/browse" className="btn btn-ghost" style={{ fontFamily: "var(--font-apple), sans-serif", borderRadius: 999 }}>
             Try another quiz
@@ -171,6 +167,7 @@ export default function ResultPage() {
             </Link>
           )}
         </div>
+        <p className="mt-4 text-sm" style={{ color: "var(--color-mutedc)", fontFamily: "var(--font-apple), sans-serif" }}>{headline} {passed ? "Keep the momentum going." : "Review the breakdown and try again — you've got this."}</p>
       </div>
 
       <div className="mt-14">
