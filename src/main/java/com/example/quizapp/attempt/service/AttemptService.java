@@ -49,8 +49,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AttemptService {
 
@@ -63,6 +65,7 @@ public class AttemptService {
 	private final CurrentUserProvider currentUserProvider;
 	private final ObjectMapper objectMapper;
 	private final LeaderboardService leaderboardService;
+	private final AttemptAnswerBatchService batchService;
 
 	@Transactional
 	public StartAttemptResponse start(Long quizId, StartAttemptRequest request) {
@@ -155,10 +158,13 @@ public class AttemptService {
 
 	@Transactional
 	public AttemptResultDto submit(Long attemptId, SubmitAttemptRequest request) {
+		long totalStart = System.nanoTime();
 		if (request == null) {
 			throw new BadRequestException("Request body with answers is required");
 		}
+		long t = System.nanoTime();
 		QuizAttempt attempt = getOwnedAttempt(attemptId, request.guestSessionId());
+		long q1Ms = (System.nanoTime() - t) / 1_000_000;
 		if (attempt.getStatus() != AttemptStatus.IN_PROGRESS) {
 			throw new ConflictException("This attempt has already been submitted");
 		}
@@ -171,10 +177,12 @@ public class AttemptService {
 			}
 		}
 		List<Long> orderedIds = parseQuestionOrder(attempt);
+		t = System.nanoTime();
 		Map<Long, Question> quizQuestions = questionRepository.findAllByIdInWithOptions(
 						orderedIds.isEmpty() ? List.of(-1L) : orderedIds).stream()
 				.filter(q -> q.getStatus() == QuestionStatus.APPROVED)
 				.collect(HashMap::new, (m, q) -> m.put(q.getId(), q), (m2, extra) -> m2.putAll(extra));
+		long q2Ms = (System.nanoTime() - t) / 1_000_000;
 
 		for (SubmitAnswerDto answer : request.answers()) {
 			Question question = quizQuestions.get(answer.questionId());
@@ -206,7 +214,9 @@ public class AttemptService {
 					.isCorrect(correct)
 					.build());
 		}
-		answerRepository.saveAll(rows);
+		t = System.nanoTime();
+		batchService.batchInsert(rows);
+		long q3Ms = (System.nanoTime() - t) / 1_000_000;
 
 		int earnedPoints = rows.stream()
 				.filter(a -> a.isCorrect())
@@ -226,7 +236,9 @@ public class AttemptService {
 			attempt.setStatus(AttemptStatus.SUBMITTED);
 			attempt.setCompletedAt(Instant.now());
 		}
+		t = System.nanoTime();
 		attemptRepository.saveAndFlush(attempt);
+		long q4Ms = (System.nanoTime() - t) / 1_000_000;
 
 		Quiz quiz = attempt.getQuiz();
 		if (attempt.getUser() != null && attempt.getStatus() == AttemptStatus.SUBMITTED && quiz != null) {
@@ -238,7 +250,12 @@ public class AttemptService {
 					earnedPoints,
 					percentage);
 		}
-		return buildResultFromSubmit(attempt, rows, quizQuestions, orderedIds);
+		AttemptResultDto dto = buildResultFromSubmit(attempt, rows, quizQuestions, orderedIds);
+		long totalMs = (System.nanoTime() - totalStart) / 1_000_000;
+		if (totalMs > 1500) {
+			log.info("submit timings attemptId={} Q1={}ms Q2={}ms Q3={}ms Q4={}ms total={}ms", attemptId, q1Ms, q2Ms, q3Ms, q4Ms, totalMs);
+		}
+		return dto;
 	}
 
 	@Transactional(readOnly = true)
