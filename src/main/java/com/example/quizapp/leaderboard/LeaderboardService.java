@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.lang.NonNull;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -41,6 +42,7 @@ public class LeaderboardService {
 		return configured;
 	}
 
+	@Async
 	public void recordSubmission(Long userId, Long quizId, Long categoryId,
 			int pointsEarned, double percentage) {
 		if (!configured) {

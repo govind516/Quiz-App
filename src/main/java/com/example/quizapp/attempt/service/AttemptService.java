@@ -171,7 +171,7 @@ public class AttemptService {
 			}
 		}
 		List<Long> orderedIds = parseQuestionOrder(attempt);
-		Map<Long, Question> quizQuestions = questionRepository.findAllByIdIn(
+		Map<Long, Question> quizQuestions = questionRepository.findAllByIdInWithOptions(
 						orderedIds.isEmpty() ? List.of(-1L) : orderedIds).stream()
 				.filter(q -> q.getStatus() == QuestionStatus.APPROVED)
 				.collect(HashMap::new, (m, q) -> m.put(q.getId(), q), (m2, extra) -> m2.putAll(extra));
@@ -238,7 +238,7 @@ public class AttemptService {
 					earnedPoints,
 					percentage);
 		}
-		return buildResult(attempt);
+		return buildResultFromSubmit(attempt, rows, quizQuestions, orderedIds);
 	}
 
 	@Transactional(readOnly = true)
@@ -286,9 +286,67 @@ public class AttemptService {
 		}
 	}
 
+	private AttemptResultDto buildResultFromSubmit(QuizAttempt attempt, List<AttemptAnswer> rows,
+			Map<Long, Question> quizQuestions, List<Long> orderedIds) {
+		Quiz quiz = attempt.getQuiz();
+		Map<Long, AttemptAnswer> answersByQuestionId = new HashMap<>();
+		for (AttemptAnswer answer : rows) {
+			answersByQuestionId.put(answer.getQuestion().getId(), answer);
+		}
+		List<Question> orderedQuestions;
+		if (orderedIds.isEmpty()) {
+			orderedQuestions = quiz == null ? List.of() : quiz.getQuestions().stream()
+					.sorted(Comparator.comparing(q -> q.getId()))
+					.toList();
+		} else {
+			orderedQuestions = orderedIds.stream()
+					.map(id -> quizQuestions.get(id))
+					.filter(java.util.Objects::nonNull)
+					.toList();
+		}
+		long totalPoints = 0;
+		List<QuestionResultDto> questionResults = new ArrayList<>();
+		for (Question question : orderedQuestions) {
+			totalPoints += question.getPoints();
+			AttemptAnswer answer = answersByQuestionId.get(question.getId());
+			Set<Long> correctOptionIds = question.getOptions().stream()
+					.filter(o -> o.isCorrect())
+					.map(o -> o.getId())
+					.collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
+			Set<Long> selected = answer == null ? Set.of() : answer.getSelectedOptionIds();
+			boolean correct = answer != null && answer.isCorrect();
+			int awarded = correct ? question.getPoints() : 0;
+			questionResults.add(new QuestionResultDto(
+					question.getId(),
+					question.getQuestionText(),
+					question.getType(),
+					question.getPoints(),
+					awarded,
+					correct,
+					selected,
+					correctOptionIds,
+					question.getExplanation()));
+		}
+		double percentage = totalPoints > 0
+				? Math.round(attempt.getScore() * 1000.0 / totalPoints) / 10.0
+				: 0.0;
+		return new AttemptResultDto(
+				attempt.getId(),
+				quiz == null ? null : quiz.getId(),
+				attempt.getTitle(),
+				attempt.getStatus(),
+				attempt.getScore(),
+				totalPoints,
+				percentage,
+				attempt.getStartedAt(),
+				attempt.getCompletedAt(),
+				Duration.between(attempt.getStartedAt(), attempt.getCompletedAt()).getSeconds(),
+				questionResults);
+	}
+
 	private AttemptResultDto buildResult(QuizAttempt attempt) {
 		Quiz quiz = attempt.getQuiz();
-		List<AttemptAnswer> answers = answerRepository.findAllByAttemptId(attempt.getId());
+		List<AttemptAnswer> answers = answerRepository.findAllByAttemptIdWithOptions(attempt.getId());
 		Map<Long, AttemptAnswer> answersByQuestionId = new HashMap<>();
 		for (AttemptAnswer answer : answers) {
 			answersByQuestionId.put(answer.getQuestion().getId(), answer);
@@ -301,7 +359,7 @@ public class AttemptService {
 					.sorted(Comparator.comparing(q -> q.getId()))
 					.toList();
 		} else {
-			Map<Long, Question> byId = questionRepository.findAllByIdIn(orderedQuestionIds).stream()
+			Map<Long, Question> byId = questionRepository.findAllByIdInWithOptions(orderedQuestionIds).stream()
 					.collect(HashMap::new, (m, q) -> m.put(q.getId(), q), (m2, extra) -> m2.putAll(extra));
 			orderedQuestions = orderedQuestionIds.stream()
 					.map(id -> byId.get(id))

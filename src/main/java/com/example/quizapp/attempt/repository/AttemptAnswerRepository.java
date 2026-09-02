@@ -14,6 +14,9 @@ public interface AttemptAnswerRepository extends JpaRepository<AttemptAnswer, Lo
 
 	List<AttemptAnswer> findAllByAttemptId(Long attemptId);
 
+	@Query("SELECT DISTINCT a FROM AttemptAnswer a LEFT JOIN FETCH a.selectedOptionIds WHERE a.attempt.id = :attemptId")
+	List<AttemptAnswer> findAllByAttemptIdWithOptions(@Param("attemptId") Long attemptId);
+
 	Optional<AttemptAnswer> findByAttemptIdAndQuestionId(Long attemptId, Long questionId);
 
 	@Modifying

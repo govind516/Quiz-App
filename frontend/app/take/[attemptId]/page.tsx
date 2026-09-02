@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import type { AttemptResultDto, QuizDto, StartAttemptResponse } from "@/lib/types";
 import { useAuthStore } from "@/lib/auth-store";
 import { getGuestSessionId, readStartPayloadCached } from "@/lib/guest-session";
+import { setCachedResult } from "@/lib/result-cache";
 import { DifficultyBadge } from "@/components/difficulty-badge";
 import { Button } from "@/components/ui";
 
@@ -90,11 +91,12 @@ export default function TakeQuizPage() {
       const selectedAnswers = Object.entries(answersRef.current)
         .filter(([, optionIds]) => optionIds.length > 0)
         .map(([questionId, optionIds]) => ({ questionId: Number(questionId), selectedOptionIds: optionIds }));
-      await api<AttemptResultDto>(`/api/attempts/${attemptId}/submit`, {
+      const result = await api<AttemptResultDto>(`/api/attempts/${attemptId}/submit`, {
         method: "POST",
         auth: Boolean(user),
         body: { guestSessionId: user ? undefined : getGuestSessionId(), answers: selectedAnswers },
       });
+      setCachedResult(attemptId, result);
       router.replace(`/result/${attemptId}`);
     } catch (error) {
       submittedRef.current = false;
@@ -150,7 +152,7 @@ export default function TakeQuizPage() {
 
   const marks = ["A", "B", "C", "D", "E", "F"];
 
-  const timerColor = criticalTime ? "var(--color-dangerc)" : lowTime ? "var(--color-amberc)" : "var(--color-mint)";
+  const timerColor = criticalTime ? "var(--color-coral)" : lowTime ? "var(--color-amber)" : "var(--color-lime)";
   const timerClass = criticalTime ? "timer-ring-fg critical" : lowTime ? "timer-ring-fg warning" : "timer-ring-fg";
 
   return (
@@ -239,7 +241,7 @@ export default function TakeQuizPage() {
               onClick={() => chooseOption(option.optionId)}
               className={`option ${isSelected ? "selected" : ""} ${shakeIdx === i ? "shake" : ""}`}
             >
-              <div className="opt-mark">{showCheck ? "✓" : marks[i]}</div>
+              <div className="opt-mark">{showCheck ? "✓" : marks[i] || "?"}</div>
               {option.optionText}
             </button>
           );
@@ -253,7 +255,7 @@ export default function TakeQuizPage() {
       </div>
 
       {submitError && (
-        <div className="mt-4 rounded-lg border px-3 py-2 text-sm" style={{ borderColor: "rgba(248,113,113,0.4)", background: "var(--color-dangerdim)", color: "var(--color-dangerc)", fontFamily: "var(--font-apple), sans-serif" }}>
+        <div className="mt-4 rounded-lg border px-3 py-2 text-sm" style={{ borderColor: "rgba(255, 107, 122, 0.4)", background: "var(--color-coraldim)", color: "var(--color-coral)", fontFamily: "var(--font-apple), sans-serif" }}>
           {submitError}
         </div>
       )}

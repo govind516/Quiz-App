@@ -14,6 +14,9 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
 
 	List<Question> findAllByIdIn(List<Long> ids);
 
+	@Query("SELECT DISTINCT q FROM Question q LEFT JOIN FETCH q.options WHERE q.id IN :ids")
+	List<Question> findAllByIdInWithOptions(@Param("ids") List<Long> ids);
+
 	List<Question> findAllByStatus(QuestionStatus status);
 
 	long countByQuizIdAndStatus(Long quizId, QuestionStatus status);
