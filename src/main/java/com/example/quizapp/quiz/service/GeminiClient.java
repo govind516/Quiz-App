@@ -3,8 +3,11 @@ package com.example.quizapp.quiz.service;
 import java.util.List;
 import java.util.Map;
 
+import java.time.Duration;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
@@ -27,7 +30,11 @@ public class GeminiClient {
 			@Value("${app.gemini.base-url}") String baseUrl) {
 		this.apiKey = apiKey;
 		this.model = model;
+		SimpleClientHttpRequestFactory rf = new SimpleClientHttpRequestFactory();
+		rf.setConnectTimeout(Duration.ofSeconds(5));
+		rf.setReadTimeout(Duration.ofSeconds(45));
 		this.restClient = org.springframework.web.client.RestClient.builder()
+				.requestFactory(rf)
 				.baseUrl(baseUrl)
 				.build();
 	}
@@ -46,12 +53,15 @@ public class GeminiClient {
 
 		for (int attempt = 1; attempt <= 2; attempt++) {
 			try {
+				long httpStart = System.nanoTime();
 				GeminiResponse response = restClient.post()
 						.uri("/models/{model}:generateContent?key={key}", model, apiKey)
 						.contentType(MediaType.APPLICATION_JSON)
 						.body(body)
 						.retrieve()
 						.body(GeminiResponse.class);
+				long httpMs = (System.nanoTime() - httpStart) / 1_000_000;
+				log.info("gemini outbound HTTP call attempt={} model={} httpMs={}ms", attempt, model, httpMs);
 
 				if (response == null || response.candidates() == null || response.candidates().isEmpty()) {
 					throw new BadRequestException("Gemini returned no candidates");
@@ -77,10 +87,31 @@ public class GeminiClient {
 					sleep(800);
 					continue;
 				}
-				throw new BadRequestException("Could not reach the Gemini API");
+				throw new BadRequestException("Question generation timed out, please try again");
+			} catch (org.springframework.web.client.RestClientException e) {
+				if (isTimeout(e)) {
+					if (attempt < 2) {
+						log.warn("Gemini call timed out (attempt {}), retrying", attempt);
+						sleep(800);
+						continue;
+					}
+					throw new BadRequestException("Question generation timed out, please try again");
+				}
+				throw e;
 			}
 		}
 		throw new BadRequestException("Gemini API unavailable");
+	}
+
+	private boolean isTimeout(Throwable e) {
+		Throwable t = e;
+		while (t != null) {
+			if (t instanceof java.net.SocketTimeoutException) return true;
+			String msg = t.getMessage();
+			if (msg != null && msg.toLowerCase().contains("read timed out")) return true;
+			t = t.getCause();
+		}
+		return false;
 	}
 
 	private void sleep(long millis) {
