@@ -187,16 +187,24 @@ public class AdminQuestionService {
 		if (request.categoryId() != null) {
 			var category = categoryRepository.findById(request.categoryId())
 					.orElseThrow(() -> new ResourceNotFoundException("Category", request.categoryId()));
-			var existing = quizRepository.findFirstByCategoryIdOrderByIdAsc(category.getId());
+			String topic = request.topic() != null ? request.topic().trim() : "";
+			var difficulty = request.difficulty() != null
+					? mapToQuizDifficulty(request.difficulty())
+					: com.example.quizapp.quiz.Difficulty.BEGINNER;
+			var existing = quizRepository.findFirstByCategoryIdAndTopicAndDifficulty(category.getId(), topic, difficulty);
 			if (existing.isPresent()) {
 				quiz = existing.get();
+				// validation: existing quiz difficulty must match request
+				if (quiz.getDifficulty() != difficulty) {
+					throw new BadRequestException("Existing quiz difficulty mismatch for this topic");
+				}
 			} else {
-				var difficulty = request.difficulty() != null
-						? mapToQuizDifficulty(request.difficulty())
-						: com.example.quizapp.quiz.Difficulty.BEGINNER;
+				String title = category.getName() + ": " + topic + " — " + difficulty.name();
+				if (title.length() > 200) title = title.substring(0, 200);
 				quiz = Quiz.builder()
-						.title(category.getName())
-						.description("Auto-created for " + category.getName() + " — AI generated questions")
+						.title(title)
+						.topic(topic)
+						.description("Auto-created for " + category.getName() + " — " + topic + " — AI generated questions")
 						.category(category)
 						.difficulty(difficulty)
 						.timeLimitSec(600)
@@ -238,6 +246,7 @@ public class AdminQuestionService {
 			}
 			Question question = Question.builder()
 					.quiz(quiz)
+					.difficulty(quiz.getDifficulty())
 					.questionText(ai.questionText())
 					.type(ai.type() == null ? request.questionType() : ai.type())
 					.points(ai.points() == null || ai.points() < 1 ? 1 : Math.min(ai.points(), 100))

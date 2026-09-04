@@ -40,6 +40,10 @@ public class Question {
 	@JoinColumn(name = "quiz_id", nullable = false)
 	private Quiz quiz;
 
+	@Enumerated(EnumType.STRING)
+	@Column(length = 20)
+	private Difficulty difficulty;
+
 	@Column(name = "question_text", nullable = false, columnDefinition = "text")
 	private String questionText;
 

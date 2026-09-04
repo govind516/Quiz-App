@@ -36,4 +36,6 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
 	java.util.List<Quiz> findByCategoryIdOrderByIdAsc(Long categoryId);
 
 	java.util.Optional<Quiz> findFirstByCategoryIdOrderByIdAsc(Long categoryId);
+
+	java.util.Optional<Quiz> findFirstByCategoryIdAndTopicAndDifficulty(Long categoryId, String topic, Difficulty difficulty);
 }

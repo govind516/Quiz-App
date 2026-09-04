@@ -54,6 +54,9 @@ public class Quiz {
 	@JoinColumn(name = "category_id", nullable = false)
 	private Category category;
 
+	@Column(length = 200)
+	private String topic;
+
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 20)
 	private Difficulty difficulty;

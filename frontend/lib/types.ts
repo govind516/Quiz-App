@@ -35,6 +35,7 @@ export interface QuizDto {
 	categoryId: number;
 	categoryName: string;
 	categorySlug: string;
+	topic: string | null;
 	difficulty: Difficulty;
 	timeLimitSec: number;
 	isPublished: boolean;
@@ -135,6 +136,7 @@ export interface GenerateQuestionsPayload {
 	count: number;
 	questionType: QuestionType;
 	difficulty?: Difficulty;
+	categoryId?: number;
 }
 
 export interface GeneratedQuestionsResult {

@@ -12,6 +12,7 @@ public record QuizDto(
 		Long categoryId,
 		String categoryName,
 		String categorySlug,
+		String topic,
 		Difficulty difficulty,
 		int timeLimitSec,
 		boolean isPublished,
