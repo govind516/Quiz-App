@@ -1,11 +1,11 @@
 package com.example.quizapp.attempt.service;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.stereotype.Component;
 
 import com.example.quizapp.attempt.QuizAttempt;
-import com.example.quizapp.quiz.Question;
 import com.example.quizapp.quiz.QuestionStatus;
 import com.example.quizapp.quiz.repository.QuestionRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -59,8 +59,8 @@ public class AttemptPointsResolver {
 			return 0;
 		}
 		return (int) questionRepository.findAllByIdIn(questionIds).stream()
-				.filter(q -> q.getStatus() == QuestionStatus.APPROVED)
-				.mapToLong(Question::getPoints)
+				.filter(q -> q != null && q.getStatus() == QuestionStatus.APPROVED)
+				.mapToLong(q -> Objects.requireNonNull(q).getPoints())
 				.sum();
 	}
 }

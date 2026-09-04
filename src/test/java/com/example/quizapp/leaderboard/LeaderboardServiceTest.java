@@ -3,7 +3,6 @@ package com.example.quizapp.leaderboard;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -21,6 +20,7 @@ import com.example.quizapp.user.User;
 import com.example.quizapp.user.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("null")
 class LeaderboardServiceTest {
 
 	@Mock

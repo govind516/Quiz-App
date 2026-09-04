@@ -54,6 +54,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class AttemptService {
 
 	private static final int SUBMIT_BUFFER_SECONDS = 30;
@@ -123,15 +124,16 @@ public class AttemptService {
 				.build());
 
 		long seed = attempt.getId();
+		@SuppressWarnings("java:S2245")
 		Random random = new Random(seed);
 		List<Question> orderedQuestions = new ArrayList<>(questions);
 		Map<Long, List<Long>> optionOrderMap = new LinkedHashMap<>();
 		for (Question question : orderedQuestions) {
 			List<Option> options = question.getOptions().stream()
-					.sorted(Comparator.comparing(o -> o.getId()))
+					.sorted(Comparator.comparing(Option::getId))
 					.collect(java.util.stream.Collectors.toCollection(ArrayList::new));
 			java.util.Collections.shuffle(options, random);
-			optionOrderMap.put(question.getId(), options.stream().map(o -> o.getId()).toList());
+			optionOrderMap.put(question.getId(), options.stream().map(Option::getId).toList());
 		}
 		try {
 			attempt.setQuestionOrder(objectMapper.writeValueAsString(
@@ -181,25 +183,12 @@ public class AttemptService {
 		Map<Long, Question> quizQuestions = questionRepository.findAllByIdInWithOptions(
 						orderedIds.isEmpty() ? List.of(-1L) : orderedIds).stream()
 				.filter(q -> q.getStatus() == QuestionStatus.APPROVED)
-				.collect(HashMap::new, (m, q) -> m.put(q.getId(), q), (m2, extra) -> m2.putAll(extra));
+				.collect(HashMap::new, (m, q) -> m.put(q.getId(), q), Map::putAll);
 		long q2Ms = (System.nanoTime() - t) / 1_000_000;
 
-		for (SubmitAnswerDto answer : request.answers()) {
-			Question question = quizQuestions.get(answer.questionId());
-			if (question == null) {
-				throw new BadRequestException("Question " + answer.questionId() + " is not part of this quiz");
-			}
-			Set<Long> validOptionIds = question.getOptions().stream()
-					.map(Option::getId)
-					.collect(java.util.stream.Collectors.toSet());
-			Set<Long> selected = safeSelected(answer);
-			if (!validOptionIds.containsAll(selected)) {
-				throw new BadRequestException(
-						"Selected options for question " + answer.questionId() + " are invalid");
-			}
-		}
+		validateAnswersBelongToQuiz(request, quizQuestions);
 
-		Instant deadline = attempt.getStartedAt().plusSeconds(timeLimitSec + SUBMIT_BUFFER_SECONDS);
+		Instant deadline = attempt.getStartedAt().plusSeconds((long) timeLimitSec + SUBMIT_BUFFER_SECONDS);
 		boolean expired = Instant.now().isAfter(deadline);
 
 		List<AttemptAnswer> rows = new ArrayList<>();
@@ -327,8 +316,8 @@ public class AttemptService {
 			totalPoints += question.getPoints();
 			AttemptAnswer answer = answersByQuestionId.get(question.getId());
 			Set<Long> correctOptionIds = question.getOptions().stream()
-					.filter(o -> o.isCorrect())
-					.map(o -> o.getId())
+					.filter(Option::isCorrect)
+					.map(Option::getId)
 					.collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
 			Set<Long> selected = answer == null ? Set.of() : answer.getSelectedOptionIds();
 			boolean correct = answer != null && answer.isCorrect();
@@ -361,6 +350,23 @@ public class AttemptService {
 				questionResults);
 	}
 
+	private void validateAnswersBelongToQuiz(SubmitAttemptRequest request, Map<Long, Question> quizQuestions) {
+		for (SubmitAnswerDto answer : request.answers()) {
+			Question question = quizQuestions.get(answer.questionId());
+			if (question == null) {
+				throw new BadRequestException("Question " + answer.questionId() + " is not part of this quiz");
+			}
+			Set<Long> validOptionIds = question.getOptions().stream()
+					.map(Option::getId)
+					.collect(java.util.stream.Collectors.toSet());
+			Set<Long> selected = safeSelected(answer);
+			if (!validOptionIds.containsAll(selected)) {
+				throw new BadRequestException(
+						"Selected options for question " + answer.questionId() + " are invalid");
+			}
+		}
+	}
+
 	private AttemptResultDto buildResult(QuizAttempt attempt) {
 		Quiz quiz = attempt.getQuiz();
 		List<AttemptAnswer> answers = answerRepository.findAllByAttemptIdWithOptions(attempt.getId());
@@ -377,9 +383,9 @@ public class AttemptService {
 					.toList();
 		} else {
 			Map<Long, Question> byId = questionRepository.findAllByIdInWithOptions(orderedQuestionIds).stream()
-					.collect(HashMap::new, (m, q) -> m.put(q.getId(), q), (m2, extra) -> m2.putAll(extra));
+					.collect(HashMap::new, (m, q) -> m.put(q.getId(), q), Map::putAll);
 			orderedQuestions = orderedQuestionIds.stream()
-					.map(id -> byId.get(id))
+					.map(byId::get)
 					.filter(java.util.Objects::nonNull)
 					.toList();
 		}
@@ -390,8 +396,8 @@ public class AttemptService {
 			totalPoints += question.getPoints();
 			AttemptAnswer answer = answersByQuestionId.get(question.getId());
 			Set<Long> correctOptionIds = question.getOptions().stream()
-					.filter(o -> o.isCorrect())
-					.map(o -> o.getId())
+					.filter(Option::isCorrect)
+					.map(Option::getId)
 					.collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
 			Set<Long> selected = answer == null ? Set.of() : answer.getSelectedOptionIds();
 			boolean correct = answer != null && answer.isCorrect();

@@ -35,8 +35,8 @@ export function BookmarkButton({ quizId }: { quizId: number }) {
       <Link
         href="/auth"
         title="Log in to save quizzes"
-        className="flex h-8 w-8 items-center justify-center rounded-lg text-faintc transition hover:bg-violetdim hover:text-violet"
-        style={{ flexShrink: 0 }}
+        className="flex h-8 w-8 items-center justify-center rounded-lg transition hover:bg-violetdim hover:text-violet"
+        style={{ flexShrink: 0, color: "var(--color-tertiary)", opacity: 0.9 }}
       >
         <span style={{ fontSize: 16, lineHeight: 1 }}>♡</span>
       </Link>
@@ -50,12 +50,20 @@ export function BookmarkButton({ quizId }: { quizId: number }) {
       disabled={mutation.isPending}
       title={bookmarked ? "Remove bookmark" : "Save this quiz"}
       onClick={() => mutation.mutate(bookmarked)}
-      className="flex h-8 w-8 items-center justify-center rounded-lg transition disabled:opacity-50"
+      className="flex h-8 w-8 items-center justify-center rounded-lg transition hover:bg-violetdim disabled:opacity-50"
       style={{
         flexShrink: 0,
-        color: bookmarked ? "var(--color-violet)" : "var(--color-faintc)",
+        color: bookmarked ? "var(--color-violet)" : "var(--color-tertiary)",
+        opacity: bookmarked ? 1 : 0.85,
         transform: anim ? "scale(1.25)" : "scale(1)",
-        transition: "transform var(--dur-snap) var(--ease-spring), color var(--dur-fast) var(--ease-apple)",
+        transition:
+          "transform var(--dur-snap) var(--ease-spring), color var(--dur-fast) var(--ease-apple), opacity var(--dur-fast) var(--ease-apple), background var(--dur-fast) var(--ease-apple)",
+      }}
+      onMouseEnter={(e) => {
+        if (!bookmarked) (e.currentTarget as HTMLButtonElement).style.color = "var(--color-violet)";
+      }}
+      onMouseLeave={(e) => {
+        if (!bookmarked) (e.currentTarget as HTMLButtonElement).style.color = "var(--color-tertiary)";
       }}
     >
       <span style={{ fontSize: 16, lineHeight: 1 }}>{bookmarked ? "♥" : "♡"}</span>

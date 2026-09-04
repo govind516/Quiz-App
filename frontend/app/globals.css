@@ -235,17 +235,23 @@ h3 {
   }
 }
 
-/* ---------- cards / chips ---------- */
+/* ---------- cards / chips — layered elevation: base (#070709) < surface (#101018) < elevated (#1a1a24) ---------- */
 .card {
   background: var(--color-surface);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-md);
   padding: 24px;
   box-shadow: var(--shadow-card);
+  transition:
+    background var(--dur-base) var(--ease-apple),
+    border-color var(--dur-fast) var(--ease-apple),
+    transform var(--dur-base) var(--ease-apple),
+    box-shadow var(--dur-base) var(--ease-apple);
 }
 .card-hover {
   border-left: 2px solid transparent;
   transition:
+    background var(--dur-base) var(--ease-apple),
     border-color var(--dur-fast) var(--ease-apple),
     transform var(--dur-base) var(--ease-apple),
     box-shadow var(--dur-base) var(--ease-apple);
@@ -253,6 +259,7 @@ h3 {
 }
 .card-hover:hover {
   transform: translateY(-2px);
+  background: var(--color-surface2);
   border-color: var(--color-linestrong);
   border-left-color: var(--color-violet);
   box-shadow: var(--shadow-raised);
@@ -266,6 +273,7 @@ h3 {
   border: 1px solid var(--color-line);
   border-radius: var(--radius-md);
   transition:
+    background var(--dur-base) var(--ease-apple),
     transform var(--dur-base) var(--ease-apple),
     border-color var(--dur-fast) var(--ease-apple),
     box-shadow var(--dur-base) var(--ease-apple);
@@ -274,6 +282,7 @@ h3 {
 }
 .chip:hover {
   transform: translateY(-2px);
+  background: var(--color-surface2);
   border-color: var(--color-linestrong);
   box-shadow: var(--shadow-raised);
 }
@@ -314,28 +323,24 @@ h3 {
 }
 .badge-violet {
   color: var(--color-violet);
-  border-color: rgba(106, 92, 245, 0.35);
-  background: var(--color-violetdim);
+  border-color: rgba(106, 92, 245, 0.14);
+  background: rgba(106, 92, 245, 0.11);
 }
-.badge-mint {
-  color: var(--color-lime);
-  border-color: rgba(199, 240, 101, 0.35);
-  background: var(--color-limddim);
-}
+.badge-mint,
 .badge-lime {
   color: var(--color-lime);
-  border-color: rgba(199, 240, 101, 0.35);
-  background: var(--color-limddim);
+  border-color: rgba(199, 240, 101, 0.14);
+  background: rgba(199, 240, 101, 0.11);
 }
 .badge-amber {
   color: var(--color-amber);
-  border-color: rgba(232, 169, 77, 0.35);
-  background: var(--color-amberdim);
+  border-color: rgba(232, 169, 77, 0.14);
+  background: rgba(232, 169, 77, 0.11);
 }
 .badge-danger {
   color: var(--color-coral);
-  border-color: rgba(255, 107, 122, 0.35);
-  background: var(--color-coraldim);
+  border-color: rgba(255, 107, 122, 0.14);
+  background: rgba(255, 107, 122, 0.11);
 }
 
 /* ---------- hex shape ---------- */
@@ -365,7 +370,7 @@ h3 {
   letter-spacing: -0.01em;
 }
 .input {
-  background: var(--color-surface3);
+  background: var(--color-bg);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-sm);
   padding: 12px 14px;
@@ -374,9 +379,11 @@ h3 {
   font-size: 14px;
   transition:
     border-color var(--dur-fast) var(--ease-apple),
-    box-shadow var(--dur-fast) var(--ease-apple);
+    box-shadow var(--dur-fast) var(--ease-apple),
+    background var(--dur-fast) var(--ease-apple);
   width: 100%;
   height: 40px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02), inset 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 .input:focus {
   outline: none;
@@ -593,12 +600,13 @@ select.input option {
 .auth-tabs {
   display: flex;
   gap: 2px;
-  background: var(--color-surface2);
+  background: var(--color-bg);
   border: 1px solid var(--color-line);
   border-radius: 999px;
   padding: 3px;
   margin-bottom: 30px;
   position: relative;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 .auth-tab {
   flex: 1;
@@ -741,6 +749,9 @@ select.input option {
   border-radius: var(--radius-lg);
   padding: 32px;
   margin-bottom: 22px;
+  transition:
+    background var(--dur-base) var(--ease-apple),
+    border-color var(--dur-fast) var(--ease-apple);
 }
 .q-card h3 {
   font-family: var(--font-display), sans-serif;
@@ -1031,10 +1042,17 @@ select.input option {
   border-radius: var(--radius-lg);
   padding: 24px 20px;
   text-align: center;
-  transition: transform var(--dur-base) var(--ease-apple);
+  transition:
+    background var(--dur-base) var(--ease-apple),
+    border-color var(--dur-fast) var(--ease-apple),
+    transform var(--dur-base) var(--ease-apple),
+    box-shadow var(--dur-base) var(--ease-apple);
 }
 .milestone:hover {
   transform: translateY(-2px);
+  background: var(--color-surface2);
+  border-color: var(--color-linestrong);
+  box-shadow: var(--shadow-raised);
 }
 .milestone .hex {
   width: 70px;
@@ -1095,12 +1113,13 @@ select.input option {
   gap: 2px;
   margin-bottom: 34px;
   flex-wrap: wrap;
-  background: var(--color-surface2);
+  background: var(--color-bg);
   border: 1px solid var(--color-line);
   border-radius: 999px;
   padding: 3px;
   width: fit-content;
   position: relative;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 .lb-tab {
   padding: 8px 18px;
@@ -1136,6 +1155,17 @@ select.input option {
   border-radius: var(--radius-lg);
   padding: 22px;
   text-align: center;
+  transition:
+    background var(--dur-base) var(--ease-apple),
+    border-color var(--dur-fast) var(--ease-apple),
+    transform var(--dur-base) var(--ease-apple),
+    box-shadow var(--dur-base) var(--ease-apple);
+}
+.pod-card:hover {
+  transform: translateY(-2px);
+  background: var(--color-surface2);
+  border-color: var(--color-linestrong);
+  box-shadow: var(--shadow-raised);
 }
 .pod-card.rank1 {
   border-color: rgba(232, 169, 77, 0.2);
@@ -1249,15 +1279,16 @@ select.input option {
   justify-content: space-between;
 }
 
-/* ---------- segmented control ---------- */
+/* ---------- segmented control — control surface (inset) distinct from content cards (raised) ---------- */
 .seg-control {
   display: flex;
   gap: 2px;
-  background: var(--color-surface2);
+  background: var(--color-bg);
   border: 1px solid var(--color-line);
   border-radius: 999px;
   padding: 3px;
   width: fit-content;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 .seg-control button {
   padding: 6px 16px;

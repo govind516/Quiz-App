@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class AdminQuestionService {
 
 	private final QuestionRepository questionRepository;
@@ -296,7 +297,7 @@ public class AdminQuestionService {
 		if (!StringUtils.hasText(ai.questionText()) || ai.options() == null || ai.options().size() < 2) {
 			return false;
 		}
-		long correct = ai.options().stream().filter(o -> o.isCorrect()).count();
+		long correct = ai.options().stream().filter(GeminiResponseParser.AiOption::isCorrect).count();
 		if (correct == 0) {
 			return false;
 		}
@@ -334,7 +335,7 @@ public class AdminQuestionService {
 		if (options.size() < 2) {
 			throw new BadRequestException("A question needs at least two options");
 		}
-		long correct = options.stream().filter(o -> o.isCorrect()).count();
+		long correct = options.stream().filter(OptionRequest::isCorrect).count();
 		if (correct == 0) {
 			throw new BadRequestException("At least one option must be marked correct");
 		}

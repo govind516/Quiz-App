@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings("null")
 public class TokenDenylistService {
 
 	private static final String KEY_PREFIX = "quizapp:jti:";

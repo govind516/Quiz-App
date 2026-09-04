@@ -26,6 +26,7 @@ import com.example.quizapp.quiz.repository.QuizRepository;
 @SpringBootTest
 @org.springframework.test.context.ActiveProfiles("test")
 @Transactional
+@SuppressWarnings("null")
 class AnalyticsCategoryPerformanceTest {
 
 	@Autowired CategoryRepository categoryRepository;

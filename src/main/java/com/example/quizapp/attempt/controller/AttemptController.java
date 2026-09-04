@@ -34,9 +34,8 @@ public class AttemptController {
 			@PathVariable Long id,
 			@Valid @RequestBody SubmitAttemptRequest request,
 			HttpServletRequest httpRequest) {
-		rateLimitService.checkSubmit(ClientIdentifiers.identity(
-				currentUserProvider.get().map(com.example.quizapp.user.User::getId).orElse(null),
-				httpRequest));
+		Long userId = currentUserProvider.get().isPresent() ? currentUserProvider.get().get().getId() : null;
+		rateLimitService.checkSubmit(ClientIdentifiers.identity(userId, httpRequest));
 		return ResponseEntity.ok(attemptService.submit(id, request));
 	}
 

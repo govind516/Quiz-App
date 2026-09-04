@@ -234,11 +234,11 @@ export default function LandingPage() {
 									<span className="badge badge-violet">{quiz.categoryName}</span>
 									<span className="badge">{quiz.difficulty.charAt(0) + quiz.difficulty.slice(1).toLowerCase()}</span>
 								</div>
-								<h3 className="text-lg font-semibold text-ink">{quiz.title.replace(/\s—\s(BEGINNER|INTERMEDIATE|ADVANCED)\s*$/i, "")}</h3>
-								<p className="mt-1 text-sm text-mutedc line-clamp-2 min-h-10">
+								<h3 className="text-lg font-semibold text-ink" style={{ fontFamily: "var(--font-space), sans-serif" }}>{quiz.title.replace(/\s—\s(BEGINNER|INTERMEDIATE|ADVANCED)\s*$/i, "")}</h3>
+								<p className="mt-1 text-sm line-clamp-2 min-h-10" style={{ color: "#b8b6c4", fontFamily: "var(--font-jakarta), sans-serif" }}>
 									{quiz.description ?? "Test your knowledge."}
 								</p>
-								<div className="mt-4 text-xs text-faintc mono">
+								<div className="mt-4 text-xs mono" style={{ color: "var(--color-tertiary)" }}>
 									{quiz.questionCount} questions · {Math.round(quiz.timeLimitSec / 60)} min
 								</div>
 							</Link>

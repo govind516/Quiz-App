@@ -2,7 +2,6 @@ package com.example.quizapp.quiz.controller;
 
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,8 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.quizapp.common.exception.ResourceNotFoundException;
-import com.example.quizapp.quiz.dto.CategoryAdminRow;
-import com.example.quizapp.quiz.dto.CategoryDto;
 import com.example.quizapp.quiz.repository.CategoryRepository;
 import com.example.quizapp.quiz.repository.QuizRepository;
 import com.example.quizapp.common.exception.ConflictException;
@@ -31,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Admin Categories")
+@SuppressWarnings("null")
 public class AdminCategoryController {
 
 	public record RenameRequest(@NotBlank String name, String description) {

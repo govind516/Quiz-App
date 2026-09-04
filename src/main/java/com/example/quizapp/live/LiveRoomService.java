@@ -36,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
+@SuppressWarnings("null")
 public class LiveRoomService {
 
 	private static final int QUESTION_SECONDS = 20;
@@ -219,7 +220,7 @@ public class LiveRoomService {
 	private LiveQuestionPayload questionPayload(Room room) {
 		Question question = room.questions.get(room.currentIndex);
 		Map<Long, List<Long>> optionOrder = new java.util.HashMap<>();
-		List<Long> ids = question.getOptions().stream().map(o -> o.getId()).toList();
+		List<Long> ids = question.getOptions().stream().map(Option::getId).toList();
 		optionOrder.put(question.getId(), ids);
 		var publicQuestion = new com.example.quizapp.quiz.dto.QuestionPublicDto(
 				question.getId(),

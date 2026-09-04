@@ -32,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class QuizService {
 
 	private final QuizRepository quizRepository;
@@ -84,7 +85,7 @@ public class QuizService {
 				.createdBy(currentUserProvider.get().orElse(null))
 				.tags(new LinkedHashSet<>())
 				.build();
-		resolveTags(request.tags()).forEach(tag -> quiz.getTags().add(tag));
+		resolveTags(request.tags()).forEach(quiz.getTags()::add);
 		for (var qr : safeList(request.questions())) {
 			quiz.getQuestions().add(buildQuestion(qr, quiz));
 		}
@@ -168,7 +169,7 @@ public class QuizService {
 	}
 
 	private void validateOptions(QuestionType type, List<OptionRequest> options) {
-		long correctCount = options.stream().filter(o -> o.isCorrect()).count();
+		long correctCount = options.stream().filter(OptionRequest::isCorrect).count();
 		if (correctCount == 0) {
 			throw new BadRequestException("At least one option must be marked correct");
 		}
@@ -206,7 +207,7 @@ public class QuizService {
 				quiz.getTimeLimitSec(),
 				quiz.isPublished(),
 				(int) questionRepository.countByQuizIdAndStatus(quiz.getId(), QuestionStatus.APPROVED),
-				quiz.getTags().stream().map(t -> t.getSlug()).collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new)),
+				quiz.getTags().stream().map(Tag::getSlug).collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new)),
 				quiz.getCreatedBy() == null ? null : quiz.getCreatedBy().getName(),
 				quiz.getCreatedAt());
 	}

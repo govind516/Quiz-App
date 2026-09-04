@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class CurrentUserProvider {
 
 	private final UserRepository userRepository;

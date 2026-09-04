@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class SettingsService {
 
 	public static final String KEY_AI_GENERATION = "ai_generation_enabled";

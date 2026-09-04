@@ -35,6 +35,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/quizzes")
 @RequiredArgsConstructor
 @Tag(name = "Quizzes")
+@SuppressWarnings("null")
 public class QuizController {
 
 	private final QuizService quizService;

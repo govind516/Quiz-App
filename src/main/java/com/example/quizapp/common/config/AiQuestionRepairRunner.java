@@ -30,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @Order(100)
 @RequiredArgsConstructor
 @Slf4j
+@SuppressWarnings("null")
 public class AiQuestionRepairRunner implements ApplicationRunner {
 
 	private final CategoryRepository categoryRepository;

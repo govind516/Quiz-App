@@ -27,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class CertificateService {
 
 	private static final double PASS_PERCENTAGE = 60.0;
