@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import type {
 	AdminAnalyticsDto,
 	BulkUploadResult,
+	CategoryDto,
 	DropoffStats,
 	GenerateQuestionsPayload,
 	GeneratedQuestionsResult,
@@ -713,6 +714,13 @@ function GenerateTab({
 	const [count, setCount] = useState(5);
 	const [questionType, setQuestionType] = useState<QuestionType>("MCQ");
 	const [difficulty, setDifficulty] = useState("");
+	const [category, setCategory] = useState("");
+	const categoriesQuery = useQuery({
+		queryKey: ["generate-categories"],
+		queryFn: () => api<CategoryDto[]>("/api/categories", { auth: false }),
+	});
+
+	const lastPayloadRef = useRef<GenerateQuestionsPayload | null>(null);
 
 	const generateMutation = useMutation({
 		mutationFn: (payload: GenerateQuestionsPayload) =>
@@ -730,13 +738,33 @@ function GenerateTab({
 
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
-		generateMutation.mutate({
+		const payload: GenerateQuestionsPayload = {
 			topic,
 			count,
 			questionType,
 			difficulty: difficulty === "" ? undefined : (difficulty as GenerateQuestionsPayload["difficulty"]),
-		});
+			categoryId: category ? Number(category) : undefined,
+		};
+		lastPayloadRef.current = payload;
+		generateMutation.mutate(payload);
 	}
+
+	function handleRetry() {
+		const payload = lastPayloadRef.current ?? {
+			topic,
+			count,
+			questionType,
+			difficulty: difficulty === "" ? undefined : (difficulty as GenerateQuestionsPayload["difficulty"]),
+			categoryId: category ? Number(category) : undefined,
+		};
+		lastPayloadRef.current = payload;
+		generateMutation.mutate(payload);
+	}
+
+	const isTimeoutError =
+		generateMutation.isError &&
+		((generateMutation.error as Error)?.message?.toLowerCase().includes("timed out") ||
+			(generateMutation.error as Error)?.message?.toLowerCase().includes("temporarily"));
 
 	return (
 		<div className="max-w-2xl">
@@ -757,6 +785,21 @@ function GenerateTab({
 						value={topic}
 						onChange={(e) => setTopic(e.target.value)}
 					/>
+				</div>
+				<div className="field">
+					<label>Category</label>
+					<select
+						className="input"
+						value={category}
+						onChange={(e) => setCategory(e.target.value)}
+					>
+						<option value="">Any category</option>
+						{(categoriesQuery.data ?? []).map((c) => (
+							<option key={c.id} value={String(c.id)}>
+								{c.name}
+							</option>
+						))}
+					</select>
 				</div>
 
 				<div className="grid grid-cols-3 gap-3">
@@ -798,7 +841,7 @@ function GenerateTab({
 							<option value="">Any</option>
 							{["BEGINNER", "INTERMEDIATE", "ADVANCED"].map((d) => (
 								<option key={d} value={d}>
-									{d.charAt(0) + d.slice(1).toLowerCase()}
+									{d}
 								</option>
 							))}
 						</select>
@@ -811,13 +854,53 @@ function GenerateTab({
 					disabled={generateMutation.isPending || !topic.trim()}
 				>
 					{generateMutation.isPending
-						? "Asking Gemini… (can take ~10s)"
+						? "Generating…"
 						: "Generate questions"}
 				</Button>
 
+				{generateMutation.isPending && (
+					<div className="mt-4 rounded-xl border p-4 flex gap-3.5 items-start" style={{ borderColor: "rgba(123,92,255,0.22)", background: "rgba(123,92,255,0.07)" }}>
+						<div className="shrink-0 mt-0.5 h-8 w-8 rounded-full border-2 border-violet/30 border-t-violet animate-spin" style={{ borderTopColor: "var(--color-violet)" }} />
+						<div className="min-w-0 flex-1">
+							<p className="text-sm font-semibold" style={{ color: "var(--color-violet)", fontFamily: "var(--font-apple), sans-serif" }}>
+								Generating questions with AI — this usually takes 10-30 seconds
+							</p>
+							<p className="text-xs mt-1 leading-relaxed" style={{ color: "var(--color-mutedc)", fontFamily: "var(--font-jakarta), sans-serif" }}>
+								Crafting {count} {difficulty ? difficulty.toLowerCase() : "mixed"} {questionType.replace("_", " ").toLowerCase()} question{count > 1 ? "s" : ""} about “{topic.trim()}”{category ? ` in ${categoriesQuery.data?.find((c) => String(c.id) === category)?.name ?? "selected category"}` : ""}. You can wait here — no need to refresh.
+							</p>
+							<div className="mt-3 h-1.5 rounded-full overflow-hidden" style={{ background: "var(--color-surface2)" }}>
+								<div className="h-full w-2/3 rounded-full animate-pulse" style={{ background: "var(--color-violet)", opacity: 0.9 }} />
+							</div>
+							<p className="text-[11px] mt-2" style={{ color: "var(--color-faintc)", fontFamily: "var(--font-apple), sans-serif" }}>
+								Gemini is thinking… this is normally the longest step. DB save afterward is under a second.
+							</p>
+						</div>
+					</div>
+				)}
+
 				{generateMutation.isError && (
-					<div className="mt-4 rounded-lg border border-dangerc/40 bg-dangerdim px-3 py-2 text-sm text-dangerc">
-						{(generateMutation.error as Error).message}
+					<div className="mt-4 rounded-xl border p-4" style={{ borderColor: isTimeoutError ? "rgba(245,158,11,0.35)" : "rgba(255,107,122,0.35)", background: isTimeoutError ? "rgba(245,158,11,0.08)" : "var(--color-dangerdim)" }}>
+						<p className="text-sm font-semibold" style={{ color: isTimeoutError ? "var(--color-amber)" : "var(--color-coral)", fontFamily: "var(--font-apple), sans-serif" }}>
+							{isTimeoutError ? "AI service is temporarily busy — not a bug" : "Generation failed"}
+						</p>
+						<p className="text-xs mt-1.5 leading-relaxed" style={{ color: "var(--color-mutedc)", fontFamily: "var(--font-jakarta), sans-serif" }}>
+							{isTimeoutError
+								? "Gemini hit a transient timeout (common on free-tier under load). Your topic and settings are still saved — just retry. This usually succeeds on the next attempt within 10-30 seconds."
+								: (generateMutation.error as Error).message}
+						</p>
+						{isTimeoutError && (
+							<p className="text-[11px] mt-1.5 mono" style={{ color: "var(--color-faintc)" }}>
+								{(generateMutation.error as Error).message}
+							</p>
+						)}
+						<div className="mt-3 flex gap-2">
+							<Button size="sm" onClick={handleRetry} disabled={generateMutation.isPending}>
+								Retry generation
+							</Button>
+							<Button variant="ghost" size="sm" onClick={() => generateMutation.reset()}>
+								Dismiss
+							</Button>
+						</div>
 					</div>
 				)}
 
