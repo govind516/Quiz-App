@@ -201,13 +201,15 @@ public class AdminQuestionService {
 			} else {
 				String title = category.getName() + ": " + topic + " — " + difficulty.name();
 				if (title.length() > 200) title = title.substring(0, 200);
+				int timeLimitSec = Math.max(60, request.count() * 60);
 				quiz = Quiz.builder()
 						.title(title)
 						.topic(topic)
 						.description("Auto-created for " + category.getName() + " — " + topic + " — AI generated questions")
+						.adminNotes("AI-generated: " + topic + " / " + difficulty.name())
 						.category(category)
 						.difficulty(difficulty)
-						.timeLimitSec(600)
+						.timeLimitSec(timeLimitSec)
 						.isPublished(false)
 						.build();
 				quiz = quizRepository.save(quiz);
@@ -230,8 +232,24 @@ public class AdminQuestionService {
 		long geminiMs = (System.nanoTime() - t) / 1_000_000;
 
 		t = System.nanoTime();
-		List<GeminiResponseParser.AiQuestion> aiQuestions = GeminiResponseParser.parse(raw);
+		GeminiResponseParser.AiGenerateResult parsed = GeminiResponseParser.parseWithDescription(raw);
+		List<GeminiResponseParser.AiQuestion> aiQuestions = parsed.questions();
+		String aiDescription = parsed.description();
 		long parseMs = (System.nanoTime() - t) / 1_000_000;
+
+		// If Gemini provided a learner-facing description, use it for the quiz
+		if (aiDescription != null && !aiDescription.isBlank()) {
+			// Only overwrite if current description is auto-generated placeholder or blank
+			String currentDesc = quiz.getDescription();
+			if (currentDesc == null || currentDesc.isBlank() || currentDesc.startsWith("Auto-created")) {
+				String desc = aiDescription.trim();
+				if (desc.length() > 1000) desc = desc.substring(0, 1000);
+				quiz.setDescription(desc);
+				String topicForNotes = quiz.getTopic() != null ? quiz.getTopic() : request.topic();
+				quiz.setAdminNotes("AI-generated: " + topicForNotes + " / " + quiz.getDifficulty().name());
+				quizRepository.save(quiz);
+			}
+		}
 
 		t = System.nanoTime();
 		List<Question> batch = new ArrayList<>();
@@ -302,8 +320,9 @@ public class AdminQuestionService {
 				Each question must follow this rule: %s.
 				Every question must include a short explanation of the correct answer(s).
 				Vary the questions; avoid duplicates or trivial variations.
-				Return STRICT VALID JSON ONLY - a bare JSON array, no markdown fences, no commentary:
-				[{"questionText":"...","type":"MCQ","points":1,"explanation":"...","options":[{"text":"...","isCorrect":false}]}]
+				Also provide a single short learner-facing description for the quiz (under 15 words) that pitches what the learner will practice — do not mention AI or how it was created.
+				Return STRICT VALID JSON ONLY — an object with a "description" and a "questions" array, no markdown fences, no commentary:
+				{"description":"Practice ...","questions":[{"questionText":"...","type":"MCQ","points":1,"explanation":"...","options":[{"text":"...","isCorrect":false}]}]}
 				""".formatted(request.count(), difficulty, request.topic(), typeRule);
 	}
 

@@ -25,7 +25,7 @@ export function QuizCard({ quiz }: { quiz: QuizDto }) {
           }}
           className="text-ink"
         >
-          {quiz.title}
+          {quiz.title.replace(/\s—\s(BEGINNER|INTERMEDIATE|ADVANCED)\s*$/i, "")}
         </h3>
         <p
           className="mt-1 line-clamp-2 min-h-10"

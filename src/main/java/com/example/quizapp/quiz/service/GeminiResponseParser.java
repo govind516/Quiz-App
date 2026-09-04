@@ -21,12 +21,19 @@ public final class GeminiResponseParser {
 			List<AiOption> options) {
 	}
 
+	public record AiGenerateResult(String description, List<AiQuestion> questions) {
+	}
+
 	private static final ObjectMapper MAPPER = new ObjectMapper();
 
 	private GeminiResponseParser() {
 	}
 
 	public static List<AiQuestion> parse(String raw) {
+		return parseWithDescription(raw).questions();
+	}
+
+	public static AiGenerateResult parseWithDescription(String raw) {
 		String cleaned = stripCodeFences(raw == null ? "" : raw.trim());
 		JsonNode root;
 		try {
@@ -44,6 +51,11 @@ public final class GeminiResponseParser {
 			}
 		}
 
+		String description = null;
+		if (root.isObject() && root.has("description") && root.get("description").isTextual()) {
+			description = root.get("description").asText().trim();
+			if (description.length() > 200) description = description.substring(0, 200);
+		}
 		JsonNode arrayNode = root.isArray() ? root : root.path("questions");
 		if (!arrayNode.isArray() || arrayNode.isEmpty()) {
 			throw new BadRequestException("AI response did not contain any questions");
@@ -73,7 +85,7 @@ public final class GeminiResponseParser {
 					node.hasNonNull("explanation") ? node.get("explanation").asText() : null,
 					options));
 		}
-		return questions;
+		return new AiGenerateResult(description, questions);
 	}
 
 	private static QuestionType parseType(String raw) {

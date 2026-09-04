@@ -57,6 +57,9 @@ public class Quiz {
 	@Column(length = 200)
 	private String topic;
 
+	@Column(length = 1000)
+	private String adminNotes;
+
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 20)
 	private Difficulty difficulty;

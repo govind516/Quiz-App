@@ -53,17 +53,17 @@ function Constellation() {
   return (
     <div className="relative hidden lg:block h-[420px]">
       <svg className="constellation w-full h-full" viewBox="0 0 480 420">
-        <line x1="60" y1="80" x2="220" y2="150" stroke="rgba(110,95,245,.2)" strokeWidth="1.5" />
-        <line x1="220" y1="150" x2="380" y2="90" stroke="rgba(110,95,245,.2)" strokeWidth="1.5" />
-        <line x1="220" y1="150" x2="160" y2="300" stroke="rgba(52,211,153,.18)" strokeWidth="1.5" />
-        <line x1="160" y1="300" x2="340" y2="330" stroke="rgba(110,95,245,.15)" strokeWidth="1.5" />
-        <line x1="380" y1="90" x2="340" y2="330" stroke="rgba(110,95,245,.12)" strokeWidth="1.5" />
-        <circle className="node" cx="60" cy="80" r="4" fill="#6E5FF5" />
-        <circle className="node" cx="220" cy="150" r="4" fill="#34D399" />
-        <circle className="node" cx="380" cy="90" r="4" fill="#6E5FF5" />
-        <circle className="node" cx="160" cy="300" r="4" fill="#F59E0B" />
-        <circle className="node" cx="340" cy="330" r="4" fill="#6E5FF5" />
-        <polygon points="220,120 245,135 245,165 220,180 195,165 195,135" fill="none" stroke="#6E5FF5" strokeWidth="1.5" opacity=".45" />
+        <line x1="60" y1="80" x2="220" y2="150" stroke="rgba(106,92,245,.2)" strokeWidth="1.5" />
+        <line x1="220" y1="150" x2="380" y2="90" stroke="rgba(106,92,245,.2)" strokeWidth="1.5" />
+        <line x1="220" y1="150" x2="160" y2="300" stroke="rgba(199,240,101,.18)" strokeWidth="1.5" />
+        <line x1="160" y1="300" x2="340" y2="330" stroke="rgba(106,92,245,.15)" strokeWidth="1.5" />
+        <line x1="380" y1="90" x2="340" y2="330" stroke="rgba(106,92,245,.12)" strokeWidth="1.5" />
+        <circle className="node" cx="60" cy="80" r="4" fill="#6a5cf5" />
+        <circle className="node" cx="220" cy="150" r="4" fill="#c7f065" />
+        <circle className="node" cx="380" cy="90" r="4" fill="#6a5cf5" />
+        <circle className="node" cx="160" cy="300" r="4" fill="#e8a94d" />
+        <circle className="node" cx="340" cy="330" r="4" fill="#6a5cf5" />
+        <polygon points="220,120 245,135 245,165 220,180 195,165 195,135" fill="none" stroke="#6a5cf5" strokeWidth="1.5" opacity=".45" />
       </svg>
       <div className="float-card">
         <div className="flex items-center justify-between mb-2">
@@ -213,7 +213,7 @@ export default function LandingPage() {
 
 			{quizzes.length > 0 && (
 				<>
-					<div className="section-head !mb-6">
+					<div className="section-head mb-8">
 						<div>
 							<span className="eyebrow">Fresh questions</span>
 							<h2>Live right now.</h2>
@@ -222,7 +222,7 @@ export default function LandingPage() {
 							Browse all
 						</Link>
 					</div>
-					<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 pb-20 -mt-8">
+					<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 pb-20">
 						{quizzes.slice(0, 3).map((quiz, i) => (
 							<Link
 								key={quiz.id}
@@ -234,7 +234,7 @@ export default function LandingPage() {
 									<span className="badge badge-violet">{quiz.categoryName}</span>
 									<span className="badge">{quiz.difficulty.charAt(0) + quiz.difficulty.slice(1).toLowerCase()}</span>
 								</div>
-								<h3 className="text-lg font-semibold text-ink">{quiz.title}</h3>
+								<h3 className="text-lg font-semibold text-ink">{quiz.title.replace(/\s—\s(BEGINNER|INTERMEDIATE|ADVANCED)\s*$/i, "")}</h3>
 								<p className="mt-1 text-sm text-mutedc line-clamp-2 min-h-10">
 									{quiz.description ?? "Test your knowledge."}
 								</p>
