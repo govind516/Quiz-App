@@ -37,6 +37,7 @@ public class GeminiClient {
 				.requestFactory(rf)
 				.baseUrl(baseUrl)
 				.build();
+		log.info("Gemini RestClient configured model={} baseUrl={} connectTimeout=5s readTimeout=45s", model, baseUrl);
 	}
 
 	public boolean isConfigured() {

@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { CategoryDto, Difficulty, QuizDto } from "@/lib/types";
 import { QuizCard } from "@/components/quiz-card";
+import { Select } from "@/components/select";
 
 const DIFFICULTIES: Difficulty[] = ["BEGINNER", "INTERMEDIATE", "ADVANCED"];
 
@@ -64,11 +65,11 @@ function BrowseInner() {
       </div>
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <select
+        <Select
           value={category}
           onChange={(e) => updateCategory(e.target.value)}
-          className="input !w-auto"
-          style={{ fontFamily: "var(--font-apple), sans-serif", height: 40, borderRadius: "var(--radius-sm)" }}
+          className="!w-auto !h-10"
+          style={{ fontFamily: "var(--font-apple), sans-serif" }}
         >
           <option value="">All categories</option>
           {(categoriesQuery.data ?? []).map((c) => (
@@ -76,12 +77,12 @@ function BrowseInner() {
               {c.name}
             </option>
           ))}
-        </select>
-        <select
+        </Select>
+        <Select
           value={difficulty}
-          onChange={(e) => setDifficulty(e.target.value)}
-          className="input !w-auto"
-          style={{ fontFamily: "var(--font-apple), sans-serif", height: 40, borderRadius: "var(--radius-sm)" }}
+          onChange={(e) => setDifficulty(e.target.value as Difficulty)}
+          className="!w-auto !h-10"
+          style={{ fontFamily: "var(--font-apple), sans-serif" }}
         >
           <option value="">All difficulties</option>
           {DIFFICULTIES.map((d) => (
@@ -89,13 +90,13 @@ function BrowseInner() {
               {d.charAt(0) + d.slice(1).toLowerCase()}
             </option>
           ))}
-        </select>
+        </Select>
         <input
           value={tag}
           onChange={(e) => setTag(e.target.value)}
           placeholder="Filter by tag…"
-          className="input !w-44"
-          style={{ fontFamily: "var(--font-apple), sans-serif", height: 40, borderRadius: "var(--radius-sm)" }}
+          className="input !w-44 !h-10"
+          style={{ fontFamily: "var(--font-apple), sans-serif", paddingLeft: 12, paddingRight: 12 }}
         />
         {(category || difficulty || tag) && (
           <button

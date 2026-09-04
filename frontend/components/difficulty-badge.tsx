@@ -3,8 +3,8 @@
 import type { Difficulty } from "@/lib/types";
 import { Badge } from "./ui";
 
-const tones: Record<Difficulty, "mint" | "amber" | "violet"> = {
-  BEGINNER: "mint",
+const tones: Record<Difficulty, "lime" | "amber" | "violet"> = {
+  BEGINNER: "lime",
   INTERMEDIATE: "amber",
   ADVANCED: "violet",
 };
