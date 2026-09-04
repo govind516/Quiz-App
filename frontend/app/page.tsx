@@ -51,7 +51,7 @@ function Constellation() {
     return () => clearInterval(id);
   }, []);
   return (
-    <div className="relative hidden lg:block h-[420px]">
+    <div className="relative hidden lg:block h-[420px] parallax parallax-slow">
       <svg className="constellation w-full h-full" viewBox="0 0 480 420">
         <line x1="60" y1="80" x2="220" y2="150" stroke="rgba(106,92,245,.2)" strokeWidth="1.5" />
         <line x1="220" y1="150" x2="380" y2="90" stroke="rgba(106,92,245,.2)" strokeWidth="1.5" />
@@ -65,7 +65,7 @@ function Constellation() {
         <circle className="node" cx="340" cy="330" r="4" fill="#6a5cf5" />
         <polygon points="220,120 245,135 245,165 220,180 195,165 195,135" fill="none" stroke="#6a5cf5" strokeWidth="1.5" opacity=".45" />
       </svg>
-      <div className="float-card">
+      <div className="float-card parallax parallax-slow" style={{ animationDelay: "0.2s" }}>
         <div className="flex items-center justify-between mb-2">
           <span className="badge badge-violet" style={{ fontFamily: "var(--font-apple), sans-serif" }}>{demo.cat}</span>
           <span className="text-faintc"><IconQuestion size={14} /></span>
@@ -193,13 +193,13 @@ export default function LandingPage() {
 					<h2>Practice what you&apos;ll actually be asked.</h2>
 				</div>
 			</div>
-			<div className="tracks !pb-16">
+			<div className="tracks !pb-16 stagger">
 				{categoriesQuery.isPending
 					? Array.from({ length: 8 }).map((_, i) => (
 							<div key={i} className="h-[76px] rounded-xl bg-surface2 animate-pulse" />
 						))
 					: categories.map((c, i) => (
-							<Link key={c.id} href={`/browse?category=${c.slug}`} className="chip fade-up" style={{ animationDelay: `${Math.min(i * 50, 300)}ms` }}>
+							<Link key={c.id} href={`/browse?category=${c.slug}`} className="chip" style={{ animationDelay: `${Math.min(i * 50, 300)}ms` } as React.CSSProperties}>
 								<div className="hex">
 									<IconTag size={18} />
 								</div>
@@ -222,13 +222,13 @@ export default function LandingPage() {
 							Browse all
 						</Link>
 					</div>
-					<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 pb-20">
+					<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 pb-20 stagger">
 						{quizzes.slice(0, 3).map((quiz, i) => (
 							<Link
 								key={quiz.id}
 								href={`/quiz/${quiz.id}`}
-								className="card card-hover fade-up"
-								style={{ animationDelay: `${i * 0.08}s` }}
+								className="card card-hover"
+								style={{ animationDelay: `${i * 50}ms` } as React.CSSProperties}
 							>
 								<div className="mb-3 flex items-center gap-2">
 									<span className="badge badge-violet">{quiz.categoryName}</span>
