@@ -32,7 +32,7 @@ export function QuizCard({ quiz }: { quiz: QuizDto }) {
           style={{
             fontFamily: "var(--font-jakarta), sans-serif",
             fontSize: 13.5,
-            color: "#b8b6c4",
+            color: "var(--color-mutedc)",
             lineHeight: 1.6,
           }}
         >
@@ -42,7 +42,7 @@ export function QuizCard({ quiz }: { quiz: QuizDto }) {
       <div className="mt-4 flex items-center justify-between">
         <div
           className="mono"
-          style={{ fontSize: 12, color: "var(--color-tertiary)" }}
+          style={{ fontSize: 12, color: "var(--color-faintc)" }}
         >
           {quiz.questionCount} Qs · {Math.round(quiz.timeLimitSec / 60)} min
         </div>

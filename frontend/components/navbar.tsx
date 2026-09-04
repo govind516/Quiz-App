@@ -128,7 +128,7 @@ function AvatarDropdown({ user, logout, router }: { user: { name: string }; logo
       className="sticky top-0 z-30 border-b"
       style={{
         borderColor: "var(--color-line)",
-        background: "var(--color-bg) / 0.75",
+        background: "rgba(6,6,8,0.75)",
         backdropFilter: "blur(20px) saturate(180%)",
         WebkitBackdropFilter: "blur(20px) saturate(180%)",
       }}

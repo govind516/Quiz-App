@@ -6,7 +6,6 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { CategoryDto, Difficulty, QuizDto } from "@/lib/types";
 import { QuizCard } from "@/components/quiz-card";
-import { Select } from "@/components/select";
 
 const DIFFICULTIES: Difficulty[] = ["BEGINNER", "INTERMEDIATE", "ADVANCED"];
 
@@ -65,11 +64,11 @@ function BrowseInner() {
       </div>
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <Select
+        <select
           value={category}
           onChange={(e) => updateCategory(e.target.value)}
-          className="!w-auto !h-10"
-          style={{ fontFamily: "var(--font-apple), sans-serif" }}
+          className="input !w-auto"
+          style={{ fontFamily: "var(--font-apple), sans-serif", height: 40, borderRadius: "var(--radius-sm)" }}
         >
           <option value="">All categories</option>
           {(categoriesQuery.data ?? []).map((c) => (
@@ -77,12 +76,12 @@ function BrowseInner() {
               {c.name}
             </option>
           ))}
-        </Select>
-        <Select
+        </select>
+        <select
           value={difficulty}
-          onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-          className="!w-auto !h-10"
-          style={{ fontFamily: "var(--font-apple), sans-serif" }}
+          onChange={(e) => setDifficulty(e.target.value)}
+          className="input !w-auto"
+          style={{ fontFamily: "var(--font-apple), sans-serif", height: 40, borderRadius: "var(--radius-sm)" }}
         >
           <option value="">All difficulties</option>
           {DIFFICULTIES.map((d) => (
@@ -90,13 +89,13 @@ function BrowseInner() {
               {d.charAt(0) + d.slice(1).toLowerCase()}
             </option>
           ))}
-        </Select>
+        </select>
         <input
           value={tag}
           onChange={(e) => setTag(e.target.value)}
           placeholder="Filter by tag…"
-          className="input !w-44 !h-10"
-          style={{ fontFamily: "var(--font-apple), sans-serif", paddingLeft: 12, paddingRight: 12 }}
+          className="input !w-44"
+          style={{ fontFamily: "var(--font-apple), sans-serif", height: 40, borderRadius: "var(--radius-sm)" }}
         />
         {(category || difficulty || tag) && (
           <button
@@ -129,9 +128,9 @@ function BrowseInner() {
           No quizzes match these filters yet.
         </div>
       ) : (
-        <div className="grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3 stagger">
+        <div className="grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {quizzesQuery.data!.map((quiz, i) => (
-            <div key={quiz.id} style={{ animationDelay: `${Math.min(i * 50, 300)}ms` } as React.CSSProperties}>
+            <div key={quiz.id} className="fade-up" style={{ animationDelay: `${Math.min(i * 50, 300)}ms` }}>
               <QuizCard quiz={quiz} />
             </div>
           ))}

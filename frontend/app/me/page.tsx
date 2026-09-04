@@ -47,7 +47,7 @@ function nextMilestone(stats: UserStatsDto | undefined): {
 }
 
 function fireParticles(el: HTMLElement) {
-	const colors = ["#6a5cf5", "#c7f065", "#e8a94d"];
+	const colors = ["#7B5CFF", "#35E8B4", "#FFB84D"];
 	const rect = el.getBoundingClientRect();
 	for (let i = 0; i < 14; i++) {
 		const p = document.createElement("div");
@@ -186,7 +186,7 @@ export default function MyProgressPage() {
 			{stats && (
 				<>
 					<div className="flex items-center gap-6 mt-8 mb-10">
-						<div className="hex" style={{ background: "var(--color-amberdim)", color: "var(--color-amber)", width: 52, height: 46 }}>
+						<div className="hex" style={{ background: "var(--color-amberdim)", color: "var(--color-amberc)", width: 52, height: 46 }}>
 							<svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
 								<path d="M12 3c-1.5 2.5-4 4.2-4 7.5a4 4 0 008 0C16 7.2 13.5 5.5 12 3z" />
 								<path d="M9.5 13.5c0 1.4 1.1 2.5 2.5 2.5s2.5-1.1 2.5-2.5" />
@@ -313,7 +313,7 @@ export default function MyProgressPage() {
 							<div className="mv-bar-track mt-2 !max-w-none w-44">
 								{(() => {
 									const pct = progress.totalQuizzes ? (progress.completedQuizzes / progress.totalQuizzes) * 100 : 0;
-									const bg = pct >= 70 ? "var(--color-lime)" : pct >= 50 ? "var(--color-amber)" : "var(--color-coral)";
+									const bg = pct >= 70 ? "var(--color-mint)" : pct >= 50 ? "var(--color-amberc)" : "var(--color-dangerc)";
 									return (
 										<div
 											className="mv-bar-fill"

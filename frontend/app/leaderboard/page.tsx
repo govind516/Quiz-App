@@ -10,7 +10,6 @@ import type {
 import { useAuthStore } from "@/lib/auth-store";
 import { Eyebrow, initials } from "@/components/ui";
 import { IconTrophy } from "@/components/icons";
-import { Select } from "@/components/select";
 
 interface RankedEntry {
 	entry: LeaderboardEntryDto;
@@ -44,23 +43,19 @@ function PodCard({ slot }: { slot: RankedEntry | null }) {
 	const isSecond = slot.displayRank === 2;
 	const isThird = slot.displayRank === 3;
 	const tierStyle: React.CSSProperties = isSecond
-		? { borderColor: "rgba(255, 255, 255, 0.11)" }
+		? { borderColor: "rgba(255,255,255,0.35)" }
 		: isThird
-		? { borderColor: "rgba(255, 255, 255, 0.06)" }
-		: isFirst
-		? { borderColor: "var(--color-violet)" }
+		? { borderColor: "rgba(176,141,87,0.35)" }
 		: {};
 	const avatarTierStyle: React.CSSProperties = isSecond
-		? { borderColor: "rgba(255, 255, 255, 0.11)" }
+		? { borderColor: "rgba(255,255,255,0.35)" }
 		: isThird
-		? { borderColor: "rgba(255, 255, 255, 0.06)" }
-		: isFirst
-		? { borderColor: "var(--color-violet)" }
+		? { borderColor: "rgba(176,141,87,0.5)" }
 		: {};
 	return (
 		<div className={`pod-card ${isFirst ? "rank1" : ""}`} style={tierStyle}>
 			{isFirst && (
-				<div className="mb-1.5 flex justify-center" style={{ color: "var(--color-amber)" }}>
+				<div className="mb-1.5 flex justify-center" style={{ color: "var(--color-amberc)" }}>
 					<IconTrophy size={20} />
 				</div>
 			)}
@@ -128,8 +123,7 @@ export default function LeaderboardPage() {
 			<Eyebrow>Rankings</Eyebrow>
 			<h1 className="text-[30px] mt-2 mb-6" style={{ fontFamily: "var(--font-space), sans-serif", fontWeight: 700, letterSpacing: "-0.02em" }}>Leaderboard</h1>
 
-			<div className="flex flex-col sm:flex-row items-center gap-3 mb-6">
-<div className="lb-tabs w-full sm:w-auto flex items-center gap-2">
+			<div className="lb-tabs">
 				<button
 					className={`lb-tab ${board === "global" ? "active" : ""}`}
 					onClick={() => setBoard("global")}
@@ -143,10 +137,10 @@ export default function LeaderboardPage() {
 					By category
 				</button>
 				{board === "category" && (
-					<Select
+					<select
 						value={categorySlug}
 						onChange={(e) => setCategorySlug(e.target.value)}
-						className="sm:w-48 h-8 flex-shrink-0"
+						className="input !w-auto !py-2"
 					>
 						<option value="">Choose category…</option>
 						{(categoriesQuery.data ?? []).map((c) => (
@@ -154,9 +148,8 @@ export default function LeaderboardPage() {
 								{c.name}
 							</option>
 						))}
-					</Select>
+					</select>
 				)}
-			</div>
 			</div>
 
 			{entriesQuery.isPending ? (

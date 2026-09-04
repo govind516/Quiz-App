@@ -1,26 +1,24 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-bg: #070709;
-  --color-surface: #101018;
-  --color-surface2: #1a1a24;
-  --color-surface3: #202030;
-  --color-surface4: #24242e;
+  --color-bg: #060608;
+  --color-surface: #0f0f14;
+  --color-surface2: #161620;
+  --color-surface3: #1d1d28;
   --color-line: rgba(255, 255, 255, 0.06);
-  --color-linestrong: rgba(255, 255, 255, 0.11);
-  --color-violet: #6a5cf5;
-  --color-violetdim: rgba(106, 92, 245, 0.12);
+  --color-linestrong: rgba(255, 255, 255, 0.12);
+  --color-violet: #6e5ff5;
+  --color-violetdim: rgba(110, 95, 245, 0.13);
   --color-violethover: #8070f8;
-  --color-lime: #c7f065;
-  --color-limddim: rgba(199, 240, 101, 0.12);
-  --color-amber: #e8a94d;
-  --color-amberdim: rgba(232, 169, 77, 0.12);
-  --color-coral: #ff6b7a;
-  --color-coraldim: rgba(255, 107, 122, 0.12);
-  --color-ink: #f0eef8;
-  --color-mutedc: #9895aa;
-  --color-tertiary: #5c5a6e;
-  --color-faintc: #3a3849;
+  --color-mint: #34d399;
+  --color-mintdim: rgba(52, 211, 153, 0.13);
+  --color-amberc: #f59e0b;
+  --color-amberdim: rgba(245, 158, 11, 0.13);
+  --color-dangerc: #f87171;
+  --color-dangerdim: rgba(248, 113, 113, 0.13);
+  --color-ink: #f2f0fb;
+  --color-mutedc: #9491a8;
+  --color-faintc: #5a5870;
 
   --font-display: var(--font-space), sans-serif;
   --font-body: var(--font-jakarta), sans-serif;
@@ -36,7 +34,7 @@
   --radius-xl: 28px;
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05);
   --shadow-raised: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
-  --shadow-glow: 0 0 0 3px rgba(106, 92, 245, 0.35);
+  --shadow-glow: 0 0 0 3px rgba(110, 95, 245, 0.35);
   --dur-snap: 120ms;
   --dur-fast: 180ms;
   --dur-base: 240ms;
@@ -44,86 +42,6 @@
   --ease-out: cubic-bezier(0.2, 0.7, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
   --ease-apple: cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  --ease-cinematic: cubic-bezier(0.22, 0.68, 0, 1);
-
-  /* Cinematic OKLCH — perceptually uniform accents */
-  --violet-oklch: oklch(0.6 0.2 285);
-  --lime-oklch: oklch(0.9 0.18 125);
-  --coral-oklch: oklch(0.65 0.2 20);
-  --amber-oklch: oklch(0.75 0.15 70);
-
-  /* Mesh gradients — Stripe/Linear inspired */
-  --gradient-mesh: radial-gradient(ellipse 800px 600px at 15% 10%, rgba(106, 92, 245, 0.14), transparent 60%),
-    radial-gradient(ellipse 600px 500px at 85% 15%, rgba(199, 240, 101, 0.08), transparent 60%),
-    radial-gradient(ellipse 700px 400px at 50% 100%, rgba(232, 169, 77, 0.06), transparent 70%);
-  --gradient-mesh-strong: radial-gradient(ellipse 900px 700px at 20% 5%, rgba(106, 92, 245, 0.18), transparent 60%),
-    radial-gradient(ellipse 700px 600px at 90% 10%, rgba(199, 240, 101, 0.1), transparent 60%);
-
-  /* Typography scale 12-56 */
-  --text-xs: 12px;
-  --text-sm: 13.5px;
-  --text-base: 14px;
-  --text-md: 16px;
-  --text-lg: 22px;
-  --text-xl: 30px;
-  --text-2xl: 56px;
-}
-
-/* ---------- cinematic: grain, mesh, vignette, parallax, stagger ---------- */
-.grain {
-  position: relative;
-}
-.grain::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
-  mix-blend-mode: soft-light;
-}
-.mesh {
-  background: var(--gradient-mesh);
-}
-.mesh-strong {
-  background: var(--gradient-mesh-strong);
-}
-.vignette {
-  position: relative;
-}
-.vignette::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(ellipse 900px 600px at 50% 0%, transparent 40%, rgba(7, 7, 9, 0.35) 85%);
-}
-.parallax {
-  will-change: transform;
-  transform: translateZ(0);
-}
-@media (prefers-reduced-motion: no-preference) {
-  .parallax-slow {
-    animation: parallaxSlow linear both;
-    animation-timeline: view();
-    animation-range: entry 0% exit 100%;
-  }
-  @keyframes parallaxSlow {
-    from { transform: translateY(0); }
-    to { transform: translateY(-24px); }
-  }
-  .stagger > * {
-    opacity: 0;
-    animation: fadeUp 0.7s var(--ease-cinematic) both;
-  }
-  .stagger > *:nth-child(1) { animation-delay: 0ms; }
-  .stagger > *:nth-child(2) { animation-delay: 50ms; }
-  .stagger > *:nth-child(3) { animation-delay: 100ms; }
-  .stagger > *:nth-child(4) { animation-delay: 150ms; }
-  .stagger > *:nth-child(5) { animation-delay: 200ms; }
-  .stagger > *:nth-child(6) { animation-delay: 250ms; }
-  .stagger > *:nth-child(7) { animation-delay: 300ms; }
-  .stagger > *:nth-child(8) { animation-delay: 350ms; }
 }
 
 html,
@@ -277,11 +195,11 @@ h3 {
 }
 .btn-danger {
   background: var(--color-dangerdim);
-  border-color: rgba(255, 107, 122, 0.2);
-  color: var(--color-coral);
+  border-color: rgba(248, 113, 113, 0.2);
+  color: var(--color-dangerc);
 }
 .btn-danger:hover {
-  background: rgba(255, 107, 122, 0.2);
+  background: rgba(248, 113, 113, 0.2);
 }
 .btn-sm {
   height: 30px;
@@ -315,23 +233,17 @@ h3 {
   }
 }
 
-/* ---------- cards / chips — layered elevation: base (#070709) < surface (#101018) < elevated (#1a1a24) ---------- */
+/* ---------- cards / chips ---------- */
 .card {
   background: var(--color-surface);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-md);
   padding: 24px;
   box-shadow: var(--shadow-card);
-  transition:
-    background var(--dur-base) var(--ease-apple),
-    border-color var(--dur-fast) var(--ease-apple),
-    transform var(--dur-base) var(--ease-apple),
-    box-shadow var(--dur-base) var(--ease-apple);
 }
 .card-hover {
   border-left: 2px solid transparent;
   transition:
-    background var(--dur-base) var(--ease-apple),
     border-color var(--dur-fast) var(--ease-apple),
     transform var(--dur-base) var(--ease-apple),
     box-shadow var(--dur-base) var(--ease-apple);
@@ -339,7 +251,6 @@ h3 {
 }
 .card-hover:hover {
   transform: translateY(-2px);
-  background: var(--color-surface2);
   border-color: var(--color-linestrong);
   border-left-color: var(--color-violet);
   box-shadow: var(--shadow-raised);
@@ -353,7 +264,6 @@ h3 {
   border: 1px solid var(--color-line);
   border-radius: var(--radius-md);
   transition:
-    background var(--dur-base) var(--ease-apple),
     transform var(--dur-base) var(--ease-apple),
     border-color var(--dur-fast) var(--ease-apple),
     box-shadow var(--dur-base) var(--ease-apple);
@@ -362,7 +272,6 @@ h3 {
 }
 .chip:hover {
   transform: translateY(-2px);
-  background: var(--color-surface2);
   border-color: var(--color-linestrong);
   box-shadow: var(--shadow-raised);
 }
@@ -403,24 +312,23 @@ h3 {
 }
 .badge-violet {
   color: var(--color-violet);
-  border-color: rgba(106, 92, 245, 0.14);
-  background: rgba(106, 92, 245, 0.11);
+  border-color: rgba(110, 95, 245, 0.35);
+  background: var(--color-violetdim);
 }
-.badge-mint,
-.badge-lime {
-  color: var(--color-lime);
-  border-color: rgba(199, 240, 101, 0.14);
-  background: rgba(199, 240, 101, 0.11);
+.badge-mint {
+  color: var(--color-mint);
+  border-color: rgba(52, 211, 153, 0.35);
+  background: var(--color-mintdim);
 }
 .badge-amber {
-  color: var(--color-amber);
-  border-color: rgba(232, 169, 77, 0.14);
-  background: rgba(232, 169, 77, 0.11);
+  color: var(--color-amberc);
+  border-color: rgba(245, 158, 11, 0.35);
+  background: var(--color-amberdim);
 }
 .badge-danger {
-  color: var(--color-coral);
-  border-color: rgba(255, 107, 122, 0.14);
-  background: rgba(255, 107, 122, 0.11);
+  color: var(--color-dangerc);
+  border-color: rgba(248, 113, 113, 0.35);
+  background: var(--color-dangerdim);
 }
 
 /* ---------- hex shape ---------- */
@@ -450,7 +358,7 @@ h3 {
   letter-spacing: -0.01em;
 }
 .input {
-  background: var(--color-bg);
+  background: var(--color-surface3);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-sm);
   padding: 12px 14px;
@@ -459,11 +367,9 @@ h3 {
   font-size: 14px;
   transition:
     border-color var(--dur-fast) var(--ease-apple),
-    box-shadow var(--dur-fast) var(--ease-apple),
-    background var(--dur-fast) var(--ease-apple);
+    box-shadow var(--dur-fast) var(--ease-apple);
   width: 100%;
   height: 40px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02), inset 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 .input:focus {
   outline: none;
@@ -535,37 +441,13 @@ select.input option {
     width var(--dur-base) var(--ease-apple);
 }
 
-/* ---------- landing — cinematic mesh + grain + vignette ---------- */
+/* ---------- landing ---------- */
 .hero {
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;
   gap: 60px;
   align-items: center;
   padding: 64px 0 90px;
-  position: relative;
-  background: var(--gradient-mesh);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-.hero::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
-  mix-blend-mode: soft-light;
-}
-.hero::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(ellipse 900px 600px at 50% 0%, transparent 40%, rgba(7, 7, 9, 0.45) 90%);
-}
-.hero > * {
-  position: relative;
-  z-index: 1;
 }
 .hero h1 {
   font-family: var(--font-display), sans-serif;
@@ -640,7 +522,7 @@ select.input option {
 .float-card .code-line {
   font-family: var(--font-mono), monospace;
   font-size: 11.5px;
-  color: var(--color-lime);
+  color: var(--color-mint);
   margin-top: 8px;
 }
 .section-head {
@@ -704,13 +586,12 @@ select.input option {
 .auth-tabs {
   display: flex;
   gap: 2px;
-  background: var(--color-bg);
+  background: var(--color-surface2);
   border: 1px solid var(--color-line);
   border-radius: 999px;
   padding: 3px;
   margin-bottom: 30px;
   position: relative;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 .auth-tab {
   flex: 1;
@@ -813,7 +694,7 @@ select.input option {
 }
 .timer-ring-fg {
   fill: none;
-  stroke: var(--color-lime);
+  stroke: var(--color-mint);
   stroke-width: 4;
   stroke-linecap: round;
   transition:
@@ -821,11 +702,11 @@ select.input option {
     stroke var(--dur-fast) var(--ease-apple);
 }
 .timer-ring-fg.warning {
-  stroke: var(--color-amber);
+  stroke: var(--color-amberc);
   animation: timerPulse 1s var(--ease-apple) infinite;
 }
 .timer-ring-fg.critical {
-  stroke: var(--color-coral);
+  stroke: var(--color-dangerc);
   animation: timerPulse 0.5s var(--ease-apple) infinite;
 }
 @keyframes timerPulse {
@@ -853,9 +734,6 @@ select.input option {
   border-radius: var(--radius-lg);
   padding: 32px;
   margin-bottom: 22px;
-  transition:
-    background var(--dur-base) var(--ease-apple),
-    border-color var(--dur-fast) var(--ease-apple);
 }
 .q-card h3 {
   font-family: var(--font-display), sans-serif;
@@ -901,11 +779,11 @@ select.input option {
   background: var(--color-violetdim);
 }
 .option.correct {
-  border-color: var(--color-lime);
+  border-color: var(--color-mint);
   background: var(--color-mintdim);
 }
 .option.incorrect {
-  border-color: var(--color-coral);
+  border-color: var(--color-dangerc);
   background: var(--color-dangerdim);
 }
 .option.locked {
@@ -931,13 +809,13 @@ select.input option {
   color: #fff;
 }
 .option.correct .opt-mark {
-  background: var(--color-lime);
-  border-color: var(--color-lime);
+  background: var(--color-mint);
+  border-color: var(--color-mint);
   color: #fff;
 }
 .option.incorrect .opt-mark {
-  background: var(--color-coral);
-  border-color: var(--color-coral);
+  background: var(--color-dangerc);
+  border-color: var(--color-dangerc);
   color: #fff;
 }
 .keyboard-hints {
@@ -990,7 +868,7 @@ select.input option {
 }
 .explain-inner {
   background: var(--color-surface2);
-  border-left: 3px solid var(--color-lime);
+  border-left: 3px solid var(--color-mint);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   padding: 14px 16px;
   font-size: 13.5px;
@@ -1024,7 +902,7 @@ select.input option {
 }
 .score-ring-fg {
   fill: none;
-  stroke: var(--color-lime);
+  stroke: var(--color-mint);
   stroke-width: 10;
   stroke-linecap: round;
   stroke-dasharray: 502;
@@ -1032,11 +910,11 @@ select.input option {
   transition: stroke-dashoffset 1.4s var(--ease-out);
 }
 .score-ring-fg.pass {
-  stroke: var(--color-lime);
-  filter: drop-shadow(0 0 8px rgba(199, 240, 101, 0.3));
+  stroke: var(--color-mint);
+  filter: drop-shadow(0 0 8px rgba(52, 211, 153, 0.3));
 }
 .score-ring-fg.fail {
-  stroke: var(--color-coral);
+  stroke: var(--color-dangerc);
 }
 .score-ring-label {
   position: absolute;
@@ -1070,13 +948,13 @@ select.input option {
 }
 .bd-dot.ok {
   background: var(--color-mintdim);
-  color: var(--color-lime);
-  border: 1px solid rgba(199, 240, 101, 0.35);
+  color: var(--color-mint);
+  border: 1px solid rgba(52, 211, 153, 0.35);
 }
 .bd-dot.bad {
   background: var(--color-dangerdim);
-  color: var(--color-coral);
-  border: 1px solid rgba(255, 107, 122, 0.35);
+  color: var(--color-dangerc);
+  border: 1px solid rgba(248, 113, 113, 0.35);
 }
 .collapsible {
   overflow: hidden;
@@ -1121,8 +999,8 @@ select.input option {
 }
 .day-hex.done {
   background: var(--color-mintdim);
-  border-color: var(--color-lime);
-  color: var(--color-lime);
+  border-color: var(--color-mint);
+  color: var(--color-mint);
 }
 .day-hex.today {
   border-color: var(--color-violet);
@@ -1146,17 +1024,10 @@ select.input option {
   border-radius: var(--radius-lg);
   padding: 24px 20px;
   text-align: center;
-  transition:
-    background var(--dur-base) var(--ease-apple),
-    border-color var(--dur-fast) var(--ease-apple),
-    transform var(--dur-base) var(--ease-apple),
-    box-shadow var(--dur-base) var(--ease-apple);
+  transition: transform var(--dur-base) var(--ease-apple);
 }
 .milestone:hover {
   transform: translateY(-2px);
-  background: var(--color-surface2);
-  border-color: var(--color-linestrong);
-  box-shadow: var(--shadow-raised);
 }
 .milestone .hex {
   width: 70px;
@@ -1165,8 +1036,8 @@ select.input option {
 }
 .milestone.unlocked .hex {
   background: var(--color-mintdim);
-  color: var(--color-lime);
-  border: 1px solid rgba(199, 240, 101, 0.3);
+  color: var(--color-mint);
+  border: 1px solid rgba(52, 211, 153, 0.3);
 }
 .milestone.locked .hex {
   background: var(--color-surface2);
@@ -1202,13 +1073,13 @@ select.input option {
   transform-origin: left;
 }
 .mv-bar-fill.mint {
-  background: var(--color-lime);
+  background: var(--color-mint);
 }
 .mv-bar-fill.amber {
-  background: var(--color-amber);
+  background: var(--color-amberc);
 }
 .mv-bar-fill.danger {
-  background: var(--color-coral);
+  background: var(--color-dangerc);
 }
 
 /* ---------- leaderboard ---------- */
@@ -1217,13 +1088,12 @@ select.input option {
   gap: 2px;
   margin-bottom: 34px;
   flex-wrap: wrap;
-  background: var(--color-bg);
+  background: var(--color-surface2);
   border: 1px solid var(--color-line);
   border-radius: 999px;
   padding: 3px;
   width: fit-content;
   position: relative;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 .lb-tab {
   padding: 8px 18px;
@@ -1259,20 +1129,9 @@ select.input option {
   border-radius: var(--radius-lg);
   padding: 22px;
   text-align: center;
-  transition:
-    background var(--dur-base) var(--ease-apple),
-    border-color var(--dur-fast) var(--ease-apple),
-    transform var(--dur-base) var(--ease-apple),
-    box-shadow var(--dur-base) var(--ease-apple);
-}
-.pod-card:hover {
-  transform: translateY(-2px);
-  background: var(--color-surface2);
-  border-color: var(--color-linestrong);
-  box-shadow: var(--shadow-raised);
 }
 .pod-card.rank1 {
-  border-color: rgba(232, 169, 77, 0.2);
+  border-color: rgba(245, 158, 11, 0.2);
   padding-top: 30px;
 }
 .pod-avatar {
@@ -1289,7 +1148,7 @@ select.input option {
   border: 2px solid var(--color-linestrong);
 }
 .rank1 .pod-avatar {
-  border-color: var(--color-amber);
+  border-color: var(--color-amberc);
   width: 64px;
   height: 64px;
 }
@@ -1383,16 +1242,15 @@ select.input option {
   justify-content: space-between;
 }
 
-/* ---------- segmented control — control surface (inset) distinct from content cards (raised) ---------- */
+/* ---------- segmented control ---------- */
 .seg-control {
   display: flex;
   gap: 2px;
-  background: var(--color-bg);
+  background: var(--color-surface2);
   border: 1px solid var(--color-line);
   border-radius: 999px;
   padding: 3px;
   width: fit-content;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 .seg-control button {
   padding: 6px 16px;
@@ -1482,20 +1340,18 @@ select.input option {
   width: 100%;
   border-collapse: collapse;
 }
-/* spacing scale: 4/8/12/16/24/32 → p-1/p-2/p-3/p-4/p-6/p-8, gap-1/2/3/4/6/8 */
 .review-table th {
   text-align: left;
   font-size: 11.5px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-faintc);
-  padding: 12px 16px;
+  padding-bottom: 12px;
   font-weight: 600;
   font-family: var(--font-apple), sans-serif;
-  border-bottom: 1px solid var(--color-line);
 }
 .review-table td {
-  padding: 12px 16px;
+  padding: 12px 0;
   border-top: 1px solid var(--color-line);
   font-size: 13.5px;
   vertical-align: middle;
@@ -1528,13 +1384,13 @@ select.input option {
 }
 .icon-btn.approve:hover {
   background: var(--color-mintdim);
-  border-color: var(--color-lime);
-  color: var(--color-lime);
+  border-color: var(--color-mint);
+  color: var(--color-mint);
 }
 .icon-btn.reject:hover {
   background: var(--color-dangerdim);
-  border-color: var(--color-coral);
-  color: var(--color-coral);
+  border-color: var(--color-dangerc);
+  color: var(--color-dangerc);
 }
 
 /* ---------- global interaction system ---------- */
