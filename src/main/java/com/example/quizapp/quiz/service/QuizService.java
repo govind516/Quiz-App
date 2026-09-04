@@ -106,6 +106,9 @@ public class QuizService {
 					.orElseThrow(() -> new ResourceNotFoundException("Category", request.categoryId()));
 			quiz.setCategory(category);
 		}
+		if (request.topic() != null) {
+			quiz.setTopic(request.topic().trim());
+		}
 		if (request.difficulty() != null) {
 			quiz.setDifficulty(request.difficulty());
 		}
@@ -198,6 +201,7 @@ public class QuizService {
 				quiz.getCategory().getId(),
 				quiz.getCategory().getName(),
 				quiz.getCategory().getSlug(),
+				quiz.getTopic(),
 				quiz.getDifficulty(),
 				quiz.getTimeLimitSec(),
 				quiz.isPublished(),

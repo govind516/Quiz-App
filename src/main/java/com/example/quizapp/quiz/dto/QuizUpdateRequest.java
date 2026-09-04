@@ -10,6 +10,7 @@ public record QuizUpdateRequest(
 		@Size(max = 200) String title,
 		@Size(max = 1000) String description,
 		Long categoryId,
+		@Size(max = 200) String topic,
 		com.example.quizapp.quiz.Difficulty difficulty,
 		@Min(10) @Max(7200) Integer timeLimitSec,
 		Boolean isPublished,
