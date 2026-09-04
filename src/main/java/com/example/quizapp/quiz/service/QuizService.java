@@ -130,6 +130,9 @@ public class QuizService {
 				.orElseThrow(() -> new ResourceNotFoundException("Quiz", quizId));
 		var question = buildQuestion(toQuestionRequest(request), quiz);
 		quiz.getQuestions().add(question);
+		if (!quiz.isPublished()) {
+			quiz.setPublished(true);
+		}
 		quizRepository.save(quiz);
 		return toAdminDto(question);
 	}

@@ -28,8 +28,10 @@ import com.example.quizapp.quiz.repository.QuestionRepository;
 import com.example.quizapp.quiz.repository.QuizRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AdminQuestionService {
 
@@ -39,6 +41,7 @@ public class AdminQuestionService {
 	private final QuizService quizService;
 	private final CsvQuestionParser csvQuestionParser;
 	private final GeminiClient geminiClient;
+	private final QuestionBatchService questionBatchService;
 	private final com.example.quizapp.settings.SettingsService settingsService;
 
 	@Transactional(readOnly = true)
@@ -99,7 +102,16 @@ public class AdminQuestionService {
 		Question question = questionRepository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Question", id));
 		question.setStatus(QuestionStatus.APPROVED);
-		return toAdminDto(questionRepository.save(question));
+		Question saved = questionRepository.save(question);
+		autoPublishIfNeeded(saved.getQuiz());
+		return toAdminDto(saved);
+	}
+
+	private void autoPublishIfNeeded(Quiz quiz) {
+		if (quiz != null && !quiz.isPublished()) {
+			quiz.setPublished(true);
+			quizRepository.save(quiz);
+		}
 	}
 
 	@Transactional
@@ -165,9 +177,12 @@ public class AdminQuestionService {
 
 	@Transactional
 	public GeneratedQuestionsDto generate(Long quizId, GenerateQuestionsRequest request) {
+		long totalStart = System.nanoTime();
+		long t;
 		if (!settingsService.isAiGenerationEnabled()) {
 			throw new ConflictException("AI generation is disabled in admin settings");
 		}
+		t = System.nanoTime();
 		Quiz quiz;
 		if (request.categoryId() != null) {
 			var category = categoryRepository.findById(request.categoryId())
@@ -176,7 +191,6 @@ public class AdminQuestionService {
 			if (existing.isPresent()) {
 				quiz = existing.get();
 			} else {
-				// Create one draft quiz for this category (not per topic)
 				var difficulty = request.difficulty() != null
 						? mapToQuizDifficulty(request.difficulty())
 						: com.example.quizapp.quiz.Difficulty.BEGINNER;
@@ -197,15 +211,25 @@ public class AdminQuestionService {
 			quiz = quizRepository.findById(quizId)
 					.orElseThrow(() -> new ResourceNotFoundException("Quiz", quizId));
 		}
+		long lookupMs = (System.nanoTime() - t) / 1_000_000;
 
+		t = System.nanoTime();
 		String prompt = buildPrompt(request);
-		String raw = geminiClient.generateJson(prompt);
-		List<GeminiResponseParser.AiQuestion> aiQuestions = GeminiResponseParser.parse(raw);
+		long promptMs = (System.nanoTime() - t) / 1_000_000;
 
-		List<QuestionAdminDto> created = new ArrayList<>();
+		t = System.nanoTime();
+		String raw = geminiClient.generateJson(prompt);
+		long geminiMs = (System.nanoTime() - t) / 1_000_000;
+
+		t = System.nanoTime();
+		List<GeminiResponseParser.AiQuestion> aiQuestions = GeminiResponseParser.parse(raw);
+		long parseMs = (System.nanoTime() - t) / 1_000_000;
+
+		t = System.nanoTime();
+		List<Question> batch = new ArrayList<>();
 		int discarded = 0;
 		for (GeminiResponseParser.AiQuestion ai : aiQuestions) {
-			if (created.size() >= request.count()) {
+			if (batch.size() >= request.count()) {
 				break;
 			}
 			if (!isValidAiQuestion(ai, request.questionType())) {
@@ -227,9 +251,16 @@ public class AdminQuestionService {
 						.isCorrect(opt.isCorrect())
 						.build());
 			}
-			questionRepository.save(question);
-			created.add(toAdminDto(question));
+			batch.add(question);
 		}
+		if (!batch.isEmpty()) {
+			questionBatchService.batchInsert(batch);
+		}
+		List<QuestionAdminDto> created = batch.stream().map(this::toAdminDto).toList();
+		long dbMs = (System.nanoTime() - t) / 1_000_000;
+		long totalMs = (System.nanoTime() - totalStart) / 1_000_000;
+		log.info("generate timings quizId={} count={} lookup={}ms prompt={}ms geminiHttp={}ms parse={}ms dbWrite={}ms totalService={}ms (geminiCalls=1 batchSize={} rawLen={})",
+				quizId, request.count(), lookupMs, promptMs, geminiMs, parseMs, dbMs, totalMs, aiQuestions.size(), raw.length());
 		return new GeneratedQuestionsDto(created.size(), discarded, created);
 	}
 
