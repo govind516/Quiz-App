@@ -1,13 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { QuizDto, StartAttemptResponse } from "@/lib/types";
 import { useAuthStore } from "@/lib/auth-store";
-import { getGuestSessionId, saveStartPayload } from "@/lib/guest-session";
 import { DifficultyBadge } from "@/components/difficulty-badge";
 import { BookmarkButton } from "@/components/bookmark-button";
+import { Button } from "@/components/ui";
+import { IconHexLogo, IconArrowRight, IconQuestion, IconTag } from "@/components/icons";
+import { FadeUp, RevealHeading } from "@/components/Reveal";
+import { saveStartPayload } from "@/lib/guest-session";
 
 export default function QuizDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -21,16 +25,10 @@ export default function QuizDetailPage() {
 
   const startMutation = useMutation({
     mutationFn: () =>
-      user
-        ? api<StartAttemptResponse>(`/api/quizzes/${id}/start`, {
-            method: "POST",
-            body: {},
-          })
-        : api<StartAttemptResponse>(`/api/quizzes/${id}/start`, {
-            method: "POST",
-            body: { guestSessionId: getGuestSessionId() },
-            auth: false,
-          }),
+      api<StartAttemptResponse>(
+        `/api/attempts/${id}/start`,
+        { method: "POST", auth: Boolean(user) }
+      ),
     onSuccess: (payload) => {
       saveStartPayload(payload);
       router.push(`/take/${payload.attemptId}`);
@@ -38,21 +36,19 @@ export default function QuizDetailPage() {
   });
 
   if (quizQuery.isPending) {
-    return <div className="h-64 skeleton rounded-xl mt-10" />;
-  }
-
-  if (quizQuery.isError || !quizQuery.data) {
     return (
-      <div className="max-w-2xl mx-auto card p-8 text-center mt-10">
-        <h2 className="text-lg font-semibold text-ink" style={{ fontFamily: "var(--font-space), sans-serif" }}>Quiz not found</h2>
-        <p className="mt-2 text-sm" style={{ fontFamily: "var(--font-jakarta), sans-serif", color: "var(--color-mutedc)" }}>
-          This quiz may be unpublished or removed.
-        </p>
+      <div className="mx-auto max-w-2xl card p-8">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-surface2 rounded w-1/4"></div>
+          <div className="h-4 bg-surface2 rounded w-1/2"></div>
+          <div className="h-4 bg-surface2 rounded w-1/4"></div>
+        </div>
       </div>
     );
   }
 
   const quiz = quizQuery.data;
+  if (!quiz) return null;
 
   return (
     <div className="mx-auto max-w-2xl py-10">
@@ -70,11 +66,8 @@ export default function QuizDetailPage() {
           </div>
         </div>
 
-        <h1
-          className="text-[32px] leading-tight"
-          style={{ fontFamily: "var(--font-space), sans-serif", fontWeight: 700, letterSpacing: "-0.8px" }}
-        >
-          {quiz.title}
+        <h1 className="text-[32px] leading-tight font-display font-bold tracking-[-0.8px]" style={{ fontFamily: "var(--font-space), sans-serif" }}>
+          {quiz.title.replace(/\s—\s(BEGINNER|INTERMEDIATE|ADVANCED)\s*$/i, "")}
         </h1>
         {quiz.description && (
           <p className="mt-3" style={{ fontFamily: "var(--font-jakarta), sans-serif", lineHeight: 1.75, color: "var(--color-mutedc)" }}>
@@ -86,7 +79,7 @@ export default function QuizDetailPage() {
           <div className="rounded-lg border p-3" style={{ background: "var(--color-surface2)", borderColor: "var(--color-line)" }}>
             <div className="text-xs" style={{ fontFamily: "var(--font-apple), sans-serif", color: "var(--color-faintc)" }}>Questions</div>
             <div className="mono text-lg font-semibold mt-0.5" style={{ color: "var(--color-ink)" }}>
-              {quiz.questionCount}
+              {Math.round(quiz.questionCount)}
             </div>
           </div>
           <div className="rounded-lg border p-3" style={{ background: "var(--color-surface2)", borderColor: "var(--color-line)" }}>
@@ -103,31 +96,31 @@ export default function QuizDetailPage() {
           </div>
         </div>
 
-        <p className="mt-4 text-xs" style={{ fontFamily: "var(--font-apple), sans-serif", color: "var(--color-faintc)" }}>
+        <p className="mt-4 text-xs" style={{ fontFamily: "var(--font-apple), sans-serif", color: "var(--color-mutedc)" }}>
           {user
             ? `You are logged in as ${user.name} — your score will be saved to your history.`
             : "You will play as a guest. Sign up after the quiz to save your score."}
         </p>
 
-        {startMutation.isError && (
-          <div className="mt-4 rounded-lg border px-3 py-2 text-sm" style={{ borderColor: "rgba(248,113,113,0.4)", background: "var(--color-dangerdim)", color: "var(--color-dangerc)", fontFamily: "var(--font-apple), sans-serif" }}>
-            Could not start the quiz. Please try again.
-          </div>
+        {quiz.questionCount === 0 && (
+          <p className="mt-4 text-center text-sm" style={{ color: "var(--color-mutedc)", fontFamily: "var(--font-apple), sans-serif" }}>
+            This quiz has no questions yet.
+          </p>
         )}
 
-        <button
-          disabled={quiz.questionCount === 0 || startMutation.isPending}
-          onClick={() => startMutation.mutate()}
-          className="btn btn-primary btn-block mt-6"
-          style={{ height: 44, borderRadius: 999, fontFamily: "var(--font-apple), sans-serif", fontWeight: 600 }}
-        >
-          {startMutation.isPending
-            ? "Starting…"
-            : quiz.questionCount === 0
-              ? "No questions available yet"
-              : "Start quiz"}
-        </button>
+        <div className="mt-6 flex items-center justify-between">
+          <Button
+            disabled={quiz.questionCount === 0}
+            onClick={() => void startMutation.mutate(undefined)}
+            className="btn btn-primary btn-block mt-6"
+            style={{ borderRadius: 999, fontFamily: "var(--font-apple), sans-serif" }}
+          >
+            {startMutation.isPending ? "Starting…" : "Start quiz"}
+          </Button>
+        </div>
       </div>
     </div>
   );
 }
+
+const emptySubscribe = () => () => {};

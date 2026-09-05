@@ -2,17 +2,18 @@
 
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { AttemptResultDto, QuizDto, StartAttemptResponse } from "@/lib/types";
 import { useAuthStore } from "@/lib/auth-store";
-import { getGuestSessionId, readStartPayloadCached } from "@/lib/guest-session";
-import { setCachedResult } from "@/lib/result-cache";
 import { DifficultyBadge } from "@/components/difficulty-badge";
+import { BookmarkButton } from "@/components/bookmark-button";
 import { Button } from "@/components/ui";
-
-type AnswerMap = Record<number, number[]>;
+import { IconHexLogo, IconArrowRight, IconQuestion, IconTag } from "@/components/icons";
+import { FadeUp, RevealHeading } from "@/components/Reveal";
+import { readStartPayloadCached, saveStartPayload, getGuestSessionId } from "@/lib/guest-session";
+import { setCachedResult } from "@/lib/result-cache";
+import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from "react";
 
 const emptySubscribe = () => () => {};
 const TIMER_CIRC = 150.8;
@@ -22,6 +23,8 @@ function formatClock(totalSeconds: number): string {
   const s = totalSeconds % 60;
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
+
+type AnswerMap = Record<number, number[]>;
 
 export default function TakeQuizPage() {
   const { attemptId } = useParams<{ attemptId: string }>();
@@ -135,19 +138,17 @@ export default function TakeQuizPage() {
   const percentDone = Math.round(((current + 1) / questions.length) * 100);
 
   function chooseOption(optionId: number) {
-    // shake on deselect-multi? just apply shake if already selected MULTI
     if (question.type === "MULTI_SELECT" && selected.includes(optionId)) {
-      // allow toggle without shake
+      setAnswers((prev) => ({
+        ...prev,
+        [question.questionId]: prev[question.questionId]?.filter((id) => id !== optionId) ?? [],
+      }));
+    } else {
+      setAnswers((prev) => ({
+        ...prev,
+        [question.questionId]: question.type === "MULTI_SELECT" ? [...(prev[question.questionId] ?? []), optionId] : [optionId],
+      }));
     }
-    setAnswers((prev) => ({
-      ...prev,
-      [question.questionId]:
-        question.type === "MULTI_SELECT"
-          ? prev[question.questionId]?.includes(optionId)
-            ? prev[question.questionId].filter((id) => id !== optionId)
-            : [...(prev[question.questionId] ?? []), optionId]
-          : [optionId],
-    }));
   }
 
   const marks = ["A", "B", "C", "D", "E", "F"];

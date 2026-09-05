@@ -2,55 +2,35 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { api, publicApi } from "@/lib/api";
-import type { AttemptResultDto, QuizDto, QuestionPublicDto } from "@/lib/types";
+import { useEffect, useRef, useState } from "react";
+import { api } from "@/lib/api";
+import type { AttemptResultDto } from "@/lib/types";
 import { useAuthStore } from "@/lib/auth-store";
-import { getGuestSessionId, loadStartPayload } from "@/lib/guest-session";
-import { getCachedResult } from "@/lib/result-cache";
-import { CountUp, Eyebrow } from "@/components/ui";
+import { Eyebrow } from "@/components/Reveal";
+import { CountUp } from "@/components/ui";
 import { IconCheck, IconX } from "@/components/icons";
+import { IconHexLogo, IconArrowRight } from "@/components/icons";
+import { getGuestSessionId } from "@/lib/guest-session";
 
 export default function ResultPage() {
   const { attemptId } = useParams<{ attemptId: string }>();
   const user = useAuthStore((s) => s.user);
-
-  const cachedResult = typeof window !== "undefined" ? getCachedResult(attemptId) : null;
 
   const resultQuery = useQuery({
     queryKey: ["result", attemptId],
     queryFn: () =>
       user
         ? api<AttemptResultDto>(`/api/attempts/${attemptId}/result`)
-        : publicApi<AttemptResultDto>(`/api/attempts/${attemptId}/result?guestSessionId=${getGuestSessionId()}`),
-    enabled: !cachedResult,
+        : api<AttemptResultDto>(`/api/attempts/${attemptId}/result?guestSessionId=${getGuestSessionId()}`, { auth: false }),
     retry: false,
-    initialData: cachedResult ?? undefined,
   });
 
   const ringRef = useRef<SVGCircleElement>(null);
   const pctRef = useRef<HTMLDivElement>(null);
   const bigRef = useRef<HTMLDivElement>(null);
 
-  const result = cachedResult ?? resultQuery.data;
-
-  // Fallback: if sessionStorage cleared, fetch quiz to resolve option text
-  // Disabled when result came from cache (submit already has question text; option text still from start payload)
-  const fallbackQuizQuery = useQuery({
-    queryKey: ["quiz-fallback", result?.quizId],
-    queryFn: () => api<QuizDto>(`/api/quizzes/${result!.quizId}`, { auth: false }),
-    enabled: Boolean(result?.quizId) && !loadStartPayload(attemptId) && !cachedResult,
-  });
-
-  // Build fallback map from quiz fetch if needed
-  const fallbackQuestions = (() => {
-    if (!result) return new Map<number, QuestionPublicDto>();
-    const cached = loadStartPayload(attemptId);
-    if (cached) return new Map<number, QuestionPublicDto>(cached.questions.map((q) => [q.questionId, q]));
-    // No cached payload and no fallback quiz yet -> empty
-    return new Map<number, QuestionPublicDto>();
-  })();
+  const result = resultQuery.data;
 
   useEffect(() => {
     if (!result) return;
@@ -82,11 +62,11 @@ export default function ResultPage() {
     };
   }, [result]);
 
-  if (!cachedResult && resultQuery.isPending) {
+  if (resultQuery.isPending) {
     return <div className="h-64 skeleton rounded-xl mt-10" />;
   }
 
-  if ((!cachedResult && resultQuery.isError) || !result) {
+  if (resultQuery.isError || !result) {
     return (
       <div className="mx-auto max-w-lg card p-10 text-center mt-10">
         <h2 className="text-lg font-semibold text-ink" style={{ fontFamily: "var(--font-space), sans-serif" }}>
@@ -102,22 +82,15 @@ export default function ResultPage() {
     );
   }
 
-  function optionText(questionId: number, optionId: number): string {
-    const fromCache = fallbackQuestions.get(questionId)?.options.find((o) => o.optionId === optionId)?.optionText;
-    if (fromCache) return fromCache;
-    return `Option #${optionId}`;
-  }
-
-  const correctCount = result.questions.filter((q) => q.correct).length;
   const passed = result.percentage >= 60;
-  const headline = passed && result.percentage >= 90 ? "Excellent." : passed ? "Good effort." : "Let's work on that.";
+  const headline = passed ? "Excellent work." : "Good effort.";
 
   return (
     <div className="quiz-shell">
       <div className="text-center pt-4">
         <Eyebrow>Quiz complete</Eyebrow>
         <h2 className="text-[28px] mt-3" style={{ fontFamily: "var(--font-space), sans-serif", fontWeight: 700, letterSpacing: "-0.02em" }}>{result.quizTitle}</h2>
-        <p className="text-sm mb-2" style={{ color: "var(--color-mutedc)", fontFamily: "var(--font-jakarta), sans-serif" }}>Here&apos;s how you did.</p>
+        <p className="text-sm mb-2" style={{ color: "var(--color-mutedc)", fontFamily: "var(--font-jakarta), sans-serif" }}>Here's how you did.</p>
 
         {result.status === "EXPIRED" && (
           <div className="inline-block badge badge-danger mt-2">Time expired — auto-submitted</div>
@@ -146,11 +119,11 @@ export default function ResultPage() {
 
         <div className="grid grid-cols-3 gap-3 max-w-md mx-auto mb-8">
           <div className="card !p-4 text-center">
-            <div className="mono text-2xl font-bold" style={{ color: "var(--color-lime)" }}>{correctCount}</div>
+            <div className="mono text-2xl font-bold" style={{ color: "var(--color-lime)" }}>{result.questions.filter((q) => q.correct).length}</div>
             <div className="text-xs mt-1" style={{ fontFamily: "var(--font-apple), sans-serif", color: "var(--color-mutedc)" }}>Correct</div>
           </div>
           <div className="card !p-4 text-center">
-            <div className="mono text-2xl font-bold" style={{ color: "var(--color-coral)" }}>{result.questions.length - correctCount}</div>
+            <div className="mono text-2xl font-bold" style={{ color: "var(--color-coral)" }}>{result.questions.filter((q) => !q.correct).length}</div>
             <div className="text-xs mt-1" style={{ fontFamily: "var(--font-apple), sans-serif", color: "var(--color-mutedc)" }}>Incorrect</div>
           </div>
           <div className="card !p-4 text-center">
@@ -184,7 +157,7 @@ export default function ResultPage() {
 
         <div className="space-y-4">
           {result.questions.map((question, index) => (
-            <ReviewRow key={question.questionId} question={question} index={index} optionText={optionText} />
+            <ReviewRow key={question.questionId} question={question} index={index} optionText={(qid: number, oid: number) => result.questions.find(q => q.questionId === qid)?.selectedOptionIds.includes(oid) ? oid.toString() : `Option #${oid}`} />
           ))}
         </div>
       </div>
@@ -192,13 +165,13 @@ export default function ResultPage() {
   );
 }
 
-function ReviewRow({ question, index, optionText }: { question: import("@/lib/types").QuestionResultDto; index: number; optionText: (qid: number, oid: number) => string }) {
+function ReviewRow({ question, index, optionText }: { question: { questionId: number; selectedOptionIds: number[]; correctOptionIds: number[]; [key: string]: any }; index: number; optionText: (qid: number, oid: number) => string }) {
   const [open, setOpen] = useState(false);
   return (
     <div className={`card !p-6 ${question.correct ? "!border-mint/30" : "!border-dangerc/30"}`}>
       <div className="flex items-start justify-between gap-3 collapsible-trigger" onClick={() => setOpen((v) => !v)}>
         <div className="flex-1">
-          <div className="flex flex-wrap items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-2">
             <span className={`badge ${question.correct ? "badge-mint" : "badge-danger"}`} style={{ fontFamily: "var(--font-apple), sans-serif" }}>
               Q{index + 1}
             </span>
@@ -209,13 +182,13 @@ function ReviewRow({ question, index, optionText }: { question: import("@/lib/ty
             {question.questionText}
           </h4>
         </div>
-<span className="opt-mark w-7 h-7" style={{
-  background: question.correct ? "var(--color-lime)" : "var(--color-coral)",
-  borderColor: question.correct ? "var(--color-lime)" : "var(--color-coral)",
-  color: question.correct ? "var(--color-brown)" : "var(--color-ink)",
-}}>
-  {question.correct ? <IconCheck size={13} /> : <IconX size={13} />}
-</span>
+        <span className="opt-mark w-7 h-7" style={{
+          background: question.correct ? "var(--color-lime)" : "var(--color-coral)",
+          borderColor: question.correct ? "var(--color-lime)" : "var(--color-coral)",
+          color: question.correct ? "var(--color-brown)" : "var(--color-ink)",
+        }}>
+          {question.correct ? <IconCheck size={13} /> : <IconX size={13} />}
+        </span>
       </div>
 
       <div
@@ -236,8 +209,8 @@ function ReviewRow({ question, index, optionText }: { question: import("@/lib/ty
               ))}
             </ul>
           </div>
-          <div className="rounded-lg p-3 border" style={{ background: "var(--color-limddim)", borderColor: "rgba(255, 107, 122, 0.2)" }}>
-            <p className="text-[11px] uppercase tracking-wide mb-1" style={{ color: "rgba(255, 107, 122, 0.7)", fontFamily: "var(--font-apple), sans-serif" }}>
+          <div className="rounded-lg p-3 border" style={{ background: "var(--color-limddim)", borderColor: "rgba(255,107,122,0.2)" }}>
+            <p className="text-[11px] uppercase tracking-wide mb-1" style={{ color: "rgba(255,107,122,0.7)", fontFamily: "var(--font-apple), sans-serif" }}>
               Correct answer
             </p>
             <ul className="space-y-0.5" style={{ color: "var(--color-mint)", fontFamily: "var(--font-jakarta), sans-serif" }}>

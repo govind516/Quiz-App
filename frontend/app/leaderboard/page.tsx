@@ -1,242 +1,86 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api";
-import type {
-	CategoryDto,
-	LeaderboardEntryDto,
-} from "@/lib/types";
-import { useAuthStore } from "@/lib/auth-store";
-import { Eyebrow, initials } from "@/components/ui";
-import { IconTrophy } from "@/components/icons";
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { Crown, Zap } from "lucide-react";
+import Aurora from "@/components/Aurora";
+import { Eyebrow, FadeUp, RevealHeading } from "@/components/Reveal";
+import { leaders } from "@/lib/mock";
 
-interface RankedEntry {
-	entry: LeaderboardEntryDto;
-	displayRank: number;
-	shared: boolean;
+function PodiumCard({ p, rank }: { p: typeof leaders[0]; rank: 1 | 2 | 3 }) {
+  const heights = { 1: "h-[280px]", 2: "h-[220px]", 3: "h-[190px]" };
+  const colors = { 1: "#F5C775", 2: "#C5C5D0", 3: "#D89B7B" };
+  const orders = { 1: "md:order-2", 2: "md:order-1", 3: "md:order-3" };
+  const scale = { 1: 1, 2: 0.94, 3: 0.9 };
+  return (
+    <FadeUp delay={rank === 1 ? 0.1 : rank === 2 ? 0.2 : 0.3} className={`${orders[rank]} w-full`}>
+      <div className={`relative rounded-3xl glass overflow-hidden ${heights[rank]}`} style={{ borderColor: `${colors[rank]}30`, background: `linear-gradient(180deg, ${colors[rank]}10, transparent 80%)` }}>
+        <div className="absolute inset-0 pointer-events-none opacity-30">
+          <div className="absolute -top-20 -right-20 w-60 h-60 rounded-full blur-3xl" style={{ background: `${colors[rank]}40` }} />
+        </div>
+        <div className="relative h-full flex flex-col items-center justify-end p-6 md:p-8">
+          {rank === 1 && (
+            <motion.div initial={{ y: -8, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.6 }} className="absolute top-6">
+              <Crown className="w-6 h-6" style={{ color: colors[1] }} />
+            </motion.div>
+          )}
+          <div className="font-mono text-[11px] tracking-[0.22em] uppercase mb-4" style={{ color: colors[rank] }}>#{rank}</div>
+          <motion.div initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: scale[rank], opacity: 1 }} transition={{ delay: 0.3 + rank * 0.1, duration: 0.7, ease: [0.16, 1, 0.3, 1] }} className="relative shrink-0 w-24 h-24 md:w-28 md:h-28 rounded-full grid place-items-center font-display text-[28px] text-white mb-4" style={{ background: `radial-gradient(circle at 30% 30%, ${colors[rank]}55, rgba(255,255,255,0.04))`, border: `1.5px solid ${colors[rank]}70` }}>
+            {p.initials}
+          </motion.div>
+          <div className="text-[16px] md:text-[18px] text-white">{p.name}</div>
+          <div className="mt-1 font-display text-[24px]" style={{ color: colors[rank] }}>{p.pts.toLocaleString()}<span className="font-mono text-[11px] text-[color:var(--mute)] ml-1">pts</span></div>
+        </div>
+      </div>
+    </FadeUp>
+  );
 }
 
-function withSharedRanks(entries: LeaderboardEntryDto[]): RankedEntry[] {
-	let prevScore: number | null = null;
-	let prevRank = 0;
-	return entries.map((entry, i) => {
-		const shared = prevScore !== null && entry.score === prevScore;
-		const displayRank = shared ? prevRank : i + 1;
-		prevScore = entry.score;
-		prevRank = displayRank;
-		return { entry, displayRank, shared };
-	});
-}
+export default function Leaderboard() {
+  const [tab, setTab] = useState("Global");
+  const [top1, top2, top3, ...rest] = leaders;
 
-function PodCard({ slot }: { slot: RankedEntry | null }) {
-	if (!slot) {
-		return (
-			<div className="pod-card !border-dashed flex flex-col items-center justify-center min-h-[170px]" style={{ borderColor: "var(--color-line)" }}>
-				<div className="pod-avatar !bg-transparent" style={{ color: "var(--color-faintc)", fontFamily: "var(--font-apple), sans-serif" }}>?</div>
-				<div className="pod-handle" style={{ color: "var(--color-faintc)", fontFamily: "var(--font-apple), sans-serif" }}>Your name here</div>
-				<div className="pod-score" style={{ color: "var(--color-faintc)" }}>— pts</div>
-			</div>
-		);
-	}
-	const isFirst = slot.displayRank === 1;
-	const isSecond = slot.displayRank === 2;
-	const isThird = slot.displayRank === 3;
-	const tierStyle: React.CSSProperties = isSecond
-		? { borderColor: "rgba(255,255,255,0.35)" }
-		: isThird
-		? { borderColor: "rgba(176,141,87,0.35)" }
-		: {};
-	const avatarTierStyle: React.CSSProperties = isSecond
-		? { borderColor: "rgba(255,255,255,0.35)" }
-		: isThird
-		? { borderColor: "rgba(176,141,87,0.5)" }
-		: {};
-	return (
-		<div className={`pod-card ${isFirst ? "rank1" : ""}`} style={tierStyle}>
-			{isFirst && (
-				<div className="mb-1.5 flex justify-center" style={{ color: "var(--color-amberc)" }}>
-					<IconTrophy size={20} />
-				</div>
-			)}
-			<div className="pod-rank-badge" style={{ fontFamily: "var(--font-mono), monospace" }}>
-				#{slot.displayRank}
-				{slot.shared ? " (tie)" : ""}
-			</div>
-			<div className="pod-avatar" style={{ fontFamily: "var(--font-apple), sans-serif", ...avatarTierStyle }}>{initials(slot.entry.name)}</div>
-			<div className="pod-handle" style={{ fontFamily: "var(--font-apple), sans-serif" }}>{slot.entry.name}</div>
-			<div className="pod-score" style={{ fontFamily: "var(--font-mono), monospace", color: "var(--color-violet)" }}>{slot.entry.score.toLocaleString()} pts</div>
-		</div>
-	);
-}
+  return (
+    <main className="relative pt-36 pb-24" data-testid="leaderboard-main">
+      <Aurora />
+      <div className="relative mx-auto max-w-[1400px] px-6 md:px-10">
+        <FadeUp><Eyebrow>Rankings</Eyebrow></FadeUp>
+        <RevealHeading delay={0.1} lines={['<span class="italic text-[color:var(--ink-2)]">Leader</span>board.']} className="mt-6 font-display text-[64px] md:text-[92px] leading-[0.92] text-white" />
 
-export default function LeaderboardPage() {
-	const user = useAuthStore((s) => s.user);
-	const [board, setBoard] = useState<"global" | "category">("global");
-	const [categorySlug, setCategorySlug] = useState("");
+        <FadeUp delay={0.35} className="mt-10 inline-flex items-center rounded-full glass p-1 relative">
+          {["Global", "By category", "Weekly"].map((t) => (
+            <button key={t} onClick={() => setTab(t)} data-testid={`lb-tab-${t}`} className="relative px-5 py-2 text-[13px] transition-colors">
+              {tab === t && (<motion.span layoutId="tab-bg" className="absolute inset-0 rounded-full bg-white" transition={{ type: "spring", stiffness: 380, damping: 30 }} />)}
+              <span className={`relative ${tab === t ? "text-[#0A0A0F]" : "text-[color:var(--ink-2)]"}`}>{t}</span>
+            </button>
+          ))}
+        </FadeUp>
 
-	const categoriesQuery = useQuery({
-		queryKey: ["categories"],
-		queryFn: () => api<CategoryDto[]>("/api/categories", { auth: false }),
-	});
+        <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <PodiumCard p={top2} rank={2} />
+          <PodiumCard p={top1} rank={1} />
+          <PodiumCard p={top3} rank={3} />
+        </div>
 
-	const selectedCategory = (categoriesQuery.data ?? []).find(
-		(c) => c.slug === categorySlug
-	);
+        <FadeUp delay={0.4} className="mt-14 rounded-3xl glass overflow-hidden">
+          <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-white/[0.06] font-mono text-[10.5px] tracking-[0.18em] uppercase text-[color:var(--mute)]">
+            <div className="col-span-1">Rank</div><div className="col-span-6">Player</div><div className="col-span-2 text-right">Streak</div><div className="col-span-3 text-right">Points</div>
+          </div>
+          {rest.map((p, i) => (
+            <motion.div key={p.rank} initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: "-40px" }} transition={{ delay: i * 0.04, duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="grid grid-cols-12 gap-4 items-center px-6 py-5 border-b border-white/[0.04] last:border-b-0 hover:bg-white/[0.02] transition-colors">
+              <div className="col-span-1 font-mono text-[13px] text-[color:var(--mute)]">#{p.rank}</div>
+              <div className="col-span-6 flex items-center gap-3">
+                <div className="shrink-0 w-9 h-9 rounded-full grid place-items-center font-mono text-[11px] text-white/85 border border-white/10" style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.25), rgba(127,231,206,0.18))" }}>{p.initials}</div>
+                <div><div className="text-[14.5px] text-white">{p.name}</div><div className="font-mono text-[11px] text-[color:var(--mute)]">{p.country}</div></div>
+              </div>
+              <div className="col-span-2 text-right font-mono text-[12.5px] text-[color:var(--gold)]"><Zap className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />{p.streak}</div>
+              <div className="col-span-3 text-right font-display text-[20px] text-white">{p.pts.toLocaleString()}<span className="font-mono text-[11px] text-[color:var(--mute)] ml-1">pts</span></div>
+            </motion.div>
+          ))}
+        </FadeUp>
 
-	const entriesQuery = useQuery({
-		queryKey: ["leaderboard", board, categorySlug],
-		queryFn: () => {
-			if (board === "category" && selectedCategory) {
-				return api<LeaderboardEntryDto[]>(
-					`/api/leaderboard/category/${selectedCategory.id}?limit=25`,
-					{ auth: false }
-				);
-			}
-			return api<LeaderboardEntryDto[]>("/api/leaderboard/global?limit=25", {
-				auth: false,
-			});
-		},
-		enabled: board === "global" || Boolean(selectedCategory),
-	});
-
-	const ranked = withSharedRanks(entriesQuery.data ?? []);
-	const podiumSlots: Array<RankedEntry | null> = [
-		ranked[1] ?? null,
-		ranked[0] ?? null,
-		ranked[2] ?? null,
-	];
-	const youSlot = user
-		? ranked.find((r) => r.entry.userId === user.id)
-		: undefined;
-	const restRaw = ranked.filter(
-		(r) => !podiumSlots.some((s) => s?.entry.userId === r.entry.userId)
-	);
-	// Fix BUG 2: rest ranks must be sequential starting at #4, not repeating podium #3 on ties
-	const rest = restRaw.map((r, i) => ({ ...r, displayRank: 4 + i }));
-	const youInPodium = podiumSlots.some(
-		(s) => s?.entry.userId === user?.id
-	);
-
-	return (
-		<div className="py-10 max-w-6xl mx-auto px-8 max-[1280px]:px-6 max-[640px]:px-4">
-			<Eyebrow>Rankings</Eyebrow>
-			<h1 className="text-[30px] mt-2 mb-6" style={{ fontFamily: "var(--font-space), sans-serif", fontWeight: 700, letterSpacing: "-0.02em" }}>Leaderboard</h1>
-
-			<div className="lb-tabs">
-				<button
-					className={`lb-tab ${board === "global" ? "active" : ""}`}
-					onClick={() => setBoard("global")}
-				>
-					Global
-				</button>
-				<button
-					className={`lb-tab ${board === "category" ? "active" : ""}`}
-					onClick={() => setBoard("category")}
-				>
-					By category
-				</button>
-				{board === "category" && (
-					<select
-						value={categorySlug}
-						onChange={(e) => setCategorySlug(e.target.value)}
-						className="input !w-auto !py-2"
-					>
-						<option value="">Choose category…</option>
-						{(categoriesQuery.data ?? []).map((c) => (
-							<option key={c.id} value={c.slug}>
-								{c.name}
-							</option>
-						))}
-					</select>
-				)}
-			</div>
-
-			{entriesQuery.isPending ? (
-				<div className="space-y-4">
-					<div className="grid grid-cols-[1fr_1.15fr_1fr] gap-4">
-						{[0, 1, 2].map((i) => (
-							<div key={i} className="card h-40 animate-pulse" />
-						))}
-					</div>
-					<div className="card h-64 animate-pulse" />
-				</div>
-			) : ranked.length === 0 ? (
-				<div className="card p-10 text-center text-sm text-mutedc">
-					{board === "category" && !categorySlug ? (
-						"Pick a category to see its leaderboard."
-					) : (
-						<>
-							No ranked scores here yet.
-							<span className="block mt-2 text-xs text-faintc">
-								Complete quizzes while logged in to appear on the board
-								(leaderboards require REDIS_URI in production).
-							</span>
-						</>
-					)}
-				</div>
-			) : (
-				<>
-					<div className="podium">
-						<div className="fade-up" style={{ animationDelay: "0ms" }}><PodCard slot={podiumSlots[0]} /></div>
-						<div className="fade-up" style={{ animationDelay: "50ms" }}><PodCard slot={podiumSlots[1]} /></div>
-						<div className="fade-up" style={{ animationDelay: "100ms" }}><PodCard slot={podiumSlots[2]} /></div>
-					</div>
-
-					{rest.length > 0 && (
-						<div className="lb-list">
-							{rest.map(({ entry, displayRank }, i) => (
-								<div
-									key={entry.userId}
-									className={`lb-row row-animate ${entry.userId === user?.id ? "you" : ""}`}
-									style={{ animationDelay: `${0.05 * (i + 1)}s` }}
-								>
-									<div className="lb-rank" style={{ fontFamily: "var(--font-mono), monospace" }}>#{displayRank}</div>
-									<div className="row-avatar" style={{ fontFamily: "var(--font-apple), sans-serif" }}>{initials(entry.name)}</div>
-									<div className="row-name">
-										<div className="handle flex items-center gap-2" style={{ fontFamily: "var(--font-apple), sans-serif" }}>
-											{entry.name}
-											{entry.userId === user?.id && (
-												<span className="badge badge-violet" style={{ fontFamily: "var(--font-apple), sans-serif" }}>you</span>
-											)}
-										</div>
-									</div>
-									<div className="row-score text-right" style={{ fontFamily: "var(--font-mono), monospace", color: "var(--color-violet)" }}>
-										{entry.score.toLocaleString()}
-									</div>
-								</div>
-							))}
-						</div>
-					)}
-
-					{youSlot && !youInPodium && (
-						<div className="you-row mt-6">
-							<div className="flex items-center gap-3.5">
-								<div
-									className="row-avatar"
-									style={{ border: "1.5px solid var(--color-violet)" }}
-								>
-									{initials(youSlot.entry.name)}
-								</div>
-								<div>
-									<div className="handle font-semibold text-[13.5px] text-ink">
-										You · #{youSlot.displayRank}
-									</div>
-									<div className="text-xs text-faintc mono">
-										{youSlot.entry.score.toLocaleString()} pts
-									</div>
-								</div>
-							</div>
-							<span className="badge badge-violet">Keep climbing 🚀</span>
-						</div>
-					)}
-
-					<p className="mt-6 mono text-[11px] text-faintc leading-relaxed">
-						Scores are cumulative points across completed quizzes · quiz boards
-						track best percentage · equal scores share the same rank
-					</p>
-				</>
-			)}
-		</div>
-	);
+        <FadeUp delay={0.3} className="mt-10 font-mono text-[11px] tracking-[0.14em] uppercase text-[color:var(--mute)] text-center">Cumulative points across completed quizzes · best percentage wins on ties</FadeUp>
+      </div>
+    </main>
+  );
 }

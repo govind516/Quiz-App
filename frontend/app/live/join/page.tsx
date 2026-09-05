@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { publicApi } from "@/lib/api";
 import { Button, Eyebrow } from "@/components/ui";
+import Aurora from "@/components/Aurora";
 
 export default function JoinLiveRoomPage() {
 	const router = useRouter();
@@ -33,12 +34,14 @@ export default function JoinLiveRoomPage() {
 	}
 
 	return (
-		<div className="mx-auto max-w-sm py-10">
-			<Eyebrow>Live arena</Eyebrow>
-			<h1 className="text-[32px] mt-2 mb-1">Join a game.</h1>
-			<p className="text-mutedc text-sm">No account needed — just a nickname.</p>
+		<main className="form-page-shell">
+			<Aurora variant="soft" />
+			<div className="form-page-inner !max-w-[430px]">
+				<Eyebrow>Live arena</Eyebrow>
+				<h1>Join a game.</h1>
+				<p>No account needed. Just a nickname and the room code.</p>
 
-			<form onSubmit={handleJoin} className="card mt-6">
+			<form onSubmit={handleJoin} className="card mt-8 rounded-[22px] p-8">
 				<div className="field">
 					<label>Room code</label>
 					<input
@@ -68,10 +71,11 @@ export default function JoinLiveRoomPage() {
 					</div>
 				)}
 
-				<Button block type="submit" disabled={pending}>
+				<Button block type="submit" disabled={pending} className="!min-h-[48px]">
 					{pending ? "Joining…" : "Join game"}
 				</Button>
 			</form>
-		</div>
+			</div>
+		</main>
 	);
 }

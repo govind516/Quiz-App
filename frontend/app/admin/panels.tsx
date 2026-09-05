@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
@@ -566,8 +568,8 @@ export function QuestionFormModal({
 	const [points, setPoints] = useState(initial?.points ?? 1);
 	const [explanation, setExplanation] = useState(initial?.explanation ?? "");
 	const [options, setOptions] = useState<OptionRow[]>(
-		initial
-			? initial.options.map((o: any) => ({ optionText: o.optionText, isCorrect: o.isCorrect }))
+			initial
+				? initial.options.map((o) => ({ optionText: o.optionText, isCorrect: o.isCorrect }))
 			: [
 					{ optionText: "", isCorrect: true },
 					{ optionText: "", isCorrect: false },
@@ -584,7 +586,7 @@ export function QuestionFormModal({
 				type,
 				points,
 				explanation: explanation.trim(),
-				options: options.map((o: any) => ({
+					options: options.map((o) => ({
 					optionText: o.optionText.trim(),
 					isCorrect: o.isCorrect,
 				})),
@@ -613,7 +615,7 @@ export function QuestionFormModal({
 		} else if (newType === "MCQ") {
 			let seen = false;
 			setOptions((prev) =>
-				prev.map((o: any) => {
+					prev.map((o) => {
 					if (o.isCorrect && !seen) {
 						seen = true;
 						return o;
@@ -938,5 +940,4 @@ export function AttemptsChart({
 		</div>
 	);
 }
-
 

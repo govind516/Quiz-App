@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { LiveRoomInfo, QuizDto } from "@/lib/types";
 import { Button, Eyebrow } from "@/components/ui";
+import Aurora from "@/components/Aurora";
 
 export default function CreateLiveRoomPage() {
 	const router = useRouter();
@@ -36,14 +37,16 @@ export default function CreateLiveRoomPage() {
 	}
 
 	return (
-		<div className="mx-auto max-w-md py-10">
-			<Eyebrow>Live arena</Eyebrow>
-			<h1 className="text-[32px] mt-2 mb-1">Host a live game.</h1>
-			<p className="text-mutedc text-sm">
-				Create a room, share the code and race friends in real time.
-			</p>
+		<main className="form-page-shell">
+			<Aurora variant="soft" />
+			<div className="form-page-inner">
+				<Eyebrow>Live arena</Eyebrow>
+				<h1>Host a live game.</h1>
+				<p>
+					Create a room, share the code and race friends in real time.
+				</p>
 
-			<div className="card mt-6">
+			<div className="card mt-8 rounded-[22px] p-8">
 				<div className="field">
 					<label>Quiz to play</label>
 					<select
@@ -70,7 +73,7 @@ export default function CreateLiveRoomPage() {
 					</div>
 				)}
 
-				<Button block disabled={!quizId || pending} onClick={handleCreate}>
+				<Button block disabled={!quizId || pending} onClick={handleCreate} className="!min-h-[48px]">
 					{pending ? "Creating…" : "Create room"}
 				</Button>
 
@@ -81,6 +84,7 @@ export default function CreateLiveRoomPage() {
 					Have a code? Join a room →
 				</button>
 			</div>
-		</div>
+			</div>
+		</main>
 	);
 }
