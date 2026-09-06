@@ -8,3 +8,6 @@ graphify-out/
 !docs/
 
 # Root README is kept and tracked
+# Design reference files (not part of final codebase)
+frontend_design/
+hexquiz-preview.html
