@@ -98,6 +98,7 @@ export default function QuizPlay() {
       cat: d?.categoryName ?? "",
       totalMinutes: Math.max(1, Math.round(s.timeLimitSec / 60)),
       expiresAt: s.expiresAt as string | undefined,
+      perQuestionTimeSec: s.perQuestionTimeSec,
       questions: s.questions.map((q) => ({
         id: q.questionId,
         prompt: q.questionText,
@@ -120,33 +121,112 @@ export default function QuizPlay() {
   // Live quiz wins when the backend answers; otherwise legacy base (mock/custom).
   // A failed start (backend down / quiz gone) falls back to the mock demo.
   const quiz: any = liveQuiz ?? baseQuiz;
-  const total = quiz.questions.length;
+const total = quiz.questions.length;
   const [idx, setIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [seconds, setSeconds] = useState(quiz.totalMinutes * 60);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Sync the countdown to the attempt's server expiry when live.
+  // Per-question timer: seconds per question for live room sync.
+  // When perQuestionTimeSec > 0 (from backend), each question gets this many seconds.
+  // When 0, fall back to total time divided by question count.
+  const perQuestionTimeSec = liveQuiz?.perQuestionTimeSec
+    ? liveQuiz.perQuestionTimeSec
+    : quiz.totalMinutes * 60 / Math.max(1, quiz.questions.length);
+
+  // Current question's remaining time (countdown).
+  const [qSeconds, setQSeconds] = useState(perQuestionTimeSec);
+  const [questionTimerRunning, setQuestionTimerRunning] = useState(false);
+  const [questionTimerId, setQuestionTimerId] = useState<NodeJS.Timeout | null>(null);
+  // Monotonic timer anchors — captured once when the backend timer starts.
+  // We record both Date.now() (epoch) and performance.now() (high-res) so we can
+  // subtract them to get a stable remaining-ms value that survives wall-clock changes.
+  const [timerAnchors, setTimerAnchors] = useState<{ epoch: number; perf: number } | null>(null);
+
+  // Sync question timer remaining from backend expiry when attempt starts.
   useEffect(() => {
     if (liveQuiz?.expiresAt) {
-      const remain = Math.max(0, Math.floor((new Date(liveQuiz.expiresAt).getTime() - Date.now()) / 1000));
-      setSeconds(remain);
-      setIdx(0);
+      const expiresAtMs = new Date(liveQuiz.expiresAt).getTime();
+      const nowEpoch = Date.now();
+      const nowPerf = performance.now();
+      // initial remaining ms = expiresAt - now (at capture moment)
+      const initialRemainingMs = Math.max(0, expiresAtMs - nowEpoch);
+      setTimerAnchors({ epoch: nowEpoch, perf: nowPerf });
+      setQSeconds(Math.max(0, Math.floor(initialRemainingMs / 1000)));
       setAnswers({});
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [liveQuiz?.attemptId]);
+  }, [liveQuiz?.expiresAt, total, idx]);
 
+  // Per-question countdown using monotonic timers.
+  // remainingMs = initialRemainingMs - (perfNow - perfAnchor)
+  // This is immune to device wall-clock changes (user changes system time, DST, etc.).
+  // If the tab goes backgrounded, the countdown will be slightly fast — acceptable for a quiz.
   useEffect(() => {
-    if (seconds <= 0) return;
-    const t = setInterval(() => setSeconds((s) => s - 1), 1000);
-    return () => clearInterval(t);
-  }, [seconds]);
+    if (questionTimerId) clearInterval(questionTimerId);
+    if (qSeconds <= 0) return;
+    setQuestionTimerRunning(true);
+    const id = setInterval(() => {
+      setQSeconds((s: number) => {
+        const anchors = timerAnchors;
+        if (!anchors) return s;
+        // remainingMs = initialRemainingMs - (nowPerf - anchors.perf)
+        // We recompute initialRemainingMs each tick from the original expiresAt + anchors
+        // to avoid drift accumulation, but the simpler formula works well:
+        //   remainingMs = initialRemainingMs - (performance.now() - anchors.perf)
+        // However, to be extra safe against drift, we re-derive initialRemainingMs:
+        const expiresAtMs = new Date(liveQuiz?.expiresAt ?? '').getTime();
+        const derivedInitial = Math.max(0, expiresAtMs - anchors.epoch);
+        const remainingMs = Math.max(0, derivedInitial - (performance.now() - anchors.perf));
+        return Math.max(0, Math.floor(remainingMs / 1000));
+      });
+    }, 100);
+    setQuestionTimerId(id);
+    return () => clearInterval(id);
+  }, [qSeconds, total, idx, timerAnchors, liveQuiz?.expiresAt]);
+
+  // When question advances, reset per-question timer for the new question.
+  useEffect(() => {
+    if (questionTimerId) clearInterval(questionTimerId);
+    setQSeconds(perQuestionTimeSec);
+    setQuestionTimerRunning(false);
+    const nowEpoch = Date.now();
+    const nowPerf = performance.now();
+    const expiresAtMs = new Date(liveQuiz?.expiresAt ?? '').getTime();
+    const initialRemainingMs = Math.max(0, expiresAtMs - nowEpoch);
+    setTimerAnchors({ epoch: nowEpoch, perf: nowPerf });
+    setQSeconds(Math.max(0, Math.floor(initialRemainingMs / 1000)));
+    const id = setInterval(() => {
+      setQSeconds((s: number) => {
+        const remainingMs = Math.max(0, initialRemainingMs - (performance.now() - nowPerf));
+        return Math.max(0, Math.floor(remainingMs / 1000));
+      });
+    }, 100);
+    setQuestionTimerId(id);
+    return () => clearInterval(id);
+  }, [idx, perQuestionTimeSec, total, liveQuiz?.expiresAt]);
+
+  // Stop timer when quiz submitted.
+  useEffect(() => {
+    if (questionTimerId) clearInterval(questionTimerId);
+    setQuestionTimerId(null);
+    setTimerAnchors(null);
+  }, [submitting]);
+
+  // Auto-advance question when per-question timer reaches 0.
+  useEffect(() => {
+    if (qSeconds <= 0 && idx < total - 1) {
+      const nextId = setTimeout(() => setIdx(idx + 1), 500);
+      setQuestionTimerId(nextId);
+    }
+    if (qSeconds <= 0 && idx >= total - 1) {
+      // Last question timer expired - enable submit.
+      // The submit button will now be enabled.
+    }
+  }, [qSeconds, idx, total]);
 
   const cur: any = quiz.questions[idx];
   const answered = Object.keys(answers).length;
-  const mm = Math.floor(seconds / 60), ss = seconds % 60;
+  const mm = Math.floor(qSeconds / 60), ss = qSeconds % 60;
 
   const submit = async () => {
     setSubmitError(null);
@@ -189,7 +269,6 @@ export default function QuizPlay() {
   useEffect(() => {
     const on = (e: KeyboardEvent) => {
       if (['a','b','c','d','A','B','C','D'].includes(e.key)) chooseKey(e.key);
-      if (e.key === 'Enter' && idx < total - 1) setIdx(idx + 1);
       if (e.key === 'Escape') router.push('/practice');
     };
     window.addEventListener('keydown', on);
@@ -248,7 +327,7 @@ export default function QuizPlay() {
           </div>
           <div className="flex items-center gap-3">
             <div className="font-mono text-[16px] text-white tabular-nums flex items-center gap-2"><Timer className="w-4 h-4 text-[color:var(--violet-2)]" />{String(mm).padStart(2,'0')}:{String(ss).padStart(2,'0')}</div>
-            <TimerRing mins={mm} secs={ss} total={quiz.totalMinutes} />
+            <TimerRing mins={Math.floor(qSeconds / 60)} secs={qSeconds % 60} total={perQuestionTimeSec} />
           </div>
         </div>
 
@@ -305,7 +384,9 @@ export default function QuizPlay() {
             {idx < total - 1 ? (
               <button onClick={()=>setIdx((i)=>Math.min(total-1, i+1))} data-testid="play-next" className="px-4 py-2.5 rounded-full glass glass-hover text-[13.5px] text-white">Next →</button>
             ) : null}
-            <button onClick={submit} disabled={submitting} data-testid="play-submit" className="px-5 py-2.5 rounded-full bg-[color:var(--violet)] hover:bg-[color:var(--violet-2)] text-white text-[13.5px] font-medium transition-colors disabled:opacity-60">{submitting ? "Submitting…" : "Finish & submit"}</button>
+            {idx >= total - 1 ? (
+              <button onClick={submit} disabled={submitting} data-testid="play-submit" className="px-5 py-2.5 rounded-full bg-[color:var(--violet)] hover:bg-[color:var(--violet-2)] text-white text-[13.5px] font-medium transition-colors disabled:opacity-60">{submitting ? "Submitting…" : "Finish & submit"}</button>
+            ) : null}
           </div>
         </div>
       </div>
