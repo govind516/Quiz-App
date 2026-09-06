@@ -17,3 +17,4 @@ hexquiz-preview.html
 .vscode/
 frontend/app/build/
 target/
+src/main/java/com/example/quizapp/attempt/repository/projection/WeeklyScore.java
