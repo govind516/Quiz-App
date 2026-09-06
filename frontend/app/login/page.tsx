@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,10 +10,12 @@ import { Wordmark } from "@/components/HexLogo";
 import { Eyebrow, FadeUp } from "@/components/Reveal";
 import { publicApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
+import { useAuth } from "@/lib/auth-context";
 import type { AuthResponse } from "@/lib/types";
 
 export default function Login() {
   const router = useRouter();
+  const { login: demoLogin, loginAsGuest, setSession } = useAuth();
   const [tab, setTab] = useState<"login" | "signup">("login");
   const [showPw, setShowPw] = useState(false);
   const [name, setName] = useState("");
@@ -22,20 +24,36 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [reason, setReason] = useState<string | null>(null);
+  const [from, setFrom] = useState<string | null>(null);
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    setReason(sp.get("reason"));
+    setFrom(sp.get("from"));
+  }, []);
+
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-    // Empty fields -> fallback to mock preview navigation (keeps demo usable)
-    if (!email || !password || (tab === "signup" && !name)) {
-      router.push("/");
+    if (!email.trim()) {
+      setError("Enter an email to continue.");
+      return;
+    }
+    // Empty password -> demo login path (Claude's frontend_design behavior)
+    // Demo-only: only the seeded admin account (guptagovind516@gmail.com) gets isAdmin
+    if (!password) {
+      const { isAdmin } = demoLogin(email);
+      router.push(isAdmin ? "/admin" : (from && from !== "/login" ? from : "/"));
+      return;
+    }
+    if (tab === "signup" && !name.trim()) {
+      setError("Enter your name.");
       return;
     }
     setLoading(true);
-    // Hybrid: try real backend, fallback to mock nav('/') for preview
+    // NOTE: backend exposes only /register (no /signup endpoint).
     const tryPaths =
-      tab === "login"
-        ? ["/api/auth/login"]
-        : ["/api/auth/signup", "/api/auth/register"];
+      tab === "login" ? ["/api/auth/login"] : ["/api/auth/register"];
     const body =
       tab === "login" ? { email, password } : { name, email, password };
     let lastErr: unknown = null;
@@ -46,19 +64,20 @@ export default function Login() {
           body,
         });
         useAuthStore.getState().setAuth(res);
-        router.push("/");
+        // Sync into AuthContext state (Nav + ProtectedRoute read from here).
+        // NOTE: a raw localStorage write is NOT enough — context state would
+        // stay null and /admin would bounce straight back to /login.
+        const isAdmin = String(res.user.role).toUpperCase() === "ADMIN";
+        setSession({ email: res.user.email, name: res.user.name, isAdmin });
+        router.push(isAdmin ? "/admin" : (from && from !== "/login" ? from : "/"));
         return;
       } catch (err: unknown) {
         lastErr = err;
-        // If not 404, don't try alternative path — surface error
         const status = err instanceof Error && "status" in err ? (err as { status: number }).status : undefined;
         if (status !== undefined && status !== 404) break;
-        // For signup, try next fallback path
         if (tab === "login") break;
       }
     }
-    // Backend unavailable or auth failed -> fallback to mock for preview
-    // If backend returned a real auth error (401/400/409), show it instead of silent fallback
     const status =
       lastErr !== null && typeof lastErr === "object" && "status" in lastErr
         ? (lastErr as { status: number }).status
@@ -74,12 +93,18 @@ export default function Login() {
       return;
     }
     if (isNetworkError || status === 404 || status === undefined) {
-      // preview fallback — keep mock submit behavior
-      router.push("/");
+      // preview fallback — use demo login
+      const { isAdmin } = demoLogin(email);
+      router.push(isAdmin ? "/admin" : (from && from !== "/login" ? from : "/"));
       return;
     }
     setError(msg || "Authentication failed");
     setLoading(false);
+  };
+
+  const handleGuest = () => {
+    loginAsGuest();
+    router.push("/");
   };
 
   return (
@@ -106,6 +131,13 @@ export default function Login() {
 
       <div className="relative flex flex-col justify-center p-8 md:p-16 bg-[color:var(--bg-2)]">
         <Link href="/" className="lg:hidden mb-10"><Wordmark size={26} /></Link>
+
+        {reason === "admin-required" && (
+          <div className="mb-6 rounded-xl border border-[color:var(--coral)]/30 bg-[color:var(--coral)]/[0.06] px-4 py-3 text-[13px] text-[color:var(--coral)]" data-testid="admin-required-notice">
+            That page is for admins only. Log in with an admin account to continue.
+          </div>
+        )}
+
         <FadeUp>
           <div className="inline-flex items-center rounded-full glass p-1 relative mb-8">
             {[{k:'login', l:'Log in'}, {k:'signup', l:'Sign up'}].map((t) => (
@@ -133,7 +165,8 @@ export default function Login() {
               )}
               <div>
                 <label className="block font-mono text-[10.5px] tracking-[0.18em] uppercase text-[color:var(--mute)] mb-2">Email</label>
-                <input type="email" placeholder="you@company.com" data-testid="auth-email" value={email} onChange={(e)=>setEmail(e.target.value)} className="w-full px-4 py-3.5 rounded-xl glass text-[14px] outline-none placeholder:text-[color:var(--mute)] focus:border-[color:var(--violet)]/50 transition-colors" />
+                <input type="email" placeholder="you@company.com" data-testid="auth-email" value={email} onChange={(e)=>{ setEmail(e.target.value); setError(null); }} className="w-full px-4 py-3.5 rounded-xl glass text-[14px] outline-none placeholder:text-[color:var(--mute)] focus:border-[color:var(--violet)]/50 transition-colors" />
+                <p className="mt-2 text-[11.5px] text-[color:var(--mute)]">Admin: <span className="font-mono text-[color:var(--ink-2)]">guptagovind516@gmail.com</span> + your backend <span className="font-mono text-[color:var(--ink-2)]">ADMIN_PASSWORD</span> (.env.secrets). Backend offline? Leave password empty for demo login.</p>
               </div>
               <div>
                 <label className="block font-mono text-[10.5px] tracking-[0.18em] uppercase text-[color:var(--mute)] mb-2">Password</label>
@@ -143,7 +176,7 @@ export default function Login() {
                 </div>
               </div>
 
-              {error && <p className="text-[13px] text-red-400" role="alert">{error}</p>}
+              {error && <p className="text-[13px] text-red-400" role="alert" data-testid="auth-error">{error}</p>}
 
               <button type="submit" data-testid="auth-submit" disabled={loading} className="group w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-xl bg-[color:var(--violet)] hover:bg-[color:var(--violet-2)] text-white text-[14px] font-medium transition-all disabled:opacity-60">
                 {tab === 'login' ? 'Continue' : 'Create account'}<ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -154,8 +187,8 @@ export default function Login() {
                 <div className="relative flex justify-center"><span className="px-3 bg-[color:var(--bg-2)] font-mono text-[10.5px] tracking-[0.18em] uppercase text-[color:var(--mute)]">or</span></div>
               </div>
 
-              <Link href="/" className="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-xl glass glass-hover text-[14px] text-white" data-testid="continue-guest">Continue as guest <ArrowUpRight className="w-4 h-4" /></Link>
-              <p className="text-center text-[12.5px] text-[color:var(--mute)]">Guest scores aren't saved — sign up to keep your progress.</p>
+              <button type="button" onClick={handleGuest} className="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-xl glass glass-hover text-[14px] text-white" data-testid="continue-guest">Continue as guest <ArrowUpRight className="w-4 h-4" /></button>
+              <p className="text-center text-[12.5px] text-[color:var(--mute)]">Guest scores aren&apos;t saved — sign up to keep your progress.</p>
             </motion.form>
           </AnimatePresence>
         </div>

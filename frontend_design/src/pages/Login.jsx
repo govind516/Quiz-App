@@ -1,17 +1,37 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowUpRight, Eye, EyeOff } from 'lucide-react';
 import Aurora from '@/components/Aurora';
 import { Wordmark } from '@/components/HexLogo';
 import { Eyebrow, FadeUp } from '@/components/Reveal';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Login() {
   const nav = useNavigate();
+  const location = useLocation();
+  const { login, loginAsGuest } = useAuth();
   const [tab, setTab] = useState('login');
   const [showPw, setShowPw] = useState(false);
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
 
-  const submit = (e) => { e.preventDefault(); nav('/'); };
+  const redirectReason = location.state?.reason;
+  const redirectTo = location.state?.from?.pathname;
+
+  const submit = (e) => {
+    e.preventDefault();
+    if (!email.trim()) { setError('Enter an email to continue.'); return; }
+    const { isAdmin } = login(email);
+    // Demo-only: only the seeded admin@ account (guptagovind516@gmail.com in mock
+    // data) gets isAdmin — everyone else logs in as a regular player.
+    nav(isAdmin ? '/admin' : (redirectTo && redirectTo !== '/login' ? redirectTo : '/'));
+  };
+
+  const continueAsGuest = () => {
+    loginAsGuest();
+    nav('/');
+  };
 
   return (
     <main className="relative min-h-screen grid grid-cols-1 lg:grid-cols-2 overflow-hidden" data-testid="login-main">
@@ -37,6 +57,13 @@ export default function Login() {
 
       <div className="relative flex flex-col justify-center p-8 md:p-16 bg-[color:var(--bg-2)]">
         <Link to="/" className="lg:hidden mb-10"><Wordmark size={26} /></Link>
+
+        {redirectReason === 'admin-required' && (
+          <div className="mb-6 rounded-xl border border-[color:var(--coral)]/30 bg-[color:var(--coral)]/[0.06] px-4 py-3 text-[13px] text-[color:var(--coral)]" data-testid="admin-required-notice">
+            That page is for admins only. Log in with an admin account to continue.
+          </div>
+        )}
+
         <FadeUp>
           <div className="inline-flex items-center rounded-full glass p-1 relative mb-8">
             {[{k:'login', l:'Log in'}, {k:'signup', l:'Sign up'}].map((t) => (
@@ -64,7 +91,8 @@ export default function Login() {
               )}
               <div>
                 <label className="block font-mono text-[10.5px] tracking-[0.18em] uppercase text-[color:var(--mute)] mb-2">Email</label>
-                <input type="email" placeholder="you@company.com" data-testid="auth-email" className="w-full px-4 py-3.5 rounded-xl glass text-[14px] outline-none placeholder:text-[color:var(--mute)] focus:border-[color:var(--violet)]/50 transition-colors" />
+                <input type="email" value={email} onChange={(e)=>{ setEmail(e.target.value); setError(''); }} placeholder="you@company.com" data-testid="auth-email" className="w-full px-4 py-3.5 rounded-xl glass text-[14px] outline-none placeholder:text-[color:var(--mute)] focus:border-[color:var(--violet)]/50 transition-colors" />
+                <p className="mt-2 text-[11.5px] text-[color:var(--mute)]">Demo: use <span className="font-mono text-[color:var(--ink-2)]">guptagovind516@gmail.com</span> for admin access, any other email logs in as a player.</p>
               </div>
               <div>
                 <label className="block font-mono text-[10.5px] tracking-[0.18em] uppercase text-[color:var(--mute)] mb-2">Password</label>
@@ -73,6 +101,8 @@ export default function Login() {
                   <button type="button" onClick={()=>setShowPw((v)=>!v)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-[color:var(--mute)] hover:text-white transition-colors">{showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button>
                 </div>
               </div>
+
+              {error && <p className="text-[12.5px] text-[color:var(--coral)]" data-testid="auth-error">{error}</p>}
 
               <button type="submit" data-testid="auth-submit" className="group w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-xl bg-[color:var(--violet)] hover:bg-[color:var(--violet-2)] text-white text-[14px] font-medium transition-all">
                 {tab === 'login' ? 'Continue' : 'Create account'}<ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -83,7 +113,7 @@ export default function Login() {
                 <div className="relative flex justify-center"><span className="px-3 bg-[color:var(--bg-2)] font-mono text-[10.5px] tracking-[0.18em] uppercase text-[color:var(--mute)]">or</span></div>
               </div>
 
-              <Link to="/" className="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-xl glass glass-hover text-[14px] text-white" data-testid="continue-guest">Continue as guest <ArrowUpRight className="w-4 h-4" /></Link>
+              <button type="button" onClick={continueAsGuest} className="w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-xl glass glass-hover text-[14px] text-white" data-testid="continue-guest">Continue as guest <ArrowUpRight className="w-4 h-4" /></button>
               <p className="text-center text-[12.5px] text-[color:var(--mute)]">Guest scores aren't saved — sign up to keep your progress.</p>
             </motion.form>
           </AnimatePresence>

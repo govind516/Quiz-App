@@ -43,22 +43,36 @@ public class QuizService {
 
 	@Transactional(readOnly = true)
 	public List<QuizDto> browse(String categorySlug, Difficulty difficulty, String tagSlug) {
-		return quizRepository
-				.searchPublished(
-						StringUtils.hasText(categorySlug) ? categorySlug : null,
-						difficulty,
-						StringUtils.hasText(tagSlug) ? tagSlug : null)
-				.stream()
-				.map(this::toDto)
+		List<Quiz> quizzes = quizRepository.searchPublished(
+				StringUtils.hasText(categorySlug) ? categorySlug : null,
+				difficulty,
+				StringUtils.hasText(tagSlug) ? tagSlug : null);
+		java.util.Map<Long, Long> counts = approvedCounts(quizzes);
+		return quizzes.stream()
+				.map(q -> toDto(q, counts.getOrDefault(q.getId(), 0L)))
 				.toList();
 	}
 
 	@Transactional(readOnly = true)
 	public List<QuizDto> listAllForAdmin() {
-		return quizRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "id"))
-				.stream()
-				.map(this::toDto)
+		List<Quiz> quizzes = quizRepository.findAllWithDetails(
+				org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "id"));
+		java.util.Map<Long, Long> counts = approvedCounts(quizzes);
+		return quizzes.stream()
+				.map(q -> toDto(q, counts.getOrDefault(q.getId(), 0L)))
 				.toList();
+	}
+
+	private java.util.Map<Long, Long> approvedCounts(List<Quiz> quizzes) {
+		if (quizzes.isEmpty()) {
+			return java.util.Map.of();
+		}
+		List<Long> ids = quizzes.stream().map(Quiz::getId).toList();
+		java.util.Map<Long, Long> counts = new java.util.HashMap<>();
+		for (Object[] row : questionRepository.countApprovedByQuizIds(ids, QuestionStatus.APPROVED)) {
+			counts.put((Long) row[0], (Long) row[1]);
+		}
+		return counts;
 	}
 
 	@Transactional(readOnly = true)
@@ -195,6 +209,11 @@ public class QuizService {
 	}
 
 	public QuizDto toDto(Quiz quiz) {
+		return toDto(quiz,
+				questionRepository.countByQuizIdAndStatus(quiz.getId(), QuestionStatus.APPROVED));
+	}
+
+	private QuizDto toDto(Quiz quiz, long approvedCount) {
 		return new QuizDto(
 				quiz.getId(),
 				quiz.getTitle(),
@@ -206,7 +225,7 @@ public class QuizService {
 				quiz.getDifficulty(),
 				quiz.getTimeLimitSec(),
 				quiz.isPublished(),
-				(int) questionRepository.countByQuizIdAndStatus(quiz.getId(), QuestionStatus.APPROVED),
+				(int) approvedCount,
 				quiz.getTags().stream().map(Tag::getSlug).collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new)),
 				quiz.getCreatedBy() == null ? null : quiz.getCreatedBy().getName(),
 				quiz.getCreatedAt());

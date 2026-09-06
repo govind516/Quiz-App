@@ -7,7 +7,8 @@ import { ArrowUpRight, ArrowRight, Zap, ChevronRight } from "lucide-react";
 import Aurora from "@/components/Aurora";
 import { Eyebrow, RevealHeading, FadeUp } from "@/components/Reveal";
 import { Hex } from "@/components/Hex";
-import { categories, quizzes, codeSnippets, leaders, stats, testimonials } from "@/lib/mock";
+import { categories, quizzes as mockQuizzes, codeSnippets, leaders, stats, testimonials } from "@/lib/mock";
+import { useLiveQuizzes } from "@/lib/live-quizzes";
 
 function CodeConstellation() {
   const [idx, setIdx] = useState(0);
@@ -136,10 +137,13 @@ export default function Home() {
   const heroOpacity = useTransform(scrollYProgress, [0, 1], [1, 0.2]);
   const mx = useMotionValue(0), my = useMotionValue(0);
   const sx = useSpring(mx, { stiffness: 60, damping: 20 }), sy = useSpring(my, { stiffness: 60, damping: 20 });
+  // Live backend quizzes for the "Live right now" shelf; mock fallback offline.
+  const { quizzes: liveQuizzes } = useLiveQuizzes();
+  const quizzes = liveQuizzes.length ? liveQuizzes : mockQuizzes;
 
   return (
     <main className="relative" data-testid="home-main">
-      <section ref={heroRef as any} className="relative pt-40 pb-24 md:pt-48 md:pb-32 overflow-hidden" onMouseMove={(e) => { mx.set(e.clientX); my.set(e.clientY); }}>
+      <section ref={heroRef as any} className="relative pt-40 pb-24 md:pt-48 md:pb-32 overflow-hidden" style={{ paddingTop: "12rem" } as React.CSSProperties} onMouseMove={(e) => { mx.set(e.clientX); my.set(e.clientY); }}>
         <Aurora />
         <motion.div className="spotlight" style={{ left: sx, top: sy, opacity: 0.6 }} />
         <motion.div style={{ y: heroY, opacity: heroOpacity }} className="relative mx-auto max-w-[1400px] px-6 md:px-10">

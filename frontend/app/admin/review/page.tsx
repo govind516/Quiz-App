@@ -1,57 +1,62 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { Check, X, Sparkles } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Eyebrow, FadeUp } from "@/components/Reveal";
-import { reviewQueue as mockReviewQueue } from "@/lib/mock";
+import { AdminError, AdminLoading } from "@/components/admin-state";
 import { api } from "@/lib/api";
-import type { QuestionAdminDto } from "@/lib/types";
+import type { QuestionAdminDto, QuizDto } from "@/lib/types";
 
 export default function ReviewQueue() {
-  const [items, setItems] = useState(mockReviewQueue);
   const queryClient = useQueryClient();
 
-  // TODO: backend wiring — fetch pending questions; fallback to mock
+  // Live pending questions from the database — no mock fallback in the admin console.
   const pendingQuery = useQuery({
     queryKey: ["admin", "pending"],
     queryFn: () => api<QuestionAdminDto[]>("/api/admin/questions/pending"),
     retry: false,
   });
 
+  // Quiz titles for context on each pending item.
+  const quizzesQuery = useQuery({
+    queryKey: ["admin", "quizzes-list"],
+    queryFn: () => api<QuizDto[]>("/api/admin/quizzes"),
+    retry: false,
+  });
+  const quizTitle = new Map((quizzesQuery.data ?? []).map((q) => [q.id, q.title]));
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["admin", "pending"] });
+    queryClient.invalidateQueries({ queryKey: ["admin", "pending-count"] });
+    queryClient.invalidateQueries({ queryKey: ["admin", "questions"] });
+  };
   const approveMutation = useMutation({
     mutationFn: (id: number) => api(`/api/admin/questions/${id}/approve`, { method: "POST" }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "pending"] }),
+    onSettled: invalidate,
   });
   const rejectMutation = useMutation({
-    mutationFn: (id: number) => api(`/api/admin/questions/${id}`, { method: "DELETE" }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "pending"] }),
+    mutationFn: (id: number) => api(`/api/admin/questions/${id}/reject`, { method: "POST" }),
+    onSettled: invalidate,
   });
 
-  const displayItems: any[] = pendingQuery.data
-    ? pendingQuery.data.map((q) => ({
-        id: String(q.questionId),
-        rawId: q.questionId,
-        cat: "—",
-        difficulty: "—",
-        prompt: q.questionText,
-        choices: q.options.map((o) => ({ text: o.optionText, correct: o.isCorrect })),
-        generatedBy: "Gemini Flash 6.0",
-        submittedAt: "now",
-      }))
-    : items;
+  const displayItems: any[] = (pendingQuery.data ?? []).map((q) => ({
+    id: String(q.questionId),
+    rawId: q.questionId,
+    quiz: quizTitle.get(q.quizId) ?? `Quiz #${q.quizId}`,
+    prompt: q.questionText,
+    choices: q.options.map((o) => ({ text: o.optionText, correct: o.isCorrect })),
+  }));
 
   const decide = (id: string, approve: boolean) => {
-    // optimistic local fallback
-    setItems((it) => it.filter((x) => x.id !== id));
     const found = displayItems.find((x) => x.id === id);
-    if (found?.rawId) {
-      if (approve) approveMutation.mutate(found.rawId);
-      else rejectMutation.mutate(found.rawId);
-    }
+    if (!found?.rawId) return;
+    if (approve) approveMutation.mutate(found.rawId);
+    else rejectMutation.mutate(found.rawId);
   };
 
   const count = displayItems.length;
+  const busy = approveMutation.isPending || rejectMutation.isPending;
 
   return (
     <div data-testid="admin-review">
@@ -62,9 +67,14 @@ export default function ReviewQueue() {
         <h1 className="mt-4 font-display text-[48px] md:text-[64px] leading-[0.95] text-white">Review queue</h1>
       </FadeUp>
       <FadeUp delay={0.2} className="mt-2 text-[color:var(--ink-2)]">
-        {count} pending · drafted by Gemini Flash 6.0
+        {!pendingQuery.isPending && !pendingQuery.isError ? `${count} pending` : " "}
       </FadeUp>
 
+      {pendingQuery.isError ? (
+        <AdminError error={pendingQuery.error} retry={() => pendingQuery.refetch()} />
+      ) : pendingQuery.isPending ? (
+        <AdminLoading rows={3} />
+      ) : (
       <div className="mt-8 space-y-4">
         {count === 0 && (
           <FadeUp className="rounded-2xl glass p-10 text-center">
@@ -84,17 +94,13 @@ export default function ReviewQueue() {
                     PENDING_REVIEW
                   </span>
                   <span className="px-2.5 py-1 rounded-md text-[11px] font-mono border border-white/10 text-[color:var(--ink-2)]">
-                    {q.cat}
-                  </span>
-                  <span className="px-2.5 py-1 rounded-md text-[11px] font-mono border border-white/10 text-[color:var(--ink-2)]">
-                    {q.difficulty}
+                    {q.quiz}
                   </span>
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-mono border border-[color:var(--violet)]/25 text-[color:var(--violet-2)] bg-[color:var(--violet)]/10">
                     <Sparkles className="w-3 h-3" />
-                    {q.generatedBy}
+                    AI draft
                   </span>
                 </div>
-                <div className="font-mono text-[11px] text-[color:var(--mute)]">{q.submittedAt}</div>
               </div>
               <div className="mt-4 font-display text-[20px] text-white leading-snug">{q.prompt}</div>
               <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -111,15 +117,17 @@ export default function ReviewQueue() {
               <div className="mt-5 flex items-center gap-3">
                 <button
                   onClick={() => decide(q.id, true)}
+                  disabled={busy}
                   data-testid={`rv-approve-${q.id}`}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[color:var(--mint)]/15 hover:bg-[color:var(--mint)]/25 border border-[color:var(--mint)]/30 text-[color:var(--mint)] text-[13px] transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[color:var(--mint)]/15 hover:bg-[color:var(--mint)]/25 border border-[color:var(--mint)]/30 text-[color:var(--mint)] text-[13px] transition-colors disabled:opacity-40"
                 >
                   <Check className="w-4 h-4" /> Approve
                 </button>
                 <button
                   onClick={() => decide(q.id, false)}
+                  disabled={busy}
                   data-testid={`rv-reject-${q.id}`}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[color:var(--coral)]/10 hover:bg-[color:var(--coral)]/20 border border-[color:var(--coral)]/30 text-[color:var(--coral)] text-[13px] transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[color:var(--coral)]/10 hover:bg-[color:var(--coral)]/20 border border-[color:var(--coral)]/30 text-[color:var(--coral)] text-[13px] transition-colors disabled:opacity-40"
                 >
                   <X className="w-4 h-4" /> Reject
                 </button>
@@ -134,6 +142,7 @@ export default function ReviewQueue() {
           </FadeUp>
         ))}
       </div>
+      )}
     </div>
   );
 }

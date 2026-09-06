@@ -265,7 +265,7 @@ export interface AdminUserItem {
 	email: string;
 	role: "USER" | "ADMIN";
 	createdAt: string;
-	attemptsCompleted: number;
+	completedAttempts: number;
 	banned: boolean;
 }
 

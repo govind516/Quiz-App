@@ -1,12 +1,18 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Timer } from "lucide-react";
 import { Wordmark } from "@/components/HexLogo";
 import { playQuiz } from "@/lib/mock";
+import { api } from "@/lib/api";
+import { useAuthStore } from "@/lib/auth-store";
+import { getGuestSessionId, saveStartPayload } from "@/lib/guest-session";
+import { setCachedResult } from "@/lib/result-cache";
+import type { AttemptResultDto, QuizDto, StartAttemptResponse, SubmitAnswerDto } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -25,68 +31,112 @@ function TimerRing({ mins, secs, total }: { mins: number; secs: number; total: n
   );
 }
 
-// --- Hybrid backend scaffold (mock primary, API-ready) ---
-// Keeps mock as primary for pixel-perfect preview; swap in when backend is available.
-async function fetchQuizFromApi(quizId: string): Promise<any | null> {
-  try {
-    const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
-    const res = await fetch(`${base}/api/quizzes/${quizId}`, { cache: "no-store" });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
-  }
-}
-async function startAttemptApi(quizId: string, opts: { guestSessionId?: string; token?: string }): Promise<any | null> {
-  try {
-    const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (opts.token) headers["Authorization"] = `Bearer ${opts.token}`;
-    const res = await fetch(`${base}/api/attempts/${quizId}/start`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(opts.guestSessionId ? { guestSessionId: opts.guestSessionId } : {}),
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
-  }
-}
-async function submitAttemptApi(attemptId: string, payload: any, token?: string): Promise<any | null> {
-  try {
-    const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-    const res = await fetch(`${base}/api/attempts/${attemptId}/submit`, { method: "POST", headers, body: JSON.stringify(payload) });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
-  }
-}
+const cap = (s: string) => (s ? s.charAt(0) + s.slice(1).toLowerCase() : s);
 
 export default function QuizPlay() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
-  // Mock primary for visual exactness; hybrid fetch scaffold above can hydrate remote quiz when available.
-  const quiz: any = playQuiz;
+  const user = useAuthStore((s) => s.user);
+
+  const isCustom = id === "custom";
+  const numericId = /^\d+$/.test(id ?? "");
+
+  // Stable guest session (backend requires a UUID for guest attempts).
+  const [gsid, setGsid] = useState<string | null>(null);
+  useEffect(() => {
+    try { setGsid(getGuestSessionId()); } catch { setGsid(null); }
+  }, []);
+
+  // --- Legacy paths (unchanged): /build custom quiz via sessionStorage, mock q* quizzes ---
+  const [baseQuiz] = useState<any>(() => {
+    if (isCustom && typeof window !== "undefined") {
+      try {
+        const stored = JSON.parse(sessionStorage.getItem("custom-quiz") || "null");
+        if (stored?.questions?.length) return stored;
+      } catch { /* fall through to default */ }
+    }
+    return playQuiz;
+  });
+  const [notice] = useState(() => {
+    if (!isCustom || typeof window === "undefined") return "";
+    const n = sessionStorage.getItem("custom-quiz-notice") || "";
+    sessionStorage.removeItem("custom-quiz-notice");
+    return n;
+  });
+
+  // --- Live backend attempt (numeric quiz ids): detail for meta, start for questions ---
+  const detailQ = useQuery({
+    queryKey: ["quiz", id],
+    queryFn: () => api<QuizDto>(`/api/quizzes/${id}`, { auth: false }),
+    enabled: numericId,
+    retry: false,
+    staleTime: Infinity,
+  });
+  // POST once per (quiz, identity): staleTime Infinity + stable key dedupes StrictMode remounts.
+  const startQ = useQuery({
+    queryKey: ["attempt-start", id, user?.id ?? "guest"],
+    queryFn: () =>
+      api<StartAttemptResponse>(`/api/quizzes/${id}/start`, {
+        method: "POST",
+        auth: Boolean(user),
+        body: user ? {} : { guestSessionId: gsid },
+      }),
+    enabled: numericId && (Boolean(user) || gsid !== null),
+    retry: false,
+    staleTime: Infinity,
+  });
+
+  const liveQuiz = useMemo(() => {
+    const s = startQ.data;
+    if (!s) return null;
+    const d = detailQ.data;
+    return {
+      id: `live-${s.attemptId}`,
+      attemptId: s.attemptId as number,
+      title: s.quizTitle,
+      level: d ? cap(d.difficulty) : "",
+      cat: d?.categoryName ?? "",
+      totalMinutes: Math.max(1, Math.round(s.timeLimitSec / 60)),
+      expiresAt: s.expiresAt as string | undefined,
+      questions: s.questions.map((q) => ({
+        id: q.questionId,
+        prompt: q.questionText,
+        options: q.options.map((o) => o.optionText),
+        optIds: q.options.map((o) => o.optionId),
+      })),
+    };
+  }, [startQ.data, detailQ.data]);
+
+  // Cache the start payload so /results can map option ids back to text.
+  const savedRef = useRef<number | null>(null);
+  useEffect(() => {
+    const s = startQ.data;
+    if (s && savedRef.current !== s.attemptId) {
+      savedRef.current = s.attemptId;
+      try { saveStartPayload(s); } catch {}
+    }
+  }, [startQ.data]);
+
+  // Live quiz wins when the backend answers; otherwise legacy base (mock/custom).
+  // A failed start (backend down / quiz gone) falls back to the mock demo.
+  const quiz: any = liveQuiz ?? baseQuiz;
   const total = quiz.questions.length;
   const [idx, setIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [seconds, setSeconds] = useState(quiz.totalMinutes * 60);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Optional: attempt backend fetch to allow future hybrid mode without affecting mock preview.
-  // Falls back to mock if fetch fails — keeps pixel-perfect rendering intact.
+  // Sync the countdown to the attempt's server expiry when live.
   useEffect(() => {
-    if (!id) return;
-    void fetchQuizFromApi(id).then((remote) => {
-      if (remote) {
-        // Intentionally no state swap to preserve mock visuals; wire: setQuiz(remote) when ready.
-        void startAttemptApi(id, {});
-      }
-    });
-  }, [id]);
+    if (liveQuiz?.expiresAt) {
+      const remain = Math.max(0, Math.floor((new Date(liveQuiz.expiresAt).getTime() - Date.now()) / 1000));
+      setSeconds(remain);
+      setIdx(0);
+      setAnswers({});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveQuiz?.attemptId]);
 
   useEffect(() => {
     if (seconds <= 0) return;
@@ -98,13 +148,34 @@ export default function QuizPlay() {
   const answered = Object.keys(answers).length;
   const mm = Math.floor(seconds / 60), ss = seconds % 60;
 
-  const submit = () => {
+  const submit = async () => {
+    setSubmitError(null);
+    // Live path: grade server-side, then show the attempt result.
+    if (quiz.attemptId) {
+      const payloadAnswers: SubmitAnswerDto[] = quiz.questions
+        .filter((q: any) => answers[q.id] !== undefined)
+        .map((q: any) => ({ questionId: q.id, selectedOptionIds: [q.optIds[answers[q.id]]] }));
+      setSubmitting(true);
+      try {
+        const res = await api<AttemptResultDto>(`/api/attempts/${quiz.attemptId}/submit`, {
+          method: "POST",
+          auth: Boolean(user),
+          body: user ? { answers: payloadAnswers } : { guestSessionId: gsid, answers: payloadAnswers },
+        });
+        setCachedResult(String(quiz.attemptId), res);
+        router.push(`/results/${quiz.attemptId}`);
+      } catch (e: any) {
+        setSubmitError(e?.message || "Submit failed — try again");
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+    // Legacy client-side grading (custom builds + mock demo).
     const correct = quiz.questions.filter((q: any) => answers[q.id] === q.answer).length;
     try {
       sessionStorage.setItem(`result-${id || quiz.id}`, JSON.stringify({ correct, total, answers, quiz }));
     } catch {}
-    // Hybrid: try backend submit if attempt exists, fallback to sessionStorage mock already saved
-    // void submitAttemptApi(String(id || quiz.id), { answers });
     router.push(`/results/${id || quiz.id}`);
   };
 
@@ -123,9 +194,33 @@ export default function QuizPlay() {
     };
     window.addEventListener('keydown', on);
     return () => window.removeEventListener('keydown', on);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx, total, cur]);
 
   const progressPct = useMemo(() => ((idx + 1) / total) * 100, [idx, total]);
+
+  // Numeric id still starting the attempt: loading shell (same visual language).
+  if (numericId && !liveQuiz && !startQ.isError) {
+    return (
+      <main className="relative min-h-screen bg-[color:var(--bg)]" data-testid="play-main">
+        <div className="sticky top-0 z-40 backdrop-blur-md bg-[color:var(--bg)]/70 border-b border-white/[0.05]">
+          <div className="mx-auto max-w-[1100px] px-6 md:px-10 h-16 flex items-center justify-between">
+            <Link href="/practice"><Wordmark size={22} /></Link>
+          </div>
+        </div>
+        <div className="mx-auto max-w-[1100px] px-6 md:px-10 pt-10 pb-16 animate-pulse">
+          <div className="h-8 w-64 rounded-full bg-white/[0.06]" />
+          <div className="mt-6 rounded-3xl glass p-8 md:p-10">
+            <div className="h-9 w-3/4 rounded-xl bg-white/[0.06]" />
+            <div className="mt-4 h-9 w-1/2 rounded-xl bg-white/[0.04]" />
+          </div>
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="mt-3 h-[76px] rounded-2xl border border-white/[0.06] bg-white/[0.02]" />
+          ))}
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="relative min-h-screen bg-[color:var(--bg)]" data-testid="play-main">
@@ -136,6 +231,11 @@ export default function QuizPlay() {
       </div>
 
       <div className="mx-auto max-w-[1100px] px-6 md:px-10 pt-10 pb-16">
+        {notice && (
+          <div className="mb-6 rounded-xl border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/[0.06] px-4 py-3 text-[13px] text-[color:var(--gold)]" data-testid="quiz-shortfall-notice">
+            {notice}
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button onClick={()=>router.back()} className="w-9 h-9 rounded-full glass grid place-items-center hover:bg-white/[0.06] transition-colors" data-testid="play-back">
@@ -195,13 +295,17 @@ export default function QuizPlay() {
           <span className="ml-2 px-2 py-0.5 rounded border border-white/10 text-white/70">Esc</span><span>Exit</span>
         </div>
 
+        {submitError && (
+          <p className="mt-6 text-[13px] text-red-400" role="alert" data-testid="play-submit-error">{submitError}</p>
+        )}
+
         <div className="mt-10 flex items-center justify-between">
           <button onClick={()=>setIdx((i)=>Math.max(0, i-1))} disabled={idx===0} data-testid="play-prev" className="px-4 py-2.5 rounded-full glass glass-hover text-[13.5px] text-white disabled:opacity-40 disabled:cursor-not-allowed">← Previous</button>
           <div className="flex items-center gap-3">
             {idx < total - 1 ? (
               <button onClick={()=>setIdx((i)=>Math.min(total-1, i+1))} data-testid="play-next" className="px-4 py-2.5 rounded-full glass glass-hover text-[13.5px] text-white">Next →</button>
             ) : null}
-            <button onClick={submit} data-testid="play-submit" className="px-5 py-2.5 rounded-full bg-[color:var(--violet)] hover:bg-[color:var(--violet-2)] text-white text-[13.5px] font-medium transition-colors">Finish &amp; submit</button>
+            <button onClick={submit} disabled={submitting} data-testid="play-submit" className="px-5 py-2.5 rounded-full bg-[color:var(--violet)] hover:bg-[color:var(--violet-2)] text-white text-[13.5px] font-medium transition-colors disabled:opacity-60">{submitting ? "Submitting…" : "Finish & submit"}</button>
           </div>
         </div>
       </div>

@@ -23,17 +23,20 @@ export const quizzes = [
   { id: 'q9', title: 'AWS: IAM Deep Dive',    cat: 'Cloud & AWS', level: 'Advanced',    q: 12, min: 20, desc: 'Roles, policies, STS, boundaries.' },
 ];
 
+// weeklyPts: points earned in the last 7 days (independent ranking from all-time pts).
+// categoryPts: points earned per topic track, keyed by category slug — used to build
+// the "By category" leaderboard view.
 export const leaders = [
-  { rank: 1, name: 'Kaia Moreno',      initials: 'KM', pts: 4820, streak: 42, country: 'ES' },
-  { rank: 2, name: 'Govind Iyer',      initials: 'GI', pts: 4610, streak: 31, country: 'IN' },
-  { rank: 3, name: 'Ramesh Patel',     initials: 'RP', pts: 4390, streak: 27, country: 'IN' },
-  { rank: 4, name: 'Anouk Laurent',    initials: 'AL', pts: 4110, streak: 22, country: 'FR' },
-  { rank: 5, name: 'Yuki Tanaka',      initials: 'YT', pts: 3980, streak: 19, country: 'JP' },
-  { rank: 6, name: 'Platform Admin',   initials: 'PA', pts: 3730, streak: 15, country: 'US' },
-  { rank: 7, name: 'Nadia Khoury',     initials: 'NK', pts: 3520, streak: 12, country: 'LB' },
-  { rank: 8, name: 'Milo Andersson',   initials: 'MA', pts: 3340, streak: 11, country: 'SE' },
-  { rank: 9, name: 'Priya Rao',        initials: 'PR', pts: 3210, streak: 9,  country: 'IN' },
-  { rank:10, name: 'E2E Player',       initials: 'EP', pts: 3080, streak: 8,  country: 'DE' },
+  { rank: 1, name: 'Kaia Moreno',      initials: 'KM', pts: 4820, streak: 42, country: 'ES', weeklyPts: 410, categoryPts: { javascript: 620, python: 340, dbms: 980, dsa: 1240, cloud: 210, networking: 180, security: 90,  'system-design': 760, os: 250, testing: 150 } },
+  { rank: 2, name: 'Govind Iyer',      initials: 'GI', pts: 4610, streak: 31, country: 'IN', weeklyPts: 560, categoryPts: { javascript: 1120, python: 260, dbms: 640, dsa: 480,  cloud: 340, networking: 210, security: 120, 'system-design': 640, os: 300, testing: 500 } },
+  { rank: 3, name: 'Ramesh Patel',     initials: 'RP', pts: 4390, streak: 27, country: 'IN', weeklyPts: 180, categoryPts: { javascript: 380, python: 210, dbms: 1340, dsa: 560,  cloud: 260, networking: 890, security: 140, 'system-design': 310, os: 200, testing: 100 } },
+  { rank: 4, name: 'Anouk Laurent',    initials: 'AL', pts: 4110, streak: 22, country: 'FR', weeklyPts: 620, categoryPts: { javascript: 260, python: 1180, dbms: 420, dsa: 640,  cloud: 180, networking: 160, security: 760, 'system-design': 210, os: 190, testing: 110 } },
+  { rank: 5, name: 'Yuki Tanaka',      initials: 'YT', pts: 3980, streak: 19, country: 'JP', weeklyPts: 340, categoryPts: { javascript: 210, python: 190, dbms: 260, dsa: 1420, cloud: 130, networking: 210, security: 180, 'system-design': 980, os: 160, testing: 240 } },
+  { rank: 6, name: 'Platform Admin',   initials: 'PA', pts: 3730, streak: 15, country: 'US', weeklyPts: 90,  categoryPts: { javascript: 310, python: 260, dbms: 340, dsa: 280,  cloud: 1160,networking: 240, security: 210, 'system-design': 320, os: 280, testing: 330 } },
+  { rank: 7, name: 'Nadia Khoury',     initials: 'NK', pts: 3520, streak: 12, country: 'LB', weeklyPts: 260, categoryPts: { javascript: 190, python: 220, dbms: 210, dsa: 260,  cloud: 210, networking: 1240,security: 160, 'system-design': 260, os: 620, testing: 150 } },
+  { rank: 8, name: 'Milo Andersson',   initials: 'MA', pts: 3340, streak: 11, country: 'SE', weeklyPts: 710, categoryPts: { javascript: 260, python: 210, dbms: 190, dsa: 240,  cloud: 260, networking: 180, security: 1080,'system-design': 210, os: 260, testing: 460 } },
+  { rank: 9, name: 'Priya Rao',        initials: 'PR', pts: 3210, streak: 9,  country: 'IN', weeklyPts: 130, categoryPts: { javascript: 210, python: 260, dbms: 190, dsa: 210,  cloud: 240, networking: 190, security: 160, 'system-design': 210, os: 210, testing: 1340 } },
+  { rank:10, name: 'E2E Player',       initials: 'EP', pts: 3080, streak: 8,  country: 'DE', weeklyPts: 200, categoryPts: { javascript: 160, python: 190, dbms: 210, dsa: 190,  cloud: 180, networking: 210, security: 190, 'system-design': 190, os: 190, testing: 1180 } },
 ];
 
 export const codeSnippets = [
@@ -182,3 +185,52 @@ export const playQuiz = {
     { id:14, prompt: 'Which is NOT truthy?', options: ['"0"','[]','1','"False"'], answer: 1 },
   ],
 };
+
+/* Question pool for the custom Build-a-quiz flow ---------------------- */
+// Small hand-authored pool per category/difficulty. In a real backend this
+// would come from the same question bank the admin CMS manages — this is a
+// frontend-only stand-in so /build has real content to sample from.
+export const questionPool = {
+  javascript: [
+    { prompt: 'What does `typeof null` evaluate to?', options: ['"null"', '"undefined"', '"object"', '"boolean"'], answer: 2, difficulty: 'Beginner' },
+    { prompt: 'Which method creates a new array without mutating the original?', options: ['push()', 'splice()', 'map()', 'sort()'], answer: 2, difficulty: 'Beginner' },
+    { prompt: 'What is a closure?', options: ['A loop that never ends', 'A function bundled with its lexical scope', 'A way to close a file handle', 'A CSS selector'], answer: 1, difficulty: 'Intermediate' },
+    { prompt: 'What does `Promise.allSettled` return once resolved?', options: ['The first settled promise only', 'An array of {status, value|reason} for every promise', 'A single merged value', 'Nothing — it throws'], answer: 1, difficulty: 'Advanced' },
+    { prompt: 'In the event loop, microtasks run relative to macrotasks how?', options: ['After all macrotasks', 'Before the next macrotask, after the current task', 'Randomly interleaved', 'Only on page unload'], answer: 1, difficulty: 'Advanced' },
+  ],
+  python: [
+    { prompt: 'What does `len([1,2,3])` return?', options: ['2', '3', '4', 'Error'], answer: 1, difficulty: 'Beginner' },
+    { prompt: 'Which keyword defines a function in Python?', options: ['func', 'def', 'function', 'lambda'], answer: 1, difficulty: 'Beginner' },
+    { prompt: 'What does a list comprehension `[x*2 for x in range(3)]` produce?', options: ['[0,1,2]', '[0,2,4]', '[2,4,6]', 'Error'], answer: 1, difficulty: 'Intermediate' },
+    { prompt: 'What is the GIL?', options: ['A garbage collector', 'A lock allowing only one thread to execute Python bytecode at a time', 'A type hint system', 'A package manager'], answer: 1, difficulty: 'Advanced' },
+    { prompt: 'What does `@dataclass` primarily generate for you?', options: ['A REST API', '__init__, __repr__, __eq__ boilerplate', 'A database schema', 'Type coercion'], answer: 1, difficulty: 'Intermediate' },
+  ],
+  dbms: [
+    { prompt: 'What does ACID stand for in transactions?', options: ['Atomicity, Consistency, Isolation, Durability', 'Access, Control, Index, Data', 'Aggregate, Cache, Index, Delete', 'None of these'], answer: 0, difficulty: 'Beginner' },
+    { prompt: 'What is the primary purpose of an index?', options: ['Encrypt data', 'Speed up read queries', 'Enforce foreign keys', 'Compress storage'], answer: 1, difficulty: 'Beginner' },
+    { prompt: 'What is a covering index?', options: ['An index that covers all tables', 'An index containing every column a query needs, avoiding a table lookup', 'A backup index', 'An index on a view'], answer: 1, difficulty: 'Intermediate' },
+    { prompt: 'What isolation level prevents non-repeatable reads but allows phantom reads?', options: ['Read uncommitted', 'Read committed', 'Repeatable read', 'Serializable'], answer: 2, difficulty: 'Advanced' },
+    { prompt: 'Why can adding an index slow down writes?', options: ['It locks the whole table permanently', 'Every write must also update the index structure', 'Indexes disable transactions', 'It does not slow writes'], answer: 1, difficulty: 'Intermediate' },
+  ],
+  networking: [
+    { prompt: 'What port does HTTPS use by default?', options: ['80', '21', '443', '8080'], answer: 2, difficulty: 'Beginner' },
+    { prompt: 'What does DNS resolve?', options: ['IP addresses to domain names', 'Domain names to IP addresses', 'MAC addresses to ports', 'None of these'], answer: 1, difficulty: 'Beginner' },
+    { prompt: 'What is the main advantage of HTTP/2 over HTTP/1.1?', options: ['Plain text headers', 'Multiplexed streams over one connection', 'No encryption needed', 'UDP transport'], answer: 1, difficulty: 'Intermediate' },
+    { prompt: 'In TCP, what does the three-way handshake establish?', options: ['Encryption keys', 'A reliable, ordered connection', 'DNS resolution', 'Load balancing'], answer: 1, difficulty: 'Intermediate' },
+    { prompt: 'What problem does TLS 1.3 0-RTT introduce a tradeoff around?', options: ['Slower handshakes', 'Replay attacks on early data', 'No encryption at all', 'IPv6 compatibility'], answer: 1, difficulty: 'Advanced' },
+  ],
+  'system-design': [
+    { prompt: 'What does horizontal scaling mean?', options: ['Adding more RAM to one server', 'Adding more servers', 'Upgrading the CPU', 'Reducing traffic'], answer: 1, difficulty: 'Beginner' },
+    { prompt: 'What is a cache-aside pattern?', options: ['The app checks the cache first, falls back to the DB on a miss', 'The DB writes directly to cache', 'Caching is disabled', 'A cache with no eviction'], answer: 0, difficulty: 'Intermediate' },
+    { prompt: 'Fanout-on-write vs fanout-on-read trades off what?', options: ['Nothing, they are identical', 'Write cost vs read cost for feed generation', 'Security vs speed', 'Storage vs CPU only'], answer: 1, difficulty: 'Advanced' },
+    { prompt: 'What does CAP theorem say you must choose between under a partition?', options: ['Cost vs Availability', 'Consistency vs Availability', 'Caching vs Persistence', 'Concurrency vs Atomicity'], answer: 1, difficulty: 'Advanced' },
+  ],
+  dsa: [
+    { prompt: 'What is the time complexity of binary search?', options: ['O(n)', 'O(log n)', 'O(n log n)', 'O(1)'], answer: 1, difficulty: 'Beginner' },
+    { prompt: 'Which data structure uses LIFO ordering?', options: ['Queue', 'Stack', 'Heap', 'Graph'], answer: 1, difficulty: 'Beginner' },
+    { prompt: 'What is the average time complexity of hash map lookup?', options: ['O(n)', 'O(log n)', 'O(1)', 'O(n^2)'], answer: 2, difficulty: 'Intermediate' },
+    { prompt: 'Dynamic programming primarily optimizes problems with which property?', options: ['Random ordering', 'Overlapping subproblems and optimal substructure', 'No recursion allowed', 'Only sorting problems'], answer: 1, difficulty: 'Advanced' },
+  ],
+};
+
+export const buildableCategories = Object.keys(questionPool);

@@ -35,7 +35,7 @@ body {
   letter-spacing: -0.01em;
 }
 
-.font-display { font-family: 'Fraunces', Georgia, serif; font-optical-sizing: auto; letter-spacing: -0.03em; }
+.font-display { font-family: 'Fraunces', serif; font-optical-sizing: auto; letter-spacing: -0.03em; }
 .font-mono   { font-family: 'JetBrains Mono', ui-monospace, monospace; }
 
 /* Subtle film grain */

@@ -23,7 +23,25 @@ function TimerRing({ mins, secs, total }) {
 export default function QuizPlay() {
   const nav = useNavigate();
   const { id } = useParams();
-  const quiz = playQuiz;
+
+  // /build generates a quiz on the spot and stores it under 'custom-quiz' —
+  // everything else still falls back to the demo playQuiz, matching the
+  // original behavior for /play/q1, /play/q2, etc.
+  const [quiz] = useState(() => {
+    if (id === 'custom') {
+      try {
+        const stored = JSON.parse(sessionStorage.getItem('custom-quiz') || 'null');
+        if (stored?.questions?.length) return stored;
+      } catch { /* fall through to default */ }
+    }
+    return playQuiz;
+  });
+  const [notice] = useState(() => {
+    if (id !== 'custom') return '';
+    const n = sessionStorage.getItem('custom-quiz-notice') || '';
+    sessionStorage.removeItem('custom-quiz-notice');
+    return n;
+  });
   const total = quiz.questions.length;
   const [idx, setIdx] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -73,6 +91,11 @@ export default function QuizPlay() {
       </div>
 
       <div className="mx-auto max-w-[1100px] px-6 md:px-10 pt-10 pb-16">
+        {notice && (
+          <div className="mb-6 rounded-xl border border-[color:var(--gold)]/30 bg-[color:var(--gold)]/[0.06] px-4 py-3 text-[13px] text-[color:var(--gold)]" data-testid="quiz-shortfall-notice">
+            {notice}
+          </div>
+        )}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button onClick={()=>nav(-1)} className="w-9 h-9 rounded-full glass grid place-items-center hover:bg-white/[0.06] transition-colors" data-testid="play-back">

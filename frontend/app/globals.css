@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -77,7 +77,7 @@ body {
   letter-spacing: -0.01em;
 }
 
-.font-display { font-family: 'Fraunces', Georgia, serif; font-optical-sizing: auto; letter-spacing: -0.03em; }
+.font-display { font-family: 'Fraunces', serif; font-optical-sizing: auto; letter-spacing: -0.03em; }
 .font-mono   { font-family: 'JetBrains Mono', ui-monospace, monospace; }
 
 /* Subtle film grain */
@@ -123,8 +123,10 @@ body {
 .glass {
   background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
   border: 1px solid var(--line);
+  /* NOTE: standard property only — Tailwind v4/lightningcss drops a
+     hand-written -webkit- duplicate and can take the standard one with it,
+     leaving the nav pill with no blur (text scrolls under sharply). */
   backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
 }
 
 .glass-hover { transition: border-color 300ms ease, background 300ms ease, transform 400ms cubic-bezier(0.16,1,0.3,1); }

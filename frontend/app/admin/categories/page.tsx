@@ -4,28 +4,27 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Eyebrow, FadeUp } from "@/components/Reveal";
 import { Hex } from "@/components/Hex";
-import { categories as mockCategories } from "@/lib/mock";
+import { AdminError, AdminLoading } from "@/components/admin-state";
 import { api } from "@/lib/api";
 import type { AdminCategory } from "@/lib/types";
 import { ArrowUpRight } from "lucide-react";
 
 export default function Categories() {
-  // TODO: backend wiring — fetch real categories; fallback to mock for pixel-perfect replica
+  // Live categories from the database — no mock fallback in the admin console.
   const categoriesQuery = useQuery({
     queryKey: ["admin", "categories"],
     queryFn: () => api<AdminCategory[]>("/api/admin/categories"),
     retry: false,
   });
 
-  const categories = categoriesQuery.data
-    ? categoriesQuery.data.map((c) => ({
-        slug: c.slug,
-        name: c.name,
-        count: c.quizzes,
-        color: "#A78BFA",
-        hint: c.description ?? "",
-      }))
-    : mockCategories;
+  const categories = (categoriesQuery.data ?? []).map((c) => ({
+    slug: c.slug,
+    name: c.name,
+    quizzes: c.quizzes,
+    questions: (c as { questions?: number }).questions ?? 0,
+    color: "#A78BFA",
+    hint: c.description ?? "",
+  }));
 
   return (
     <div data-testid="admin-categories">
@@ -36,9 +35,14 @@ export default function Categories() {
         <h1 className="mt-4 font-display text-[48px] md:text-[64px] leading-[0.95] text-white">Categories</h1>
       </FadeUp>
       <FadeUp delay={0.2} className="mt-2 text-[color:var(--ink-2)]">
-        {categories.length} tracks
+        {!categoriesQuery.isPending && !categoriesQuery.isError ? `${categories.length} tracks` : " "}
       </FadeUp>
 
+      {categoriesQuery.isError ? (
+        <AdminError error={categoriesQuery.error} retry={() => categoriesQuery.refetch()} />
+      ) : categoriesQuery.isPending ? (
+        <AdminLoading rows={4} />
+      ) : (
       <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4">
         {categories.map((c: any, i: number) => (
           <FadeUp key={c.slug} delay={i * 0.04}>
@@ -53,10 +57,10 @@ export default function Categories() {
                 </div>
                 <div>
                   <div className="font-display text-[24px] leading-tight text-white">{c.name}</div>
-                  <div className="mt-1 text-[13px] text-[color:var(--ink-2)]">{c.hint}</div>
+                  <div className="mt-1 text-[13px] text-[color:var(--ink-2)]">{c.hint || `${c.questions} questions`}</div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-[11px] text-[color:var(--mute)]">{c.count} quizzes</span>
+                  <span className="font-mono text-[11px] text-[color:var(--mute)]">{c.quizzes} quizzes</span>
                   <ArrowUpRight className="w-4 h-4 text-white/40 group-hover:text-white transition-colors" />
                 </div>
               </div>
@@ -64,6 +68,7 @@ export default function Categories() {
           </FadeUp>
         ))}
       </div>
+      )}
     </div>
   );
 }

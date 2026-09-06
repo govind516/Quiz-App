@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { ChevronDown, Sparkles } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Eyebrow, FadeUp } from "@/components/Reveal";
-import { categories as mockCategories } from "@/lib/mock";
 import { api } from "@/lib/api";
 import type { CategoryDto, GenerateQuestionsPayload, GeneratedQuestionsResult } from "@/lib/types";
 
@@ -14,18 +13,15 @@ export default function AIStudio() {
   const [count, setCount] = useState(5);
   const [type, setType] = useState("MCQ");
   const [difficulty, setDifficulty] = useState("Any");
-  const [generating, setGenerating] = useState(false);
-  const [done, setDone] = useState(false);
+  const [genError, setGenError] = useState<string | null>(null);
 
-  // TODO: backend wiring — fetch categories for dropdown
+  // Live categories from the database.
   const categoriesQuery = useQuery({
     queryKey: ["admin", "categories-ai"],
     queryFn: () => api<CategoryDto[]>("/api/admin/categories"),
     retry: false,
   });
-  const categories = categoriesQuery.data
-    ? categoriesQuery.data.map((c) => ({ name: c.name }))
-    : mockCategories;
+  const categories = (categoriesQuery.data ?? []).map((c) => ({ name: c.name }));
 
   const generateMutation = useMutation({
     mutationFn: (payload: GenerateQuestionsPayload) =>
@@ -34,9 +30,7 @@ export default function AIStudio() {
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    setGenerating(true);
-    setDone(false);
-    // Try real API; fallback to mock timeout for visual replica
+    setGenError(null);
     const catObj = categoriesQuery.data?.find((c) => c.name === cat);
     const payload: GenerateQuestionsPayload = {
       topic,
@@ -46,32 +40,13 @@ export default function AIStudio() {
       categoryId: catObj?.id,
     };
     generateMutation.mutate(payload, {
-      onSuccess: () => {
-        setGenerating(false);
-        setDone(true);
-      },
-      onError: () => {
-        // fallback visual delay if backend unavailable
-        setTimeout(() => {
-          setGenerating(false);
-          setDone(true);
-        }, 1400);
+      onError: (err: any) => {
+        setGenError(err?.message || "Generation failed");
       },
     });
-    // fallback timer if mutation hangs
-    setTimeout(() => {
-      if (generating) {
-        // handled by onError/onSuccess above; keep for mock path
-      }
-    }, 1400);
-    // For mock path when no backend, also set timeout
-    if (!categoriesQuery.data) {
-      // already handled via onError fallback; ensure still shows
-    }
   };
 
-  // Use local generating state derived from mutation pending as well
-  const isGenerating = generating || generateMutation.isPending;
+  const isGenerating = generateMutation.isPending;
 
   return (
     <div data-testid="admin-ai">
@@ -188,12 +163,21 @@ export default function AIStudio() {
               {isGenerating ? "Generating…" : "Generate questions"}
             </button>
 
-            {(done || generateMutation.isSuccess) && (
+            {generateMutation.isSuccess && (
               <div
                 className="mt-2 rounded-xl border border-[color:var(--mint)]/25 bg-[color:var(--mint)]/[0.06] p-4 text-[13.5px] text-[color:var(--mint)]"
                 data-testid="ai-success"
               >
                 Drafted {count} question(s) → sent to review queue.
+              </div>
+            )}
+            {(genError || generateMutation.isError) && (
+              <div
+                className="mt-2 rounded-xl border border-[color:var(--coral)]/30 bg-[color:var(--coral)]/[0.06] p-4 text-[13.5px] text-[color:var(--coral)]"
+                data-testid="ai-error"
+                role="alert"
+              >
+                {genError ?? "Generation failed — is the backend AI key configured?"}
               </div>
             )}
           </div>

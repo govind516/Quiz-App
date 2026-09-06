@@ -1,23 +1,34 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Wordmark } from "@/components/HexLogo";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, LogOut } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 import { useAuthStore } from "@/lib/auth-store";
 
-const links = [
+function initialsOf(name: string) {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+const baseLinks = [
   { to: "/practice", label: "Practice" },
   { to: "/leaderboard", label: "Leaderboard" },
-  { to: "/admin", label: "Build" },
-  { to: "/admin/review", label: "Live" },
+  { to: "/build", label: "Build" },
+  { to: "/live", label: "Live" },
 ];
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
-  const { user } = useAuthStore();
+  const router = useRouter();
+  const { isAuthenticated, isAdmin, user, logout } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -25,6 +36,9 @@ export default function Nav() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Build/Live are public (guest + authed) as requested; Admin console only for admins.
+  const links = isAdmin ? [...baseLinks, { to: "/admin", label: "Admin" }] : baseLinks;
 
   return (
     <motion.header
@@ -42,7 +56,7 @@ export default function Nav() {
 
           <nav className="hidden md:flex items-center gap-1 relative">
             {links.map((l) => {
-              const active = l.to === "/admin" ? pathname === "/admin" : pathname === l.to;
+              const active = l.to === "/admin" ? pathname?.startsWith("/admin") : pathname === l.to;
               return (
                 <Link key={l.to} href={l.to} className="relative px-5 py-2 text-[13.5px] text-[color:var(--ink-2)] hover:text-white transition-colors" data-testid={`nav-link-${l.label.toLowerCase()}`}>
                   {active && (
@@ -59,12 +73,31 @@ export default function Nav() {
           </nav>
 
           <div className="flex items-center gap-2">
-            {user && user.role === "ADMIN" && (
+            {isAdmin && (
               <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono text-[color:var(--violet-2)] border border-[color:var(--violet)]/25 bg-[color:var(--violet)]/10">
                 Admin
               </span>
             )}
-            {!user ? (
+            {isAuthenticated ? (
+              <>
+                <Link
+                  href="/profile"
+                  title="Profile"
+                  data-testid="nav-profile-link"
+                  className="w-8 h-8 rounded-full grid place-items-center font-mono text-xs text-white border border-white/10 hover:border-[color:var(--violet-2)]/60 transition-colors"
+                  style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.25), rgba(127,231,206,0.18))" }}
+                >
+                  {initialsOf(user?.name || "G")}
+                </Link>
+                <button
+                  onClick={() => { logout(); useAuthStore.getState().logout(); router.push("/"); }}
+                  className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13.5px] text-[color:var(--ink-2)] hover:text-white hover:bg-white/[0.04] transition-colors"
+                  data-testid="nav-logout-btn"
+                >
+                  <LogOut className="w-3.5 h-3.5" /> {user?.guest ? "Exit guest" : "Log out"}
+                </button>
+              </>
+            ) : (
               <>
                 <Link href="/login" className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13.5px] text-[color:var(--ink-2)] hover:text-white hover:bg-white/[0.04] transition-colors" data-testid="nav-login-link">
                   Log in
@@ -74,10 +107,6 @@ export default function Nav() {
                   <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                 </Link>
               </>
-            ) : (
-              <Link href="/me" className="w-8 h-8 rounded-full grid place-items-center font-mono text-xs text-white border border-white/10" style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.25), rgba(127,231,206,0.18))" }}>
-                {user.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
-              </Link>
             )}
           </div>
         </div>

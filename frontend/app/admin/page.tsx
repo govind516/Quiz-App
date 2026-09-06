@@ -5,16 +5,17 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { Eyebrow, FadeUp } from "@/components/Reveal";
-import {
-  adminStats as mockStats,
-  attemptsWeek as mockAttemptsWeek,
-  avgScoreTrend as mockAvgScoreTrend,
-  quizCompletion as mockQuizCompletion,
-  topCategoriesWeek as mockTopCategoriesWeek,
-  adminQuizzes as mockAdminQuizzes,
-} from "@/lib/mock";
+import { AdminError, AdminLoading } from "@/components/admin-state";
 import { api } from "@/lib/api";
-import type { OverviewStats, ScoreTrendPoint, DropoffStats, QuizDto } from "@/lib/types";
+import type {
+  AdminAnalyticsDto,
+  CategoryPerformanceItem,
+  DropoffStats,
+  OverviewStats,
+  QuestionAdminDto,
+  QuizDto,
+  ScoreTrendPoint,
+} from "@/lib/types";
 
 function StatCard({ label, value, sub, accent, delay = 0 }: any) {
   return (
@@ -94,7 +95,7 @@ function AreaChart({
 }
 
 export default function Dashboard() {
-  // TODO: backend wiring — try real API, fallback to mock for pixel-perfect preview when backend unavailable
+  // Live backend data throughout — no mock fallbacks in the admin console.
   const overviewQ = useQuery({
     queryKey: ["admin", "overview"],
     queryFn: () => api<OverviewStats>("/api/admin/analytics/overview"),
@@ -102,7 +103,7 @@ export default function Dashboard() {
   });
   const attemptsQ = useQuery({
     queryKey: ["admin", "attemptsWeek"],
-    queryFn: () => api<{ date: string; count: number }[]>("/api/admin/analytics/attempts?days=7"),
+    queryFn: () => api<AdminAnalyticsDto>("/api/admin/analytics/attempts?days=7"),
     retry: false,
   });
   const scoresQ = useQuery({
@@ -120,46 +121,57 @@ export default function Dashboard() {
     queryFn: () => api<QuizDto[]>("/api/admin/quizzes"),
     retry: false,
   });
+  const categoriesQ = useQuery({
+    queryKey: ["admin", "analytics-categories"],
+    queryFn: () => api<CategoryPerformanceItem[]>("/api/admin/analytics/categories"),
+    retry: false,
+  });
+  const pendingQ = useQuery({
+    queryKey: ["admin", "pending-count"],
+    queryFn: () => api<QuestionAdminDto[]>("/api/admin/questions/pending"),
+    retry: false,
+  });
 
-  const stats = overviewQ.data
-    ? {
-        totalLearners: overviewQ.data.totalUsers,
-        attemptsToday: overviewQ.data.attemptsToday,
-        avgScore: overviewQ.data.avgScorePct30d,
-        pendingAI: mockStats.pendingAI,
-      }
-    : mockStats;
+  const queries = [overviewQ, attemptsQ, scoresQ, dropoffQ, quizzesQ, categoriesQ, pendingQ];
+  const firstError = queries.find((q) => q.isError)?.error;
+  const loading = queries.some((q) => q.isPending);
 
-  const attemptsWeek = attemptsQ.data
-    ? attemptsQ.data.map((d) => ({
-        day: new Date(d.date).toLocaleDateString("en-US", { weekday: "short" }).toUpperCase(),
-        val: d.count,
-      }))
-    : mockAttemptsWeek;
+  const stats = {
+    totalLearners: overviewQ.data?.totalUsers ?? 0,
+    attemptsToday: overviewQ.data?.attemptsToday ?? 0,
+    avgScore: Math.round(overviewQ.data?.avgScorePct30d ?? 0),
+    pendingAI: pendingQ.data?.length ?? 0,
+  };
 
-  const avgScoreTrend = scoresQ.data
-    ? scoresQ.data.map((d) => ({
-        day: new Date(d.date).toLocaleDateString("en-US", { weekday: "short" }).toUpperCase(),
-        val: Math.round(d.avgPct),
-      }))
-    : mockAvgScoreTrend;
+  const attemptsWeek = (attemptsQ.data?.daily ?? []).map((d) => ({
+    day: new Date(d.date).toLocaleDateString("en-US", { weekday: "short" }).toUpperCase(),
+    val: d.count,
+  }));
 
-  const quizCompletion = dropoffQ.data
-    ? { started: dropoffQ.data.started, finished: dropoffQ.data.completed, abandoned: dropoffQ.data.abandoned }
-    : mockQuizCompletion;
+  const avgScoreTrend = (scoresQ.data ?? []).map((d) => ({
+    day: new Date(d.date).toLocaleDateString("en-US", { weekday: "short" }).toUpperCase(),
+    val: Math.round(d.avgPct),
+  }));
 
-  // topCategoriesWeek fallback; could fetch from /api/admin/analytics/categories but keep mock shape
-  const topCategoriesWeek = mockTopCategoriesWeek;
+  const quizCompletion = {
+    started: dropoffQ.data?.started ?? 0,
+    finished: dropoffQ.data?.completed ?? 0,
+    abandoned: dropoffQ.data?.abandoned ?? 0,
+  };
 
-  const adminQuizzes = quizzesQ.data
-    ? quizzesQ.data.map((q) => ({
-        id: String(q.id),
-        title: q.title,
-        cat: q.categoryName,
-        status: q.isPublished ? "live" : "draft",
-        questions: q.questionCount,
-      }))
-    : mockAdminQuizzes;
+  const topCategoriesWeek = (categoriesQ.data ?? [])
+    .slice(0, 4)
+    .map((c) => ({ name: c.name, count: c.attempts }));
+
+  const adminQuizzes = (quizzesQ.data ?? []).map((q) => ({
+    id: String(q.id),
+    title: q.title,
+    cat: q.categoryName,
+    status: q.isPublished ? "live" : "draft",
+    questions: q.questionCount,
+  }));
+
+  const refetchAll = () => queries.forEach((q) => q.refetch());
 
   return (
     <div>
@@ -170,6 +182,12 @@ export default function Dashboard() {
         <h1 className="mt-4 font-display text-[48px] md:text-[64px] leading-[0.95] text-white">Dashboard</h1>
       </FadeUp>
 
+      {firstError ? (
+        <AdminError error={firstError} retry={refetchAll} />
+      ) : loading ? (
+        <AdminLoading rows={4} />
+      ) : (
+      <>
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total learners" value={stats.totalLearners} sub="no sign-ups this week" delay={0.05} />
         <StatCard label="Attempts finished today" value={stats.attemptsToday} sub="across 10 categories" delay={0.1} />
@@ -270,6 +288,11 @@ export default function Dashboard() {
             <div className="col-span-2">Status</div>
             <div className="col-span-1 text-right">Qs</div>
           </div>
+          {adminQuizzes.length === 0 && (
+            <div className="px-6 py-8 text-center text-[13.5px] text-[color:var(--mute)]">
+              No quizzes yet — create one to get started.
+            </div>
+          )}
           {adminQuizzes.map((q: any) => (
             <div
               key={q.id}
@@ -289,6 +312,8 @@ export default function Dashboard() {
           ))}
         </div>
       </FadeUp>
+      </>
+      )}
     </div>
   );
 }
