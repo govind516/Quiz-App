@@ -4,5 +4,8 @@ public record LeaderboardEntryDto(
 		int rank,
 		Long userId,
 		String name,
-		double score) {
+		double score,
+		String initials,
+		String country,
+		int streak) {
 }

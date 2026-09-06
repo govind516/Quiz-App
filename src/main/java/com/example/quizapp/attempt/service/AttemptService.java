@@ -85,7 +85,11 @@ public class AttemptService {
 		if (user == null) {
 			guestSessionId = requireGuestSessionId(request == null ? null : request.guestSessionId());
 		}
-		return createAttempt(quiz.getTitle(), quiz.getTimeLimitSec(), questions, user, guestSessionId, quiz);
+		int perQTimeSec = quiz.getQuestionTimeLimitSec();
+		if (perQTimeSec <= 0 && !questions.isEmpty()) {
+			perQTimeSec = Math.max(1, quiz.getTimeLimitSec() / questions.size());
+		}
+		return createAttempt(quiz.getTitle(), quiz.getTimeLimitSec(), perQTimeSec, questions, user, guestSessionId, quiz);
 	}
 
 	@Transactional
@@ -106,10 +110,10 @@ public class AttemptService {
 		String title = "Custom: "
 				+ (StringUtils.hasText(request.categorySlug()) ? request.categorySlug() : "Mixed")
 				+ " · " + count + " Qs";
-		return createAttempt(title, request.timeLimitSec(), picked, user, null, null);
+		return createAttempt(title, request.timeLimitSec(), 0, picked, user, null, null);
 	}
 
-	private StartAttemptResponse createAttempt(String title, int timeLimitSec,
+	private StartAttemptResponse createAttempt(String title, int timeLimitSec, int perQuestionTimeSec,
 			List<Question> questions, User user, String guestSessionId, Quiz quiz) {
 		Instant startedAt = Instant.now();
 		QuizAttempt attempt = attemptRepository.save(QuizAttempt.builder()
@@ -118,6 +122,7 @@ public class AttemptService {
 				.quiz(quiz)
 				.title(title)
 				.timeLimitSec(timeLimitSec)
+				.questionTimeLimitSec(perQuestionTimeSec)
 				.startedAt(startedAt)
 				.status(AttemptStatus.IN_PROGRESS)
 				.score(0)
@@ -153,6 +158,7 @@ public class AttemptService {
 				quiz == null ? null : quiz.getId(),
 				title,
 				timeLimitSec,
+				perQuestionTimeSec,
 				startedAt,
 				startedAt.plusSeconds(timeLimitSec),
 				publicQuestions);
@@ -306,7 +312,7 @@ public class AttemptService {
 					.toList();
 		} else {
 			orderedQuestions = orderedIds.stream()
-					.map(id -> quizQuestions.get(id))
+					.map(quizQuestions::get)
 					.filter(java.util.Objects::nonNull)
 					.toList();
 		}

@@ -44,6 +44,12 @@ public class LeaderboardController {
 		return ResponseEntity.ok(leaderboardService.topCategory(categoryId, clamp(limit)));
 	}
 
+	@GetMapping("/weekly")
+	public ResponseEntity<List<LeaderboardEntryDto>> weekly(
+			@RequestParam(defaultValue = "10") int limit) {
+		return ResponseEntity.ok(leaderboardService.topWeekly(clamp(limit)));
+	}
+
 	private static int clamp(int limit) {
 		if (limit < 1 || limit > 100) {
 			throw new BadRequestException("limit must be between 1 and 100");

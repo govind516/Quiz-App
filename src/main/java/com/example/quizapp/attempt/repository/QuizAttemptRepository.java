@@ -11,6 +11,7 @@ import com.example.quizapp.attempt.AttemptStatus;
 import com.example.quizapp.attempt.QuizAttempt;
 import com.example.quizapp.attempt.repository.projection.CategoryCount;
 import com.example.quizapp.attempt.repository.projection.DayCount;
+import com.example.quizapp.attempt.repository.projection.WeeklyScore;
 
 public interface QuizAttemptRepository extends JpaRepository<QuizAttempt, Long> {
 
@@ -53,6 +54,17 @@ public interface QuizAttemptRepository extends JpaRepository<QuizAttempt, Long> 
 	@org.springframework.data.jpa.repository.Modifying
 	@Query("DELETE FROM QuizAttempt a WHERE a.user.id = :userId")
 	int deleteByUserId(@Param("userId") Long userId);
+
+	@Query(value = """
+			SELECT u.id AS userId, u.name AS name, SUM(a.score) AS points
+			FROM quiz_attempts a JOIN users u ON u.id = a.user_id
+			WHERE a.status = 'SUBMITTED'
+			  AND a.completed_at >= CURRENT_DATE - CAST(:days AS integer)
+			GROUP BY u.id, u.name
+			ORDER BY points DESC
+			LIMIT 100
+			""", nativeQuery = true)
+	List<WeeklyScore> topWeeklyScores(@Param("days") int days);
 
 	@Query(value = """
 			SELECT TO_CHAR(a.completed_at, 'YYYY-MM-DD') AS day,

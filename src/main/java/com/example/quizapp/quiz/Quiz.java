@@ -67,6 +67,14 @@ public class Quiz {
 	@Column(name = "time_limit_sec", nullable = false)
 	private int timeLimitSec;
 
+	/**
+	 * Per-question time limit in seconds for live room quizzes.
+	 * When > 0, each question gets this many seconds (synchronized across all players).
+	 * When 0, falls back to totalTimeSec / questionCount (legacy behavior).
+	 */
+	@Column(name = "question_time_limit_sec")
+	private int questionTimeLimitSec;
+
 	@Column(name = "is_published", nullable = false)
 	@Builder.Default
 	private boolean isPublished = false;

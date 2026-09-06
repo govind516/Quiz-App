@@ -51,4 +51,11 @@ public class User {
 	@Column(nullable = false, columnDefinition = "boolean not null default false")
 	@Builder.Default
 	private boolean banned = false;
+
+	@Column(length = 100)
+	private String country;
+
+	@Column(nullable = false, columnDefinition = "integer default 0")
+	@Builder.Default
+	private int streak = 0;
 }

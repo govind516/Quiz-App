@@ -16,6 +16,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 
+import com.example.quizapp.attempt.repository.QuizAttemptRepository;
+import com.example.quizapp.attempt.repository.projection.WeeklyScore;
 import com.example.quizapp.user.User;
 import com.example.quizapp.user.UserRepository;
 
@@ -29,6 +31,9 @@ class LeaderboardServiceTest {
 	@Mock
 	private ZSetOperations<String, String> zSetOps;
 
+	@Mock
+	private QuizAttemptRepository attemptRepository;
+
 	private StringRedisTemplate templateReturning(ZSetOperations<String, String> ops) {
 		return new StringRedisTemplate() {
 			@Override
@@ -41,7 +46,7 @@ class LeaderboardServiceTest {
 	@Test
 	@DisplayName("Degrades to no-op when Redis is not configured")
 	void degradesWhenNotConfigured() {
-		LeaderboardService service = new LeaderboardService(templateReturning(zSetOps), userRepository, "");
+		LeaderboardService service = new LeaderboardService(templateReturning(zSetOps), userRepository, attemptRepository, "");
 
 		service.recordSubmission(1L, 2L, 3L, 10, 80.0);
 
@@ -55,7 +60,7 @@ class LeaderboardServiceTest {
 		when(zSetOps.reverseRangeWithScores(anyString(), anyLong(), anyLong()))
 				.thenThrow(new RuntimeException("connection refused"));
 
-		LeaderboardService service = new LeaderboardService(templateReturning(zSetOps), userRepository,
+		LeaderboardService service = new LeaderboardService(templateReturning(zSetOps), userRepository, attemptRepository,
 				"rediss://default:pw@example.upstash.io:6379");
 
 		assertThat(service.topGlobal(10)).isEmpty();
@@ -74,14 +79,46 @@ class LeaderboardServiceTest {
 		User u3 = User.builder().id(3L).name("Lin").build();
 		when(userRepository.findAllByIdIn(List.of(7L, 3L))).thenReturn(List.of(u7, u3));
 
-		LeaderboardService service = new LeaderboardService(templateReturning(zSetOps), userRepository,
+		LeaderboardService service = new LeaderboardService(templateReturning(zSetOps), userRepository, attemptRepository,
 				"rediss://default:pw@example.upstash.io:6379");
 
 		List<LeaderboardEntryDto> entries = service.topGlobal(10);
 
+assertThat(entries).containsExactly(
+			new LeaderboardEntryDto(1, 7L, "Ada", 250.5, "AD", "Unknown", 0),
+			new LeaderboardEntryDto(2, 3L, "Lin", 90.0, "LI", "Unknown", 0));
+	}
+
+@Test
+	@DisplayName("Returns weekly leaderboard from database")
+	void weeklyLeaderboardFromDatabase() {
+		WeeklyScore ws1 = new WeeklyScore() {
+			@Override
+			public Long getUserId() { return 7L; }
+			@Override
+			public String getName() { return "Ada"; }
+			@Override
+			public Number getPoints() { return 250; }
+		};
+		WeeklyScore ws2 = new WeeklyScore() {
+			@Override
+			public Long getUserId() { return 3L; }
+			@Override
+			public String getName() { return "Lin"; }
+			@Override
+			public Number getPoints() { return 180; }
+		};
+		when(attemptRepository.topWeeklyScores(7)).thenReturn(List.of(ws1, ws2));
+
+		LeaderboardService service = new LeaderboardService(templateReturning(zSetOps), userRepository, attemptRepository,
+				"rediss://default:pw@example.upstash.io:6379");
+
+		List<LeaderboardEntryDto> entries = service.topWeekly(10);
+
+		assertThat(entries).hasSize(2);
 		assertThat(entries).containsExactly(
-				new LeaderboardEntryDto(1, 7L, "Ada", 250.5),
-				new LeaderboardEntryDto(2, 3L, "Lin", 90.0));
+				new LeaderboardEntryDto(1, 7L, "Ada", 250.0, "AD", "Unknown", 0),
+				new LeaderboardEntryDto(2, 3L, "Lin", 180.0, "LI", "Unknown", 0));
 	}
 
 	private ZSetOperations.TypedTuple<String> tuple(String member, Double score) {

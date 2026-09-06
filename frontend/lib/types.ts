@@ -63,6 +63,7 @@ export interface StartAttemptResponse {
 	quizId: number;
 	quizTitle: string;
 	timeLimitSec: number;
+	perQuestionTimeSec: number;
 	startedAt: string;
 	expiresAt: string;
 	questions: QuestionPublicDto[];
@@ -150,6 +151,9 @@ export interface LeaderboardEntryDto {
 	userId: number;
 	name: string;
 	score: number;
+	initials: string;
+	country: string;
+	streak: number;
 }
 
 export interface BadgeDto {

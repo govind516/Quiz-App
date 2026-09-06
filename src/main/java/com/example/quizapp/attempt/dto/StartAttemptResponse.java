@@ -10,6 +10,7 @@ public record StartAttemptResponse(
 		Long quizId,
 		String quizTitle,
 		int timeLimitSec,
+		int perQuestionTimeSec,
 		Instant startedAt,
 		Instant expiresAt,
 		List<QuestionPublicDto> questions) {
