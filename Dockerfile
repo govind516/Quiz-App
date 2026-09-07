@@ -1,18 +1,18 @@
 # ============================================================
-# BUILD STAGE - Use base image Maven directly
+# BUILD STAGE - Use base image Maven with clean package
 # ============================================================
 FROM maven:3.9-eclipse-temurin-21 AS build
 
-# Set workdir (the image default is /usr/src/maven)
+# Set workdir
 WORKDIR /app
 
 # Copy only the essential files Maven needs
 COPY pom.xml ./
 COPY src ./src
 
-# Run Maven package directly (the base image has Maven at /usr/share/maven/bin/maven)
+# Run Maven clean package (ensures fresh build, avoids incremental issues)
 # -DskipTests skips test execution
-RUN mvn package -DskipTests
+RUN mvn clean package -DskipTests
 
 # ============================================================
 # RUNTIME STAGE - Java JRE only
@@ -21,7 +21,8 @@ FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 # Copy the packaged JAR from build stage
-COPY --from=build /app/target/app.jar app.jar
+# JAR filename is quiz_app-0.0.1-SNAPSHOT.jar per pom.xml configuration
+COPY --from=build /app/target/quiz_app-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose the port your Spring Boot app uses
 EXPOSE 8080
