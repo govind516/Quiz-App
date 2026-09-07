@@ -38,11 +38,18 @@ services:
     rootDir: frontend
     plan: free
     region: singapore
-    buildCommand: npm ci && npm run build
+    buildCommand: npm run build
     startCommand: npm run start
     autoDeploy: true
     envVars:
       - key: NODE_VERSION
-        value: "22"
+        value: "20"
       - key: NEXT_PUBLIC_API_URL
         sync: false
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        value: "https://quiz-app-delta-five-97.vercel.app,http://localhost:3000"
+        generateValue: false
