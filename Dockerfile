@@ -11,10 +11,8 @@ COPY .mvn ./.mvn
 # Make wrapper executable
 RUN chmod +x mvnw
 
-# ✅ FIX: Dependency download - removed -q -B flags that caused phase error
-RUN ./mvnw dependency:go-offline
-
-# Copy source code & compile (safe flags)
+# Copy source code & compile (download deps online, then package)
+# This is reliable - first build downloads deps, subsequent builds use Docker cache
 COPY src ./src
 RUN ./mvnw -q -B package -DskipTests
 
@@ -24,7 +22,7 @@ RUN ./mvnw -q -B package -DskipTests
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Copy the packaged JAR from build stage (specific filename)
+# Copy the packaged JAR from build stage
 COPY --from=build /app/target/app.jar app.jar
 
 # Expose the port your Spring Boot app uses
