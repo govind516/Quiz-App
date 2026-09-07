@@ -1,0 +1,42 @@
+# Docker Compose example for HexQuiz
+# Copy to docker-compose.yml and fill in actual values
+services:
+  supabase:
+    image: supabase/supabase:latest
+    env:
+      - SUPABASE_DB_POSTGREST_DB=postgres
+      - SUPABASE_DB_POSTGREST_URL=postgres://postgres@db:5432/postgres?sslmode=require
+      - SUPABASE_DB_STORAGE_URL=postgres://postgres@db:5432/postgres?sslmode=require
+      - SUPABASE_REALTIME_ENABLE_JWT=true
+    ports:
+      - "5432:5432"  # Postgres
+      - "443:443"    # Realtime
+    volumes:
+      - supabase-db:/var/lib/postgresql/data
+    # To enable storage, add:
+    # - SUPABASE_STORAGE_ENABLED=true
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/var/lib/redis
+
+  backend:
+    build: .
+    command: ./mvnw spring-boot:run
+    env_file: .env.secrets
+    depends_on:
+      - supabase
+      - redis
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./.mvn:/root/.mvn:ro
+      - ./src:/src:ro
+      - pom.xml:/pom.xml:ro
+
+volumes:
+  supabase-db:
+  redis-data:
