@@ -1,20 +1,18 @@
 # ============================================================
-# BUILD STAGE - Download deps & compile
+# BUILD STAGE - Use base image Maven directly
 # ============================================================
 FROM maven:3.9-eclipse-temurin-21 AS build
+
+# Set workdir (the image default is /usr/src/maven)
 WORKDIR /app
 
-# Copy Maven wrapper & config FIRST (for layer caching)
-COPY mvnw pom.xml ./
-COPY .mvn ./.mvn
-
-# Make wrapper executable
-RUN chmod +x mvnw
-
-# Copy source code & compile (download deps online, then package)
-# This is reliable - first build downloads deps, subsequent builds use Docker cache
+# Copy only the essential files Maven needs
+COPY pom.xml ./
 COPY src ./src
-RUN ./mvnw -q -B package -DskipTests
+
+# Run Maven package directly (the base image has Maven at /usr/share/maven/bin/maven)
+# -DskipTests skips test execution
+RUN mvn package -DskipTests
 
 # ============================================================
 # RUNTIME STAGE - Java JRE only
