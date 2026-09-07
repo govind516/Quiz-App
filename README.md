@@ -18,8 +18,11 @@ Modern quiz platform combining LeetCode‑style practice with live multiplayer r
 # 1. Clone & env
 git clone <repo-url>
 cd quiz-app
-cp .env.example .env.local          # fill in Supabase, Redis, Gemini keys
-# .env.secrets is gitignored — contains ADMIN_EMAIL / ADMIN_PASSWORD / REDIS_URI / GEMINI_API_KEY
+# Copy .env.example to .env.local for local development overrides
+cp .env.example .env.local
+# .env.secrets is gitignored and contains actual secret values (ADMIN_EMAIL / ADMIN_PASSWORD / REDIS_URI / GEMINI_API_KEY).
+# If you need to update secrets, copy .env.secrets content into .env.local or set env vars directly.
+# Never commit .env.secrets or .env.local — they are gitignored.
 
 # 2. Backend
 cd ..
