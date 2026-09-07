@@ -49,14 +49,16 @@ If Docker is available, bring up Supabase, Redis, and the backend together.
 docker-compose up -d
 ```
 
-This requires a `docker-compose.yml` at the project root (not included in this repo skeleton but typically defines):
-- `supabase` service (Postgres + realtime + storage)
-- `redis` service (`)
-- `backend` service (Java app via `./mvnw spring-boot:run` or a prebuilt JAR)
+This requires a `docker-compose.yml` at the project root (not included in this repo skeleton) that typically defines:
+
+- `supabase` service — Supabase Postgres + Realtime + Storage
+- `redis` service — Upstash or Redis Labs Redis instance
+- `backend` service — Java app via `./mvnw spring-boot:run` or a prebuilt JAR
 
 Then:
 ```bash
 npm run dev    # frontend connects to host IPs automatically via Docker DNS
+```
 ```
 
 ## Option 3: CI / Remote Build Only
