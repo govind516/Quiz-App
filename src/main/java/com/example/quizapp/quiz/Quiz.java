@@ -71,8 +71,9 @@ public class Quiz {
 	 * Per-question time limit in seconds for live room quizzes.
 	 * When > 0, each question gets this many seconds (synchronized across all players).
 	 * When 0, falls back to totalTimeSec / questionCount (legacy behavior).
+	 * Never NULL — default is 0 (fallback behavior).
 	 */
-	@Column(name = "question_time_limit_sec")
+	@Column(name = "question_time_limit_sec", nullable = false, columnDefinition = "int default 0")
 	private int questionTimeLimitSec;
 
 	@Column(name = "is_published", nullable = false)
