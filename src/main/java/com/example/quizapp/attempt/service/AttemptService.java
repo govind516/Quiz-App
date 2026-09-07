@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -439,13 +440,19 @@ public class AttemptService {
 
 	private List<Long> parseQuestionOrder(QuizAttempt attempt) {
 		if (attempt.getQuestionOrder() == null || attempt.getQuestionOrder().isBlank()) {
-			return List.of();
+			// Fallback: get question IDs from the associated quiz
+			return attempt.getQuiz().getQuestions().stream()
+					.map(Question::getId)
+					.collect(Collectors.toList());
 		}
 		try {
 			return objectMapper.readValue(attempt.getQuestionOrder(), new TypeReference<List<Long>>() {
 			});
 		} catch (JsonProcessingException e) {
-			return List.of();
+			// Fallback: get question IDs from the associated quiz
+			return attempt.getQuiz().getQuestions().stream()
+					.map(Question::getId)
+					.collect(Collectors.toList());
 		}
 	}
 
