@@ -439,21 +439,25 @@ public class AttemptService {
 	}
 
 	private List<Long> parseQuestionOrder(QuizAttempt attempt) {
-		if (attempt.getQuestionOrder() == null || attempt.getQuestionOrder().isBlank()) {
+		String questionOrder = attempt.getQuestionOrder();
+		if (questionOrder == null || questionOrder.isBlank()) {
 			// Fallback: get question IDs from the associated quiz
 			return attempt.getQuiz().getQuestions().stream()
 					.map(Question::getId)
 					.collect(Collectors.toList());
 		}
 		try {
-			return objectMapper.readValue(attempt.getQuestionOrder(), new TypeReference<List<Long>>() {
-			});
+			List<Long> orderedIds = objectMapper.readValue(questionOrder, new TypeReference<List<Long>>() {});
+			if (orderedIds != null && !orderedIds.isEmpty()) {
+				return orderedIds;
+			}
 		} catch (JsonProcessingException e) {
-			// Fallback: get question IDs from the associated quiz
-			return attempt.getQuiz().getQuestions().stream()
-					.map(Question::getId)
-					.collect(Collectors.toList());
+			// ignored
 		}
+		// Fallback: get question IDs from the associated quiz
+		return attempt.getQuiz().getQuestions().stream()
+				.map(Question::getId)
+				.collect(Collectors.toList());
 	}
 
 	private QuestionPublicDto toPublicQuestion(Question question, List<Long> optionOrder) {
