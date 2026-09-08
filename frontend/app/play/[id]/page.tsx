@@ -221,15 +221,27 @@ const total = quiz.questions.length;
     if (v !== undefined && v < cur.options.length) setAnswers((a) => ({ ...a, [cur.id]: v }));
   };
 
+  // Stable ref so the keyboard handler always calls the latest submit
+  // without re-subscribing on every render.
+  const submitRef = useRef(submit);
+  useEffect(() => {
+    submitRef.current = submit;
+  });
+
   useEffect(() => {
     const on = (e: KeyboardEvent) => {
       if (['a','b','c','d','A','B','C','D'].includes(e.key)) chooseKey(e.key);
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (idx < total - 1) setIdx(idx + 1);
+        else if (!submitting) void submitRef.current();
+      }
       if (e.key === 'Escape') router.push('/practice');
     };
     window.addEventListener('keydown', on);
     return () => window.removeEventListener('keydown', on);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idx, total, cur]);
+  }, [idx, total, cur, submitting]);
 
   const progressPct = useMemo(() => ((idx + 1) / total) * 100, [idx, total]);
 
