@@ -15,7 +15,6 @@ hexquiz-preview.html
 # Local secrets and IDE config
 .env.secrets
 .vscode/
-frontend/app/build/
 target/
 # Docker
 Dockerfile
