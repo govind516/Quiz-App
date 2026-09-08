@@ -26,9 +26,17 @@ const baseLinks = [
 
 export default function Nav() {
   const [scrolled, setScrolled] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, isAdmin, user, logout } = useAuth();
+
+  const doLogout = () => {
+    logout();
+    try { useAuthStore.getState().logout(); } catch {}
+    setConfirmLogout(false);
+    router.push("/");
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -37,10 +45,20 @@ export default function Nav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    if (!confirmLogout) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setConfirmLogout(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [confirmLogout]);
+
   // Build/Live are public (guest + authed) as requested; Admin console only for admins.
   const links = isAdmin ? [...baseLinks, { to: "/admin", label: "Admin" }] : baseLinks;
 
   return (
+    <>
     <motion.header
       initial={{ y: -30, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
@@ -90,7 +108,7 @@ export default function Nav() {
                   {initialsOf(user?.name || "G")}
                 </Link>
                 <button
-                  onClick={() => { logout(); useAuthStore.getState().logout(); router.push("/"); }}
+                  onClick={() => setConfirmLogout(true)}
                   className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13.5px] text-[color:var(--ink-2)] hover:text-white hover:bg-white/[0.04] transition-colors"
                   data-testid="nav-logout-btn"
                 >
@@ -112,5 +130,47 @@ export default function Nav() {
         </div>
       </div>
     </motion.header>
+    {confirmLogout && (
+      <div
+        className="fixed inset-0 z-[60] grid place-items-center bg-black/60 backdrop-blur-sm px-6"
+        onClick={() => setConfirmLogout(false)}
+        data-testid="logout-confirm-overlay"
+      >
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Confirm log out"
+          onClick={(e) => e.stopPropagation()}
+          className="w-full max-w-[380px] rounded-3xl glass p-6 md:p-7"
+          data-testid="logout-confirm-dialog"
+        >
+          <div className="font-display text-[24px] text-white">
+            {user?.guest ? "Exit guest session?" : "Log out?"}
+          </div>
+          <p className="mt-2 text-[13.5px] leading-relaxed text-[color:var(--ink-2)]">
+            {user?.guest
+              ? "Your guest progress won't be saved. Sign up to keep your streaks."
+              : "You'll be signed out on this device. Your streaks and progress stay saved."}
+          </p>
+          <div className="mt-6 flex items-center justify-end gap-2.5">
+            <button
+              onClick={() => setConfirmLogout(false)}
+              className="px-4 py-2.5 rounded-full glass glass-hover text-[13.5px] text-white"
+              data-testid="logout-confirm-cancel"
+            >
+              Stay
+            </button>
+            <button
+              onClick={doLogout}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-[color:var(--violet)] hover:bg-[color:var(--violet-2)] text-white text-[13.5px] font-medium transition-colors"
+              data-testid="logout-confirm-yes"
+            >
+              <LogOut className="w-3.5 h-3.5" /> {user?.guest ? "Exit" : "Log out"}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </>
   );
 }
