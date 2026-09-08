@@ -42,7 +42,7 @@ function PodiumCard({ p, rank }: { p: LeaderboardEntryDto; rank: 1 | 2 | 3 }) {
               border: `1.5px solid ${colors[rank]}70`,
             } as React.CSSProperties}
           >
-            {p.initials}
+            {p.initials ?? "AI"}
           </motion.div>
           <div className="text-[16px] md:text-[18px] text-white">{p.name}</div>
           <div className="mt-1 font-display text-[24px]" style={{ color: colors[rank] }}>{p.score.toLocaleString()}<span className="font-mono text-[11px] text-[color:var(--mute)] ml-1">pts</span></div>
@@ -154,9 +154,9 @@ export default function Leaderboard() {
         ) : (
           <>
           <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-4 items-end" key={`${tab}-${category}`}>
-            <PodiumCard p={top2} rank={2} />
-            <PodiumCard p={top1} rank={1} />
-            <PodiumCard p={top3} rank={3} />
+            {top2 && <PodiumCard p={top2} rank={2} />}
+            {top1 && <PodiumCard p={top1} rank={1} />}
+            {top3 && <PodiumCard p={top3} rank={3} />}
           </div>
 
           <FadeUp delay={0.4} className="mt-14 rounded-3xl glass overflow-hidden">
@@ -169,7 +169,7 @@ export default function Leaderboard() {
                 <motion.div key={p.name} initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: "-40px" }} transition={{ delay: i * 0.04, duration: 0.5, ease: [0.16, 1, 0.3, 1] }} className="grid grid-cols-12 gap-4 items-center px-6 py-5 border-b border-white/[0.04] last:border-b-0 hover:bg-white/[0.02] transition-colors">
                   <div className="col-span-1 font-mono text-[13px] text-[color:var(--mute)]">#{p.rank}</div>
                   <div className="col-span-6 flex items-center gap-3">
-                    <div className="shrink-0 w-9 h-9 rounded-full grid place-items-center font-mono text-[11px] text-white/85 border border-white/10" style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.25), rgba(127,231,206,0.18))" }}>{p.initials}</div>
+                    <div className="shrink-0 w-9 h-9 rounded-full grid place-items-center font-mono text-[11px] text-white/85 border border-white/10" style={{ background: "linear-gradient(135deg, rgba(167,139,250,0.25), rgba(127,231,206,0.18))" }}>{p.initials ?? "AI"}</div>
                     <div><div className="text-[14.5px] text-white">{p.name}</div><div className="font-mono text-[11px] text-[color:var(--mute)]">{p.country}</div></div>
                   </div>
                   <div className="col-span-2 text-right font-mono text-[12.5px] text-[color:var(--gold)]"><Zap className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />{p.streak}</div>

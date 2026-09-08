@@ -79,7 +79,7 @@ export default function QuizResults() {
 
   // --- Live attempt result rendering ---
   if (live) {
-    const total = live.totalPoints || live.questions.length || 1;
+    const total = Math.max(1, live.totalPoints || live.questions.length || 1);
     const pct = Math.round(((live.score ?? 0) / total) * 100);
     const band = pct >= 80 ? { c: '#7FE7CE', l: 'You shipped it.' } : pct >= 60 ? { c: '#F5C775', l: 'Solid rep.' } : { c: '#FF9E7A', l: 'Reload the drills.' };
     // Map option ids -> text from the cached start payload (saved at play time).
@@ -154,8 +154,8 @@ export default function QuizResults() {
               <div className="font-mono text-[11px] tracking-[0.16em] uppercase text-[color:var(--mute)]">answered · your pick · correct</div>
             </div>
             {live.questions.map((q, i) => {
-              const pickedId = q.selectedOptionIds?.[0];
-              const rightId = q.correctOptionIds?.[0];
+              const pickedId = q.selectedOptionIds && q.selectedOptionIds.length > 0 ? q.selectedOptionIds[0] : undefined;
+              const rightId = q.correctOptionIds && q.correctOptionIds.length > 0 ? q.correctOptionIds[0] : undefined;
               const pickedText = pickedId !== undefined ? (optText.get(pickedId) ?? `#${pickedId}`) : '—';
               const rightText = rightId !== undefined ? (optText.get(rightId) ?? `#${rightId}`) : '—';
               return (
