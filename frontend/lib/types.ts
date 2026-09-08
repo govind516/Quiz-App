@@ -194,6 +194,8 @@ export interface LiveRoomInfo {
 	hostName: string;
 	status: LiveRoomStatus;
 	players: PlayerInfo[];
+	/** Present only when status is ACTIVE (reconnect resync). */
+	currentQuestion: LiveQuestionPayload | null;
 }
 
 export interface LiveQuestionPayload {

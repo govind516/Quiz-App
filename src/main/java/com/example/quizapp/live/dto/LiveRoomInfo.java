@@ -7,5 +7,8 @@ public record LiveRoomInfo(
 		String quizTitle,
 		String hostName,
 		String status,
-		List<PlayerInfo> players) {
+		List<PlayerInfo> players,
+		// Present only when status is ACTIVE, so reconnecting clients can
+		// resync to the running question without waiting for the next broadcast.
+		LiveQuestionPayload currentQuestion) {
 }

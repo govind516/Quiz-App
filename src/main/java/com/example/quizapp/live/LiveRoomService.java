@@ -258,7 +258,8 @@ public class LiveRoomService {
 				room.quiz.getTitle(),
 				room.host.getName(),
 				room.status.name(),
-				scoreboard(room));
+				scoreboard(room),
+				room.status == Status.ACTIVE ? questionPayload(room) : null);
 	}
 
 	private Room room(String code) {
