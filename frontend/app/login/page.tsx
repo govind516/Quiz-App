@@ -39,8 +39,8 @@ export default function Login() {
       setError("Enter an email to continue.");
       return;
     }
-    // Empty password -> demo login path (Claude's frontend_design behavior)
-    // Demo-only: only the seeded admin account (guptagovind516@gmail.com) gets isAdmin
+    // Empty password -> demo login path (offline preview behavior).
+    // Demo-only: an account matching the seeded admin email gets isAdmin.
     if (!password) {
       const { isAdmin } = demoLogin(email);
       router.push(isAdmin ? "/admin" : (from && from !== "/login" ? from : "/"));
@@ -166,7 +166,7 @@ export default function Login() {
               <div>
                 <label className="block font-mono text-[10.5px] tracking-[0.18em] uppercase text-[color:var(--mute)] mb-2">Email</label>
                 <input type="email" placeholder="you@company.com" data-testid="auth-email" value={email} onChange={(e)=>{ setEmail(e.target.value); setError(null); }} className="w-full px-4 py-3.5 rounded-xl glass text-[14px] outline-none placeholder:text-[color:var(--mute)] focus:border-[color:var(--violet)]/50 transition-colors" />
-                <p className="mt-2 text-[11.5px] text-[color:var(--mute)]">Admin: <span className="font-mono text-[color:var(--ink-2)]">guptagovind516@gmail.com</span> + your backend <span className="font-mono text-[color:var(--ink-2)]">ADMIN_PASSWORD</span> (.env.secrets). Backend offline? Leave password empty for demo login.</p>
+                <p className="mt-2 text-[11.5px] text-[color:var(--mute)]">Admin? Sign in with your backend admin account (<span className="font-mono text-[color:var(--ink-2)]">ADMIN_EMAIL</span> + <span className="font-mono text-[color:var(--ink-2)]">ADMIN_PASSWORD</span>). Backend offline? Leave password empty for demo login.</p>
               </div>
               <div>
                 <label className="block font-mono text-[10.5px] tracking-[0.18em] uppercase text-[color:var(--mute)] mb-2">Password</label>

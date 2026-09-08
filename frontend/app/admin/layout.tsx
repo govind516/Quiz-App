@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { HexMark } from "@/components/HexLogo";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { useAuth } from "@/lib/auth-context";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { QuestionAdminDto } from "@/lib/types";
@@ -83,6 +84,14 @@ function SidebarItem({ item, isActive, badge }: { item: SidebarItemType; isActiv
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const pendingCount = usePendingCount();
+  const { user } = useAuth();
+  const adminName = user?.name || "Platform Admin";
+  const adminInitials = adminName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
   return (
     <ProtectedRoute requireAdmin>
       <main className="relative pt-28 pb-24" data-testid="admin-layout">
@@ -125,12 +134,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       border: "1px solid rgba(255,255,255,0.1)",
                     }}
                   >
-                    PA
+                    {adminInitials}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[13.5px] text-white truncate">Platform Admin</div>
+                    <div className="text-[13.5px] text-white truncate">{adminName}</div>
                     <div className="font-mono text-[10.5px] text-[color:var(--mute)] truncate">
-                      guptagovind516@gmail.com
+                      {user?.email ?? "admin console"}
                     </div>
                   </div>
                 </div>
