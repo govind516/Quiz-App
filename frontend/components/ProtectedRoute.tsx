@@ -14,7 +14,9 @@ export default function ProtectedRoute({ children, requireAdmin = false }: { chi
     // redirecting here would bounce valid stored sessions back to /login.
     if (!hydrated) return;
     if (requireAdmin && !isAdmin) {
-      const params = new URLSearchParams({ reason: "admin-required", from: pathname || "/admin" });
+      // Land on the plain login page (it serves everyone — no admin-only
+      // messaging there). `from` lets admins resume where they were headed.
+      const params = new URLSearchParams({ from: pathname || "/admin" });
       router.replace(`/login?${params.toString()}`);
       return;
     }

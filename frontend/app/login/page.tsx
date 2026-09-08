@@ -24,13 +24,23 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [reason, setReason] = useState<string | null>(null);
   const [from, setFrom] = useState<string | null>(null);
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
-    setReason(sp.get("reason"));
     setFrom(sp.get("from"));
   }, []);
+
+  // Role-aware landing page: admins resume `from` (default /admin);
+  // everyone else goes to `from` unless it is admin-gated (then home).
+  // This also kills the old bounce loop: non-admin bounced from /admin
+  // no longer gets sent straight back into the guard after logging in.
+  const nextAfterLogin = (isAdmin: boolean) => {
+    if (from && from.startsWith("/") && !from.startsWith("/login")) {
+      if (from.startsWith("/admin") && !isAdmin) return "/";
+      return from;
+    }
+    return isAdmin ? "/admin" : "/";
+  };
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -43,7 +53,7 @@ export default function Login() {
     // Demo-only: an account matching the seeded admin email gets isAdmin.
     if (!password) {
       const { isAdmin } = demoLogin(email);
-      router.push(isAdmin ? "/admin" : (from && from !== "/login" ? from : "/"));
+      router.push(nextAfterLogin(isAdmin));
       return;
     }
     if (tab === "signup" && !name.trim()) {
@@ -69,7 +79,7 @@ export default function Login() {
         // stay null and /admin would bounce straight back to /login.
         const isAdmin = String(res.user.role).toUpperCase() === "ADMIN";
         setSession({ email: res.user.email, name: res.user.name, isAdmin });
-        router.push(isAdmin ? "/admin" : (from && from !== "/login" ? from : "/"));
+        router.push(nextAfterLogin(isAdmin));
         return;
       } catch (err: unknown) {
         lastErr = err;
@@ -95,7 +105,7 @@ export default function Login() {
     if (isNetworkError || status === 404 || status === undefined) {
       // preview fallback — use demo login
       const { isAdmin } = demoLogin(email);
-      router.push(isAdmin ? "/admin" : (from && from !== "/login" ? from : "/"));
+      router.push(nextAfterLogin(isAdmin));
       return;
     }
     setError(msg || "Authentication failed");
@@ -131,12 +141,6 @@ export default function Login() {
 
       <div className="relative flex flex-col justify-center p-8 md:p-16 bg-[color:var(--bg-2)]">
         <Link href="/" className="lg:hidden mb-10"><Wordmark size={26} /></Link>
-
-        {reason === "admin-required" && (
-          <div className="mb-6 rounded-xl border border-[color:var(--coral)]/30 bg-[color:var(--coral)]/[0.06] px-4 py-3 text-[13px] text-[color:var(--coral)]" data-testid="admin-required-notice">
-            That page is for admins only. Log in with an admin account to continue.
-          </div>
-        )}
 
         <FadeUp>
           <div className="inline-flex items-center rounded-full glass p-1 relative mb-8">
