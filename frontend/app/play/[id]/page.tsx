@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Timer } from "lucide-react";
 import { Wordmark } from "@/components/HexLogo";
+import { CodeText } from "@/components/CodeText";
 import { playQuiz } from "@/lib/mock";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
@@ -304,7 +305,7 @@ const total = quiz.questions.length;
               <span className="px-2.5 py-1 rounded-full text-[11px] font-mono bg-[color:var(--violet)]/15 text-[color:var(--violet-2)] border border-[color:var(--violet)]/25">Single answer</span>
               <span className="px-2.5 py-1 rounded-full text-[11px] font-mono border border-white/10 text-[color:var(--ink-2)]">1 pt</span>
             </div>
-            <div className="mt-6 font-display text-[32px] md:text-[38px] leading-[1.15] text-white">{cur.prompt}</div>
+            <div className="mt-6 font-display text-[32px] md:text-[38px] leading-[1.15] text-white"><CodeText text={cur.prompt} /></div>
           </motion.div>
         </AnimatePresence>
 
@@ -316,7 +317,7 @@ const total = quiz.questions.length;
               <button key={i} onClick={()=>setAnswers((a) => ({ ...a, [cur.id]: i }))} data-testid={`option-${letter}`}
                 className={`group text-left px-5 py-4 rounded-2xl border transition-all flex items-center gap-4 ${selected ? 'border-[color:var(--violet)]/60 bg-[color:var(--violet)]/[0.08]' : 'border-white/[0.06] hover:border-white/20 bg-white/[0.02]'}`}>
                 <div className={`w-9 h-9 rounded-lg grid place-items-center font-mono text-[13px] shrink-0 transition-colors ${selected ? 'bg-[color:var(--violet)] text-white' : 'bg-white/[0.06] text-[color:var(--ink-2)]'}`}>{letter}</div>
-                <div className="text-[16px] text-white">{opt}</div>
+                <div className="text-[16px] text-white"><CodeText text={opt} /></div>
               </button>
             );
           })}

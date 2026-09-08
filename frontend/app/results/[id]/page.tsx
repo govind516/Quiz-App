@@ -9,6 +9,7 @@ import { CheckCircle2, XCircle, Sparkles, Share2, RotateCw } from "lucide-react"
 import Aurora from "@/components/Aurora";
 import { Wordmark } from "@/components/HexLogo";
 import { Eyebrow, FadeUp } from "@/components/Reveal";
+import { CodeText } from "@/components/CodeText";
 import { playQuiz } from "@/lib/mock";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
@@ -162,10 +163,10 @@ export default function QuizResults() {
                 <div key={q.questionId} className="px-6 py-5 border-b border-white/[0.04] last:border-b-0 grid grid-cols-12 gap-4 items-start">
                   <div className="col-span-1 font-mono text-[13px] text-[color:var(--mute)]">#{i+1}</div>
                   <div className="col-span-8">
-                    <div className="text-[15.5px] text-white">{q.questionText}</div>
+                    <div className="text-[15.5px] text-white"><CodeText text={q.questionText} /></div>
                     <div className="mt-2 flex flex-wrap items-center gap-2 font-mono text-[11.5px] text-[color:var(--ink-2)]">
-                      <span className="px-2 py-0.5 rounded border border-white/10">picked: <span className="text-white">{pickedText}</span></span>
-                      <span className="px-2 py-0.5 rounded border border-[color:var(--mint)]/30 text-[color:var(--mint)]">correct: {rightText}</span>
+                      <span className="px-2 py-0.5 rounded border border-white/10">picked: <span className="text-white"><CodeText text={pickedText} /></span></span>
+                      <span className="px-2 py-0.5 rounded border border-[color:var(--mint)]/30 text-[color:var(--mint)]">correct: <CodeText text={rightText} /></span>
                     </div>
                   </div>
                   <div className="col-span-3 flex justify-end">
