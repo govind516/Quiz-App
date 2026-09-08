@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Heart, ChevronDown, ChevronLeft, ArrowUpRight } from "lucide-react";
@@ -96,6 +96,24 @@ export default function Practice() {
   }), [quizzes, cat, level, q]);
 
   const cats = useMemo(() => ["All", ...Array.from(new Set(quizzes.map((c) => c.cat)))], [quizzes]);
+
+  // Deep-link support: /practice?cat=<slug> (e.g. from the home page tracks)
+  // preselects the matching category filter so users don't pick it twice.
+  const catParamApplied = useRef(false);
+  useEffect(() => {
+    if (catParamApplied.current || typeof window === "undefined") return;
+    if (cats.length <= 1) return; // quizzes not loaded yet
+    let slug: string | null = null;
+    try {
+      slug = new URLSearchParams(window.location.search).get("cat");
+    } catch { slug = null; }
+    if (!slug) return;
+    const match = cats.find((c) => c !== "All" && slugify(c) === slugify(slug));
+    if (match) {
+      catParamApplied.current = true;
+      setCat(match);
+    }
+  }, [cats]);
 
   // Default view (no search, no filters): 10 topic cards instead of a 30-card wall.
   // Searching or filtering drops into the flat quiz-card list.

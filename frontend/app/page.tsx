@@ -86,7 +86,7 @@ function Stat({ n, l, delay=0 }: { n: any; l: any; delay?: number }) {
 function CategoryCard({ c, i }: { c: any; i: number }) {
   return (
     <FadeUp delay={i * 0.05}>
-      <Link href="/practice" className="group block relative rounded-2xl glass glass-hover p-6 h-[180px] overflow-hidden" data-testid={`category-card-${c.slug}`}>
+      <Link href={`/practice?cat=${c.slug}`} className="group block relative rounded-2xl glass glass-hover p-6 h-[180px] overflow-hidden" data-testid={`category-card-${c.slug}`}>
         <div className="absolute -right-8 -top-8 opacity-20 group-hover:opacity-45 transition-opacity duration-500"><Hex size={130} color={c.color} /></div>
         <div className="relative flex flex-col h-full justify-between">
           <div className="flex items-center gap-2 font-mono text-[10.5px] tracking-[0.18em] uppercase text-[color:var(--mute)]"><span className="h-1 w-1 rounded-full" style={{ background: c.color }} />track</div>
