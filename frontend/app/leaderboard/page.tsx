@@ -9,7 +9,7 @@ import { Eyebrow, FadeUp, RevealHeading } from "@/components/Reveal";
 import { AdminLoading, AdminError } from "@/components/admin-state";
 import { api } from "@/lib/api";
 import { categories } from "@/lib/mock";
-import type { LeaderboardEntryDto } from "@/lib/types";
+import type { CategoryDto, LeaderboardEntryDto } from "@/lib/types";
 
 const AVATAR_SIZE: Record<number, number> = { 1: 112, 2: 84, 3: 72 };
 const MIN_HEIGHT: Record<number, string> = { 1: "min-h-[260px]", 2: "min-h-[210px]", 3: "min-h-[190px]" };
@@ -57,7 +57,29 @@ export default function Leaderboard() {
   const [category, setCategory] = useState("");
 
   const [categoriesList] = useState(categories);
+
+  // Live categories carry numeric ids — the board endpoint expects an id,
+  // not a slug. Fall back to the mock list (slugs) when the backend is down.
+  const catsQuery = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => api<CategoryDto[]>("/api/categories", { auth: false }),
+    retry: false,
+    staleTime: 300_000,
+  });
+  const liveCats = catsQuery.data;
+  const dropdownCats = liveCats
+    ? liveCats.map((c) => ({ slug: String(c.id), name: c.name }))
+    : categoriesList;
   const [selectedCategory, setSelectedCategory] = useState(categoriesList[0]?.slug || "");
+  // Re-point the selection at the first live category once they arrive
+  // (the initial mock slug would otherwise 400 against the id-based API).
+  React.useEffect(() => {
+    if (!liveCats?.length) return;
+    if (!liveCats.some((c) => String(c.id) === selectedCategory)) {
+      setSelectedCategory(String(liveCats[0].id));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [liveCats]);
 
   const globalQuery = useQuery({
     queryKey: ["leaderboard", "global"],
@@ -74,7 +96,9 @@ export default function Leaderboard() {
   const categoryQuery = useQuery({
     queryKey: ["leaderboard", "category", selectedCategory],
     queryFn: () => api<LeaderboardEntryDto[]>(`/api/leaderboard/category/${selectedCategory}?limit=10`),
-    enabled: !!selectedCategory,
+    // Only query when we hold a live numeric id — mock slugs would 400.
+    enabled: !!selectedCategory && !!liveCats,
+    retry: false,
     staleTime: 30_000,
   });
 
@@ -97,7 +121,8 @@ export default function Leaderboard() {
   const refetchAll = () => {
     globalQuery.refetch();
     weeklyQuery.refetch();
-    if (category) categoryQuery.refetch();
+    catsQuery.refetch();
+    if (selectedCategory) categoryQuery.refetch();
   };
 
   const top1 = sorted?.[0];
@@ -126,7 +151,7 @@ export default function Leaderboard() {
             <div className="relative">
               <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} data-testid="lb-category-select"
                 className="appearance-none pl-4 pr-10 py-2.5 rounded-full glass text-[13px] text-white outline-none cursor-pointer">
-                {categories.map((c) => <option key={c.slug} value={c.slug} className="bg-[#0D0D12]">{c.name}</option>)}
+                {dropdownCats.map((c) => <option key={c.slug} value={c.slug} className="bg-[#0D0D12]">{c.name}</option>)}
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[color:var(--mute)] pointer-events-none" />
             </div>
@@ -139,7 +164,8 @@ export default function Leaderboard() {
 
         {error ? (
           <div className="mt-8 rounded-2xl border border-[color:var(--coral)]/30 bg-[color:var(--coral)]/[0.06] p-6 text-center" role="alert" data-testid="leaderboard-error">
-            <div className="text-[14px] text-[color:var(--coral)]">Couldn&apos;t load leaderboard.</div>
+            <div className="text-[14px] tracking-[0.14em] uppercase text-[color:var(--coral)]">Rankings are unavailable right now</div>
+            <div className="mt-2 text-[13px] text-[color:var(--ink-2)]">Check your connection and try again in a moment.</div>
             <button onClick={refetchAll} className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full glass glass-hover text-[13px] text-white">
               Retry
             </button>
@@ -147,9 +173,9 @@ export default function Leaderboard() {
         ) : loading ? (
           <AdminLoading rows={4} />
         ) : sorted.length === 0 ? (
-          <div className="mt-14 text-center text-[color:var(--mute)]">
-            <div className="text-[14px] tracking-[0.14em] uppercase">No leaderboard data yet</div>
-            <div className="mt-4">Complete your first quiz to appear on the leaderboard!</div>
+          <div className="mt-14 text-center text-[color:var(--mute)]" data-testid="leaderboard-empty">
+            <div className="text-[14px] tracking-[0.14em] uppercase">No rankings yet</div>
+            <div className="mt-4">Be the first on the board — complete a quiz to claim your spot!</div>
           </div>
         ) : (
           <>
