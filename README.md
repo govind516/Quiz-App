@@ -52,7 +52,14 @@ quiz-app/
 ```
 
 ## Live Demo
-(Deploy URL if deployed — otherwise note “local dev only”)
+**Deployed at:** <https://quiz-app-gamma-ten-37.vercel.app/>
+
+![alt text](docs/frontend-demo.png)
+
+| Component | Platform | URL |
+|---|---|---|
+| Frontend | Vercel | https://quiz-app-gamma-ten-37.vercel.app/ |
+| Backend | Render (Docker) | https://quizapp-backend-lqrc.onrender.com |
 
 ## Learn More
 - See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for system diagram + design decisions

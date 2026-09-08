@@ -32,10 +32,17 @@ export default function Nav() {
   const { isAuthenticated, isAdmin, user, logout } = useAuth();
 
   const doLogout = () => {
+    // Flag that a logout is in progress so ProtectedRoute does not re‑inject
+    // ``from=/admin`` (or any other route) into the login URL.
+    if (typeof window !== "undefined") {
+      localStorage.setItem("quiz_userJustLoggedOut", "true");
+    }
     logout();
     try { useAuthStore.getState().logout(); } catch {}
     setConfirmLogout(false);
-    router.push("/");
+    // Navigate to login; ProtectedRoute will detect the flag and redirect
+    // to ``/login`` without a ``from`` param, then clear the flag.
+    router.replace("/login");
   };
 
   useEffect(() => {
