@@ -16,17 +16,19 @@ import type { AttemptResultDto, QuizDto, StartAttemptResponse, SubmitAnswerDto }
 
 export const dynamic = "force-dynamic";
 
-function TimerRing({ mins, secs, total }: { mins: number; secs: number; total: number }) {
-  const pct = (mins * 60 + secs) / (total * 60);
+function TimerRing({ remainingSec, totalSec }: { remainingSec: number; totalSec: number }) {
   const dash = 2 * Math.PI * 22;
+  const safeTotal = Number.isFinite(totalSec) && totalSec > 0 ? totalSec : 1;
+  const safeRemaining = Number.isFinite(remainingSec) ? Math.min(Math.max(remainingSec, 0), safeTotal) : safeTotal;
+  const pct = safeRemaining / safeTotal;
   return (
     <div className="relative w-14 h-14">
       <svg viewBox="0 0 50 50" className="w-14 h-14 -rotate-90">
         <circle cx="25" cy="25" r="22" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="2.5" />
-        <circle cx="25" cy="25" r="22" fill="none" stroke="url(#tg)" strokeWidth="2.5" strokeLinecap="round" strokeDasharray={dash} strokeDashoffset={dash * (1 - pct)} />
+        <circle cx="25" cy="25" r="22" fill="none" stroke="url(#tg)" strokeWidth="2.5" strokeLinecap="round" strokeDasharray={dash} strokeDashoffset={String(dash * (1 - pct))} />
         <defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#A78BFA" /><stop offset="1" stopColor="#7FE7CE" /></linearGradient></defs>
       </svg>
-      <div className="absolute inset-0 grid place-items-center font-mono text-[11px] text-white">{mins}m</div>
+      <div className="absolute inset-0 grid place-items-center font-mono text-[11px] text-white">{Math.floor(safeRemaining / 60)}m</div>
     </div>
   );
 }
@@ -129,104 +131,56 @@ const total = quiz.questions.length;
 
   // Per-question timer: seconds per question for live room sync.
   // When perQuestionTimeSec > 0 (from backend), each question gets this many seconds.
-  // When 0, fall back to total time divided by question count.
-  const perQuestionTimeSec = liveQuiz?.perQuestionTimeSec
-    ? liveQuiz.perQuestionTimeSec
-    : quiz.totalMinutes * 60 / Math.max(1, quiz.questions.length);
+  // When 0/missing, fall back to total time divided by question count.
+  const rawPerQ = liveQuiz?.perQuestionTimeSec;
+  const perQuestionTimeSec = Number.isFinite(rawPerQ) && (rawPerQ as number) > 0
+    ? Math.max(1, Math.floor(rawPerQ as number))
+    : Math.max(1, Math.floor((quiz.totalMinutes * 60) / Math.max(1, quiz.questions.length)));
 
-  // Current question's remaining time (countdown).
+  // Current question's remaining time (countdown, in whole seconds).
   const [qSeconds, setQSeconds] = useState(perQuestionTimeSec);
-  const [questionTimerRunning, setQuestionTimerRunning] = useState(false);
-  const [questionTimerId, setQuestionTimerId] = useState<NodeJS.Timeout | null>(null);
-  // Monotonic timer anchors — captured once when the backend timer starts.
-  // We record both Date.now() (epoch) and performance.now() (high-res) so we can
-  // subtract them to get a stable remaining-ms value that survives wall-clock changes.
-  const [timerAnchors, setTimerAnchors] = useState<{ epoch: number; perf: number } | null>(null);
 
-  // Sync question timer remaining from backend expiry when attempt starts.
+  // Reset quiz state exactly once when a new live attempt starts.
+  // NOTE: this must NOT depend on idx/total — otherwise every question
+  // navigation would wipe the user's selected answers (data-loss bug).
+  const attemptId = liveQuiz?.attemptId ?? null;
   useEffect(() => {
-    if (liveQuiz?.expiresAt) {
-      const expiresAtMs = new Date(liveQuiz.expiresAt).getTime();
-      const nowEpoch = Date.now();
-      const nowPerf = performance.now();
-      // initial remaining ms = expiresAt - now (at capture moment)
-      const initialRemainingMs = Math.max(0, expiresAtMs - nowEpoch);
-      setTimerAnchors({ epoch: nowEpoch, perf: nowPerf });
-      setQSeconds(Math.max(0, Math.floor(initialRemainingMs / 1000)));
-      setAnswers({});
-    }
-  }, [liveQuiz?.expiresAt, total, idx]);
-
-  // Per-question countdown using monotonic timers.
-  // remainingMs = initialRemainingMs - (perfNow - perfAnchor)
-  // This is immune to device wall-clock changes (user changes system time, DST, etc.).
-  // If the tab goes backgrounded, the countdown will be slightly fast — acceptable for a quiz.
-  useEffect(() => {
-    if (questionTimerId) clearInterval(questionTimerId);
-    if (qSeconds <= 0) return;
-    setQuestionTimerRunning(true);
-    const id = setInterval(() => {
-      setQSeconds((s: number) => {
-        const anchors = timerAnchors;
-        if (!anchors) return s;
-        // remainingMs = initialRemainingMs - (nowPerf - anchors.perf)
-        // We recompute initialRemainingMs each tick from the original expiresAt + anchors
-        // to avoid drift accumulation, but the simpler formula works well:
-        //   remainingMs = initialRemainingMs - (performance.now() - anchors.perf)
-        // However, to be extra safe against drift, we re-derive initialRemainingMs:
-        const expiresAtMs = new Date(liveQuiz?.expiresAt ?? '').getTime();
-        const derivedInitial = Math.max(0, expiresAtMs - anchors.epoch);
-        const remainingMs = Math.max(0, derivedInitial - (performance.now() - anchors.perf));
-        return Math.max(0, Math.floor(remainingMs / 1000));
-      });
-    }, 100);
-    setQuestionTimerId(id);
-    return () => clearInterval(id);
-  }, [qSeconds, total, idx, timerAnchors, liveQuiz?.expiresAt]);
-
-  // When question advances, reset per-question timer for the new question.
-  useEffect(() => {
-    if (questionTimerId) clearInterval(questionTimerId);
+    if (attemptId == null) return;
+    setIdx(0);
+    setAnswers({});
     setQSeconds(perQuestionTimeSec);
-    setQuestionTimerRunning(false);
-    const nowEpoch = Date.now();
-    const nowPerf = performance.now();
-    const expiresAtMs = new Date(liveQuiz?.expiresAt ?? '').getTime();
-    const initialRemainingMs = Math.max(0, expiresAtMs - nowEpoch);
-    setTimerAnchors({ epoch: nowEpoch, perf: nowPerf });
-    setQSeconds(Math.max(0, Math.floor(initialRemainingMs / 1000)));
-    const id = setInterval(() => {
-      setQSeconds((s: number) => {
-        const remainingMs = Math.max(0, initialRemainingMs - (performance.now() - nowPerf));
-        return Math.max(0, Math.floor(remainingMs / 1000));
-      });
-    }, 100);
-    setQuestionTimerId(id);
-    return () => clearInterval(id);
-  }, [idx, perQuestionTimeSec, total, liveQuiz?.expiresAt]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [attemptId]);
 
-  // Stop timer when quiz submitted.
+  // Reset the per-question countdown whenever the question changes
+  // or the backend-provided per-question budget arrives.
   useEffect(() => {
-    if (questionTimerId) clearInterval(questionTimerId);
-    setQuestionTimerId(null);
-    setTimerAnchors(null);
-  }, [submitting]);
+    setQSeconds(perQuestionTimeSec);
+  }, [idx, perQuestionTimeSec]);
+
+  // Single 1s ticker. Cleans up on question change/unmount/submit.
+  const timerDone = qSeconds <= 0;
+  useEffect(() => {
+    if (submitting) return;
+    if (timerDone) return;
+    const id = setInterval(() => {
+      setQSeconds((s: number) => (Number.isFinite(s) && s > 0 ? s - 1 : 0));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [idx, perQuestionTimeSec, submitting, timerDone]);
 
   // Auto-advance question when per-question timer reaches 0.
   useEffect(() => {
     if (qSeconds <= 0 && idx < total - 1) {
       const nextId = setTimeout(() => setIdx(idx + 1), 500);
-      setQuestionTimerId(nextId);
-    }
-    if (qSeconds <= 0 && idx >= total - 1) {
-      // Last question timer expired - enable submit.
-      // The submit button will now be enabled.
+      return () => clearTimeout(nextId);
     }
   }, [qSeconds, idx, total]);
 
   const cur: any = quiz.questions[idx];
   const answered = Object.keys(answers).length;
-  const mm = Math.floor(qSeconds / 60), ss = qSeconds % 60;
+  const safeQSeconds = Number.isFinite(qSeconds) && qSeconds >= 0 ? Math.floor(qSeconds) : 0;
+  const mm = Math.floor(safeQSeconds / 60), ss = safeQSeconds % 60;
 
   const submit = async () => {
     setSubmitError(null);
@@ -327,7 +281,7 @@ const total = quiz.questions.length;
           </div>
           <div className="flex items-center gap-3">
             <div className="font-mono text-[16px] text-white tabular-nums flex items-center gap-2"><Timer className="w-4 h-4 text-[color:var(--violet-2)]" />{String(mm).padStart(2,'0')}:{String(ss).padStart(2,'0')}</div>
-            <TimerRing mins={Math.floor(qSeconds / 60)} secs={qSeconds % 60} total={perQuestionTimeSec} />
+            <TimerRing remainingSec={qSeconds} totalSec={perQuestionTimeSec} />
           </div>
         </div>
 
