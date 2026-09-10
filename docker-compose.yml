@@ -1,0 +1,76 @@
+# One-command local startup. Values default so a clean clone works with no .env file;
+# copy .env.example to .env to override (see README Quick Start).
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-quizdb}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DB_URL: ${DB_URL:-jdbc:postgresql://postgres:5432/quizdb}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-in-prod-32bytes-minimum-padding!!}
+      JWT_ACCESS_TTL_MS: ${JWT_ACCESS_TTL_MS:-900000}
+      JWT_REFRESH_TTL_MS: ${JWT_REFRESH_TTL_MS:-604800000}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@quizapp.dev}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      DDL_AUTO: ${DDL_AUTO:-update}
+      DB_POOL_SIZE: ${DB_POOL_SIZE:-10}
+      DB_POOL_MIN_IDLE: ${DB_POOL_MIN_IDLE:-2}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.6-flash}
+      REDIS_URI: ${REDIS_URI:-redis://redis:6379}
+      RL_SUBMIT_LIMIT: ${RL_SUBMIT_LIMIT:-10}
+      RL_START_LIMIT: ${RL_START_LIMIT:-30}
+      RL_AUTH_LIMIT: ${RL_AUTH_LIMIT:-5}
+      RL_WINDOW_SECONDS: ${RL_WINDOW_SECONDS:-60}
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+
+volumes:
+  pgdata:
+  redis-data:

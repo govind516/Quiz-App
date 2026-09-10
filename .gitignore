@@ -16,5 +16,7 @@ hexquiz-preview.html
 .env.secrets
 .vscode/
 target/
-# Docker
+# Docker (ignore stray generated Dockerfiles, but keep the project's own)
 Dockerfile
+!/Dockerfile
+!/frontend/Dockerfile

@@ -14,6 +14,16 @@ Modern quiz platform combining LeetCode‑style practice with live multiplayer r
 
 ## Quick Start
 
+**Option A — one command (Docker):**
+```bash
+git clone <repo-url>
+cd quiz-app
+cp .env.example .env   # optional: defaults work without it
+docker compose up --build
+# frontend → http://localhost:3000, backend → http://localhost:8080
+```
+
+**Option B — manual (local JVM + Node):**
 ```bash
 # 1. Clone & env
 git clone <repo-url>
