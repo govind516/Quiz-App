@@ -97,9 +97,39 @@ quiz-app/
 │  └─ ... (Next.js 16 App Router)
 ├─ src/main/java/...     # Spring Boot 3.5.16, Java 21
 ├─ src/test/java/...     # 30 backend tests
-└─ docs/
-   ├─ ARCHITECTURE.md
-   ├─ API.md
-   ├─ SECURITY.md
-   ├─ ROADMAP.md
-   └─ SETUP.md   (this file)
+ └─ docs/
+    ├─ ARCHITECTURE.md
+    ├─ API.md
+    ├─ SECURITY.md
+    ├─ ROADMAP.md
+    └─ SETUP.md   (this file)
+
+## Dependency Health (recorded 2026-09-10)
+
+Backend pins that were previously inherited from `spring-boot-starter-parent` are now
+explicit in `pom.xml` (`spring-boot-starters.version`, `postgresql.version`, `h2.version`,
+`spring-security-test.version`, `lombok.version`). Values equal what Boot 3.5.16 resolves,
+so pinning changed nothing — it just makes future upgrades visible to Dependabot.
+
+Command:
+
+```bash
+./mvnw -B org.codehaus.mojo:versions-maven-plugin:2.21.0:display-dependency-updates
+```
+
+Direct dependencies with newer versions on that date (none upgraded yet — left for Dependabot):
+
+```
+com.bucket4j:bucket4j_jdk17-core .................... 8.14.0 -> 8.19.0
+io.jsonwebtoken:jjwt-api ............................ 0.12.3 -> 0.13.0
+io.jsonwebtoken:jjwt-impl ........................... 0.12.3 -> 0.13.0
+io.jsonwebtoken:jjwt-jackson ........................ 0.12.3 -> 0.13.0
+net.logstash.logback:logstash-logback-encoder ....... 8.1 -> 9.0
+org.apache.commons:commons-csv ...................... 1.10.0 -> 1.14.1
+org.springdoc:springdoc-openapi-starter-webmvc-ui ... 2.3.0 -> 3.1.1
+```
+
+Managed (BOM) note: all pinned Boot starters, `postgresql:42.7.11`, `lombok:1.18.42`
+and `spring-security-test:6.5.11` are current; only `com.h2database:h2` (test scope)
+shows an update (`2.3.232 -> 2.5.250`). The BOM remainder (jackson, logback, …) tracks
+the Boot parent and moves with it, not individually.
