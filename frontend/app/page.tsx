@@ -1,14 +1,17 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
 import { ArrowUpRight, ArrowRight, Zap, ChevronRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import Aurora from "@/components/Aurora";
 import { Eyebrow, RevealHeading, FadeUp } from "@/components/Reveal";
 import { Hex } from "@/components/Hex";
-import { categories, quizzes as mockQuizzes, codeSnippets, leaders, stats, testimonials } from "@/lib/mock";
+import { categories, quizzes as mockQuizzes, codeSnippets, leaders, testimonials } from "@/lib/mock";
 import { useLiveQuizzes } from "@/lib/live-quizzes";
+import { api } from "@/lib/api";
+import type { LeaderboardEntryDto } from "@/lib/types";
 
 function CodeConstellation() {
   const [idx, setIdx] = useState(0);
@@ -141,6 +144,21 @@ export default function Home() {
   const { quizzes: liveQuizzes } = useLiveQuizzes();
   const quizzes = liveQuizzes.length ? liveQuizzes : mockQuizzes;
 
+  // Hero stats derived from the same live quiz list (mock fallback included).
+  const trackCount = useMemo(() => new Set(liveQuizzes.map((q) => q.cat)).size, [liveQuizzes]);
+  const questionTotal = useMemo(() => liveQuizzes.reduce((s, q) => s + q.q, 0), [liveQuizzes]);
+
+  // Weekly leaderboard preview (DB-backed, works without Redis); mock fallback offline.
+  const weeklyQ = useQuery({
+    queryKey: ["leaderboard", "weekly-home"],
+    queryFn: () => api<LeaderboardEntryDto[]>("/api/leaderboard/weekly?limit=5", { auth: false }),
+    retry: false,
+    staleTime: 60_000,
+  });
+  const board = weeklyQ.data?.length
+    ? weeklyQ.data.map((e) => ({ rank: e.rank, initials: e.initials, name: e.name, country: e.country, streak: e.streak, pts: e.score }))
+    : leaders.slice(0, 5);
+
   return (
     <main className="relative" data-testid="home-main">
       <section ref={heroRef as any} className="relative pt-40 pb-24 md:pt-48 md:pb-32 overflow-hidden" style={{ paddingTop: "12rem" } as React.CSSProperties} onMouseMove={(e) => { mx.set(e.clientX); my.set(e.clientY); }}>
@@ -161,9 +179,9 @@ export default function Home() {
                 <Link href="/leaderboard" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full glass glass-hover text-[14px] text-white" data-testid="hero-leaderboard-btn">See the leaderboard</Link>
               </FadeUp>
               <FadeUp delay={0.9} className="mt-14 grid grid-cols-3 gap-6 max-w-[520px]">
-                <Stat n={stats.categories} l="topic tracks" delay={0} />
-                <Stat n={stats.questions} l="crafted questions" delay={0.1} />
-                <Stat n={stats.live} l="live right now" delay={0.2} />
+                <Stat n={trackCount} l="topic tracks" delay={0} />
+                <Stat n={questionTotal} l="crafted questions" delay={0.1} />
+                <Stat n={liveQuizzes.length} l="live quizzes" delay={0.2} />
               </FadeUp>
             </div>
             <div className="lg:col-span-6 relative"><CodeConstellation /></div>
@@ -235,7 +253,7 @@ export default function Home() {
             </div>
             <div className="lg:col-span-8">
               <div className="rounded-3xl glass overflow-hidden">
-                {leaders.slice(0, 5).map((l, i) => (
+                {board.map((l, i) => (
                   <FadeUp key={l.rank} delay={i * 0.05}>
                     <div className={`flex items-center gap-5 px-6 py-5 ${i !== 0 ? 'border-t border-white/[0.05]' : ''}`}>
                       <div className="font-mono text-[13px] w-8 text-[color:var(--mute)]">#{l.rank}</div>
