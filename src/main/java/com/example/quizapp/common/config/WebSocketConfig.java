@@ -1,8 +1,8 @@
 package com.example.quizapp.common.config;
 
 import org.springframework.context.annotation.Bean;
-import org.springframework.lang.NonNull;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.lang.NonNull;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;

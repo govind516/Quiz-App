@@ -1,9 +1,8 @@
 package com.example.quizapp.quiz.service;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-
-import java.time.Duration;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;

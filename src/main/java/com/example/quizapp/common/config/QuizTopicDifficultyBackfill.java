@@ -9,8 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.quizapp.quiz.QuestionStatus;
 import com.example.quizapp.quiz.Quiz;
-import com.example.quizapp.quiz.repository.QuizRepository;
 import com.example.quizapp.quiz.repository.QuestionRepository;
+import com.example.quizapp.quiz.repository.QuizRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

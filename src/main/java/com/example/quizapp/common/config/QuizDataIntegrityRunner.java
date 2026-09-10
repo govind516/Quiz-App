@@ -1,19 +1,15 @@
 package com.example.quizapp.common.config;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.transaction.Transactional;
-
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import com.example.quizapp.quiz.Quiz;
-import com.example.quizapp.quiz.repository.QuizRepository;
-import com.example.quizapp.attempt.QuizAttempt;
 import com.example.quizapp.attempt.repository.QuizAttemptRepository;
+import com.example.quizapp.quiz.repository.QuizRepository;
 
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

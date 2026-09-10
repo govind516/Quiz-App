@@ -12,8 +12,8 @@ import com.example.quizapp.quiz.dto.AdminAnalyticsDto;
 import com.example.quizapp.quiz.dto.AdminOverviewDto;
 import com.example.quizapp.quiz.dto.CategoryPerformanceDto;
 import com.example.quizapp.quiz.dto.DropoffDto;
-import com.example.quizapp.quiz.dto.ScoreTrendPoint;
 import com.example.quizapp.quiz.dto.QuizDto;
+import com.example.quizapp.quiz.dto.ScoreTrendPoint;
 import com.example.quizapp.quiz.service.AdminAnalyticsService;
 import com.example.quizapp.quiz.service.AnalyticsService;
 import com.example.quizapp.quiz.service.QuizService;
@@ -64,4 +64,3 @@ public class AdminQuizController {
 		return ResponseEntity.ok(analyticsService.attemptsOverview(clamped));
 	}
 }
-

@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.quizapp.common.exception.ConflictException;
 import com.example.quizapp.common.exception.ResourceNotFoundException;
+import com.example.quizapp.quiz.Category;
 import com.example.quizapp.quiz.repository.CategoryRepository;
 import com.example.quizapp.quiz.repository.QuizRepository;
-import com.example.quizapp.common.exception.ConflictException;
-import com.example.quizapp.quiz.Category;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

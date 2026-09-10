@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.quizapp.auth.CurrentUserProvider;
 import com.example.quizapp.certificate.CertificateService;
-import com.example.quizapp.certificate.dto.CertificateDto;
 import com.example.quizapp.certificate.dto.CategoryProgressDto;
+import com.example.quizapp.certificate.dto.CertificateDto;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

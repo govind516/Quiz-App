@@ -19,6 +19,9 @@ jobs:
           cache: maven
       # No -DskipTests: test execution gates the deploy.
       - run: ./mvnw -B test
+      # Report-only: hygiene ratchet (import order, unused imports, whitespace).
+      - run: ./mvnw -B spotless:check
+        continue-on-error: true
 
   frontend:
     name: Frontend typecheck + build

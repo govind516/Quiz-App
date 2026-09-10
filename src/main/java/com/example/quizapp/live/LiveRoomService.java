@@ -14,7 +14,9 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.example.quizapp.attempt.service.AnswerGrader;
 import com.example.quizapp.common.exception.ConflictException;
 import com.example.quizapp.common.exception.ResourceNotFoundException;
 import com.example.quizapp.live.dto.AnswerMessage;
@@ -23,7 +25,6 @@ import com.example.quizapp.live.dto.FinalResultsPayload;
 import com.example.quizapp.live.dto.LiveQuestionPayload;
 import com.example.quizapp.live.dto.LiveRoomInfo;
 import com.example.quizapp.live.dto.PlayerInfo;
-import com.example.quizapp.attempt.service.AnswerGrader;
 import com.example.quizapp.quiz.Option;
 import com.example.quizapp.quiz.Question;
 import com.example.quizapp.quiz.QuestionStatus;
@@ -32,7 +33,6 @@ import com.example.quizapp.quiz.repository.QuizRepository;
 import com.example.quizapp.user.User;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
