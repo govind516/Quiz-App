@@ -19,6 +19,11 @@ jobs:
           cache: maven
       # No -DskipTests: test execution gates the deploy.
       - run: ./mvnw -B test
+      # Coverage report only (no threshold yet) — uploaded for the baseline.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco
       # Report-only: hygiene ratchet (import order, unused imports, whitespace).
       - run: ./mvnw -B spotless:check
         continue-on-error: true
