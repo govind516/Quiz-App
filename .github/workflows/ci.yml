@@ -41,6 +41,9 @@ jobs:
       # Report-only: does not gate merges until the pre-existing violations are fixed.
       - run: npm run lint
         continue-on-error: true
+      # Report-only first pass: frontend coverage starts here, gating comes later.
+      - run: npm run test
+        continue-on-error: true
       # Report-only until the baseline is clean.
       - run: npm audit --audit-level=high
         continue-on-error: true
